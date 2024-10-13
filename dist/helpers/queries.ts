@@ -93,5 +93,43 @@ query ($page: Int, $perPage: Int) {
   }
 }
 `;
+const userQuery = `
+query ($username: String) {
+  User(name: $username) {
+    id
+    name
+    siteUrl
+    donatorTier
+    donatorBadge
+    createdAt
+    updatedAt
+    previousNames {
+      name
+      createdAt
+      updatedAt
+    }
+    isBlocked
+    isFollower
+    isFollowing
+    options {
+      profileColor
+      timezone
+      activityMergeTime
+    }
+    statistics {
+      anime {
+        count
+        episodesWatched
+        minutesWatched
+      }
+      manga {
+        count
+        chaptersRead
+        volumesRead
+      }
+    }
+  }
+}
+`;
 
-export { currentUserQuery, trendingQuery, popularQuery };
+export { currentUserQuery, trendingQuery, popularQuery, userQuery };

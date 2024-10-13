@@ -122,6 +122,19 @@ async function isLoggedIn(): Promise<Boolean> {
   }
 }
 
+async function logoutUser() {
+  if (fs.existsSync(save_path)) {
+    try {
+      fs.unlinkSync(save_path);
+      console.log("Logout successful.");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  } else {
+    console.log("You may already be logged out.");
+  }
+}
+
 export {
   getAccessTokenFromUser,
   storeAccessToken,
@@ -129,4 +142,5 @@ export {
   anilistUserLogin,
   currentUserInfo,
   isLoggedIn,
+  logoutUser,
 };

@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { anilistUserLogin, currentUserInfo } from "./helpers/auth.js";
+import {
+  anilistUserLogin,
+  currentUserInfo,
+  logoutUser,
+} from "./helpers/auth.js";
 import { getPopular, getTrending } from "./helpers/lists.js";
+import { getUserInfoByUsername } from "./helpers/more.js";
 
 const cli = new Command();
 
@@ -44,6 +49,18 @@ cli
   .action(async ({ count }) => {
     await getPopular(Number(count));
   });
+cli
+  .command("user")
+  .description("Get user information")
+  .requiredOption("-un, --username <string>", "null")
+  .action(async ({ username }) => {
+    await getUserInfoByUsername(username);
+  });
+cli
+  .command("logout")
+  .description("Log out the current user.")
+  .action(async () => {
+    await logoutUser();
+  });
 
 cli.parse(process.argv);
-const options = cli.opts();
