@@ -1,0 +1,33 @@
+{
+  "name": "@irfanshadikrishad/anilist",
+  "description": "Unofficial AniList CLI",
+  "author": "Irfan Shadik Rishad",
+  "version": "1.0.0-beta.0",
+  "main": "./bin/index.js",
+  "type": "module",
+  "bin": {
+    "anilist": "./bin/index.js"
+  },
+  "scripts": {
+    "build": "rm -rf ./bin && tsc"
+  },
+  "keywords": [
+    "anilist",
+    "CLI"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irfanshadikrishad/anilist"
+  },
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "inquirer": "^12.0.0",
+    "node-fetch": "^3.3.2",
+    "open": "^10.1.0"
+  }
+}
