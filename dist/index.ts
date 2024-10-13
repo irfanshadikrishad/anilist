@@ -6,6 +6,8 @@ import {
   logoutUser,
 } from "./helpers/auth.js";
 import {
+  deleteAnimeCollection,
+  deleteMangaCollection,
   getPopular,
   getTrending,
   loggedInUsersAnimeLists,
@@ -80,6 +82,21 @@ cli
       await loggedInUsersAnimeLists();
     } else if (manga) {
       await loggedInUsersMangaLists();
+    }
+  });
+cli
+  .command("delete")
+  .alias("del")
+  .description("Delete entire collections of anime or mang")
+  .option("-a, --anime", "For anime list of authenticated user", false)
+  .option("-m, --manga", "For manga list of authenticated user", false)
+  .action(async ({ anime, manga }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.log(`Must select an option, either --anime or --manga`);
+    } else if (anime) {
+      await deleteAnimeCollection();
+    } else if (manga) {
+      await deleteMangaCollection();
     }
   });
 

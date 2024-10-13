@@ -137,6 +137,7 @@ query ($id: Int) {
     lists {
       name
       entries {
+        id
         media {
           id
           title {
@@ -150,21 +151,35 @@ query ($id: Int) {
 }
 `;
 const currentUserMangaList = `
-query ($id: Int) {
-  MediaListCollection(userId: $id, type: MANGA) {
-    lists {
-      name
-      entries {
-        media {
-          title {
-            romaji
-            english
+  query ($id: Int) {
+    MediaListCollection(userId: $id, type: MANGA) {
+      lists {
+        name
+        entries {
+          id
+          media {
+            title {
+              romaji
+              english
+            }
           }
         }
       }
     }
   }
-}
+`;
+const deleteMediaEntryMutation = `
+ mutation($id: Int!) {
+    DeleteMediaListEntry(id: $id) {
+      deleted
+    }
+  }`;
+const deleteMangaEntryMutation = `
+  mutation ($id: Int) {
+    DeleteMediaListEntry(id: $id) {
+      deleted
+    }
+  }
 `;
 
 export {
@@ -174,4 +189,6 @@ export {
   userQuery,
   currentUserAnimeList,
   currentUserMangaList,
+  deleteMediaEntryMutation,
+  deleteMangaEntryMutation,
 };

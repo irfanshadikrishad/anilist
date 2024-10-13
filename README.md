@@ -5,7 +5,7 @@ Unofficial Anilist CLI
 #### How to install?
 
 Make sure [Node.js](https://nodejs.org/en) and [npm](https://www.npmjs.com) are already installed in your system.
-Then install the package by running (not-yet-published though)
+Then install the package by running
 
 ```bash
 npm install -g @irfanshadikrishad/anilist
@@ -42,5 +42,6 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | popular (alias: plr) | -c (count: default 10)   | Get popular animes                         |
 | user                 | -un (username)           | Get information of the user                |
 | lists (alias: ls)    | -a/--anime or -m/--manga | Get anime or manga lists of logged in user |
+| delete (alias: del)  | -a/--anime or -m/--manga | Delete collections of anime or manga       |
 
-#### **_Thanks for visiting 🐙_**
+#### **_Thanks for visiting 💙_**
