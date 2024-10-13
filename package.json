@@ -9,6 +9,9 @@
   "bin": {
     "anilist": "./bin/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "rm -rf ./bin && tsc -w"
   },
