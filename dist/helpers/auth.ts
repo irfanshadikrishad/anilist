@@ -5,8 +5,8 @@ import inquirer from "inquirer";
 import open from "open";
 import fetch from "node-fetch";
 import { currentUserQuery } from "./queries.js";
+import { aniListEndpoint, redirectUri } from "./workers.js";
 
-const redirectUri = "https://anilist.co/api/v2/oauth/pin";
 const home_dir = os.homedir();
 const save_path = path.join(home_dir, ".anilist_token");
 
@@ -70,7 +70,7 @@ async function currentUserInfo() {
 
   if (loggedIn) {
     const sToken = await retriveAccessToken();
-    const request = await fetch(`https://graphql.anilist.co`, {
+    const request = await fetch(aniListEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

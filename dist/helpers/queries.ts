@@ -67,5 +67,31 @@ const currentUserQuery = `
   }
 }
 `;
+const trendingQuery = `
+query ($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    media(sort: TRENDING_DESC, type: ANIME) {
+      id
+      title {
+        romaji
+        english
+      }
+    }
+  }
+}
+`;
+const popularQuery = `
+query ($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    media(sort: POPULARITY_DESC, type: ANIME) {
+      id
+      title {
+        romaji
+        english
+      }
+    }
+  }
+}
+`;
 
-export { currentUserQuery };
+export { currentUserQuery, trendingQuery, popularQuery };

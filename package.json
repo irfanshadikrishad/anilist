@@ -5,6 +5,7 @@
   "version": "1.0.0-beta.0",
   "main": "./bin/index.js",
   "type": "module",
+  "types": "./bin/index.d.ts",
   "bin": {
     "anilist": "./bin/index.js"
   },
