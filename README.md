@@ -31,15 +31,16 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### Available Commands:
 
-| Commands      | Options                             | Uses                             |
-| ------------- | ----------------------------------- | -------------------------------- |
-| login         | -i (clientID) and -s (clientSecret) | To login with AniList            |
-| logout        | null                                | To logout                        |
-| me            | null                                | Information about logged in user |
-|               | -V                                  | Get the CLI version              |
-|               | -h                                  | Get available commands           |
-| trending (tr) | -c (count: default 10)              | Get trending animes              |
-| popular (plr) | -c (count: default 10)              | Get popular animes               |
-| user          | -un (username)                      | Get information of the user      |
+| Commands             | Options                  | Uses                                       |
+| -------------------- | ------------------------ | ------------------------------------------ |
+| login                | -i/--id and -s/--secret  | To login with AniList                      |
+| logout               | null                     | To logout                                  |
+| me                   | null                     | Information about logged in user           |
+|                      | -V/--version             | Get the CLI version                        |
+|                      | -h/--help                | Get available commands                     |
+| trending (alias: tr) | -c (count: default 10)   | Get trending animes                        |
+| popular (alias: plr) | -c (count: default 10)   | Get popular animes                         |
+| user                 | -un (username)           | Get information of the user                |
+| lists (alias: ls)    | -a/--anime or -m/--manga | Get anime or manga lists of logged in user |
 
-#### **_Thanks for visiting_**
+#### **_Thanks for visiting 🐙_**

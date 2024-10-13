@@ -5,7 +5,12 @@ import {
   currentUserInfo,
   logoutUser,
 } from "./helpers/auth.js";
-import { getPopular, getTrending } from "./helpers/lists.js";
+import {
+  getPopular,
+  getTrending,
+  loggedInUsersAnimeLists,
+  loggedInUsersMangaLists,
+} from "./helpers/lists.js";
 import { getUserInfoByUsername } from "./helpers/more.js";
 
 const cli = new Command();
@@ -61,6 +66,21 @@ cli
   .description("Log out the current user.")
   .action(async () => {
     await logoutUser();
+  });
+cli
+  .command("lists")
+  .alias("ls")
+  .description("Get anime or manga list of authenticated user.")
+  .option("-a, --anime", "For anime list of authenticated user", false)
+  .option("-m, --manga", "For manga list of authenticated user", false)
+  .action(async ({ anime, manga }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.log(`Must select an option, either --anime or --manga`);
+    } else if (anime) {
+      await loggedInUsersAnimeLists();
+    } else if (manga) {
+      await loggedInUsersMangaLists();
+    }
   });
 
 cli.parse(process.argv);

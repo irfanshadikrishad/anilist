@@ -10,7 +10,7 @@
     "anilist": "./bin/index.js"
   },
   "scripts": {
-    "build": "rm -rf ./bin && tsc"
+    "build": "rm -rf ./bin && tsc -w"
   },
   "keywords": [
     "anilist",

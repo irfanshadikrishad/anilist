@@ -131,5 +131,47 @@ query ($username: String) {
   }
 }
 `;
+const currentUserAnimeList = `
+query ($id: Int) {
+  MediaListCollection(userId: $id, type: ANIME) {
+    lists {
+      name
+      entries {
+        media {
+          id
+          title {
+            romaji
+            english
+          }
+        }
+      }
+    }
+  }
+}
+`;
+const currentUserMangaList = `
+query ($id: Int) {
+  MediaListCollection(userId: $id, type: MANGA) {
+    lists {
+      name
+      entries {
+        media {
+          title {
+            romaji
+            english
+          }
+        }
+      }
+    }
+  }
+}
+`;
 
-export { currentUserQuery, trendingQuery, popularQuery, userQuery };
+export {
+  currentUserQuery,
+  trendingQuery,
+  popularQuery,
+  userQuery,
+  currentUserAnimeList,
+  currentUserMangaList,
+};

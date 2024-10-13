@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
-import { aniListEndpoint } from "./workers.js";
 import { userQuery } from "./queries.js";
 import { isLoggedIn, retriveAccessToken } from "./auth.js";
+import { aniListEndpoint } from "./workers.js";
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -28,9 +28,7 @@ async function getUserInfoByUsername(username: string) {
       {
         user?.createdAt &&
           console.log(
-            `Account Created:\t${new Date(
-              user?.createdAt * 1000
-            ).toUTCString()}`
+            `Account Created:${new Date(user?.createdAt * 1000).toUTCString()}`
           );
       }
       console.log(

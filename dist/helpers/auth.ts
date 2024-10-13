@@ -135,6 +135,23 @@ async function logoutUser() {
   }
 }
 
+async function currentUsersId() {
+  const request = await fetch(aniListEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await retriveAccessToken()}`,
+    },
+    body: JSON.stringify({ query: currentUserQuery }),
+  });
+  const { data }: any = await request.json();
+  if (request.status === 200) {
+    return data?.Viewer?.id;
+  } else {
+    return null;
+  }
+}
+
 export {
   getAccessTokenFromUser,
   storeAccessToken,
@@ -143,4 +160,5 @@ export {
   currentUserInfo,
   isLoggedIn,
   logoutUser,
+  currentUsersId,
 };
