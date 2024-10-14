@@ -17,10 +17,7 @@ import { getUserInfoByUsername } from "./helpers/more.js";
 
 const cli = new Command();
 
-cli
-  .name("anilist")
-  .description("Unofficial AniList CLI")
-  .version("1.0.0-beta.0");
+cli.name("anilist").description("Unofficial AniList CLI").version("1.0.0");
 
 cli
   .command("login")
