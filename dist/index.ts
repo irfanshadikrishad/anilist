@@ -10,6 +10,7 @@ import {
   deleteMangaCollection,
   getPopular,
   getTrending,
+  getUpcomingAnimes,
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
 } from "./helpers/lists.js";
@@ -95,6 +96,14 @@ cli
     } else if (manga) {
       await deleteMangaCollection();
     }
+  });
+cli
+  .command("upcoming")
+  .alias("up")
+  .description("Anime that will be released in upcoming season")
+  .option("-c, --count <number>", "Number of items to get", "10")
+  .action(async ({ count }) => {
+    await getUpcomingAnimes(Number(count));
   });
 
 cli.parse(process.argv);

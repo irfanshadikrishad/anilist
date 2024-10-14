@@ -51,6 +51,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`user`**                          | `-un (username)`                 | Get information about a specific AniList user    |
 | **`lists`** <br> _(alias: `ls`)_    | `-a, --anime` <br> `-m, --manga` | Fetch anime or manga lists of the logged-in user |
 | **`delete`** <br> _(alias: `del`)_  | `-a, --anime` <br> `-m, --manga` | Delete collections of anime or manga             |
+| **`upcoming`** <br> _(alias:`up`)_  | `-c (default: 10)`               | Fetch upcoming anime (default count is 10)       |
 
 #### Command Breakdown:
 
@@ -88,6 +89,12 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 - **Options**:
   - `-c (count)`: Specify how many popular anime to fetch (default: 10).
 - **Description**: Fetch the most popular anime series, with the option to customize how many results to display.
+
+#### `upcoming` _(alias: `up`)_:
+
+- **Options**:
+  - `-c (count)`: Specify how many upcoming anime to fetch (default: 10).
+- **Description**: Fetch the upcoming anime series next season, with the option to customize how many results to display.
 
 #### `user`:
 

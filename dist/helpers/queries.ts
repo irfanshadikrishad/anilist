@@ -181,6 +181,31 @@ const deleteMangaEntryMutation = `
     }
   }
 `;
+const upcomingAnimesQuery = `
+query GetNextSeasonAnime($nextSeason: MediaSeason, $nextYear: Int, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(season: $nextSeason, seasonYear: $nextYear, type: ANIME, sort: POPULARITY_DESC) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      season
+      seasonYear
+      startDate {
+        year
+        month
+        day
+      }
+      episodes
+      description
+      genres
+    }
+  }
+}
+`;
 
 export {
   currentUserQuery,
@@ -191,4 +216,5 @@ export {
   currentUserMangaList,
   deleteMediaEntryMutation,
   deleteMangaEntryMutation,
+  upcomingAnimesQuery,
 };
