@@ -54,55 +54,55 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### Command Breakdown:
 
-### `login`:
+#### `login`:
 
 - **Options**:
   - `-i, --id`: Specify AniList Client ID
   - `-s, --secret`: Provide the AniList Client Secret
 - **Usage**: Authenticate and log in to AniList using your ID and secret credentials.
 
-### `logout`:
+#### `logout`:
 
 - **Description**: End the current session and log out from your AniList account.
 
-### `me`:
+#### `me`:
 
 - **Description**: Retrieve and display information about the currently logged-in user, including stats and profile details.
 
-### `-V, --version`:
+#### `-V, --version`:
 
 - **Description**: Quickly check which version of the CLI you are running.
 
-### `-h, --help`:
+#### `-h, --help`:
 
 - **Description**: List all available commands and their usage details for quick reference.
 
-### `trending` _(alias: `tr`)_:
+#### `trending` _(alias: `tr`)_:
 
 - **Options**:
   - `-c (count)`: Specify how many trending anime to fetch (default: 10).
 - **Description**: Fetch the current trending anime series, with the option to customize how many results to display.
 
-### `popular` _(alias: `plr`)_:
+#### `popular` _(alias: `plr`)_:
 
 - **Options**:
   - `-c (count)`: Specify how many popular anime to fetch (default: 10).
 - **Description**: Fetch the most popular anime series, with the option to customize how many results to display.
 
-### `user`:
+#### `user`:
 
 - **Options**:
   - `-un (username)`: Specify the AniList username to fetch.
 - **Description**: Retrieve profile information about a specific AniList user.
 
-### `lists` _(alias: `ls`)_:
+#### `lists` _(alias: `ls`)_:
 
 - **Options**:
   - `-a, --anime`: Fetch the authenticated user's anime list.
   - `-m, --manga`: Fetch the authenticated user's manga list.
 - **Description**: Get the anime or manga lists of the logged-in user.
 
-### `delete` _(alias: `del`)_:
+#### `delete` _(alias: `del`)_:
 
 - **Options**:
   - `-a, --anime`: Delete your specific anime collection that you want.
