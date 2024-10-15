@@ -4,8 +4,9 @@ import path from "path";
 import inquirer from "inquirer";
 import open from "open";
 import fetch from "node-fetch";
-import { currentUserQuery } from "./queries.js";
-import { aniListEndpoint, redirectUri } from "./workers.js";
+import { currentUserQuery, userActivityQuery } from "./queries.js";
+import { aniListEndpoint, getTitle, redirectUri } from "./workers.js";
+import { fetcher } from "./fetcher.js";
 
 const home_dir = os.homedir();
 const save_path = path.join(home_dir, ".anilist_token");
@@ -70,18 +71,30 @@ async function currentUserInfo() {
 
   if (loggedIn) {
     const sToken = await retriveAccessToken();
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sToken}`,
+    };
     const request = await fetch(aniListEndpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sToken}`,
-      },
+      headers: headers,
       body: JSON.stringify({ query: currentUserQuery }),
     });
     const { data, errors }: any = await request.json();
 
     if (request.status === 200) {
       const user = data?.Viewer;
+      const activiResponse = await fetcher(
+        userActivityQuery,
+        {
+          id: user?.id,
+          page: 1,
+          perPage: 10,
+        },
+        headers
+      );
+      const activities = activiResponse?.data?.Page?.activities;
+
       console.log(`\nID:\t\t\t${user?.id}`);
       console.log(`Name:\t\t\t${user?.name}`);
       console.log(`siteUrl:\t\t${user?.siteUrl}`);
@@ -98,11 +111,22 @@ async function currentUserInfo() {
         `Account Updated:\t${new Date(user?.updatedAt * 1000).toUTCString()}`
       );
       console.log(
-        `Statistics (Anime)\nCount: ${user?.statistics?.anime?.count} meanScore: ${user?.statistics?.anime?.meanScore} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
+        `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} meanScore: ${user?.statistics?.anime?.meanScore} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
       );
       console.log(
         `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
       );
+      console.log(`\nRecent Activities:`);
+      activities.length > 0 &&
+        activities.map(
+          ({ id, status, progress, createdAt, media }, idx: number) => {
+            progress
+              ? console.log(
+                  `${status} ${progress} of ${getTitle(media?.title)}`
+                )
+              : console.log(`${status} ${getTitle(media?.title)}`);
+          }
+        );
     } else {
       console.log(
         `Something went wrong. Please log in again. ${errors[0].message}`

@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { animeDetailsQuery, userQuery } from "./queries.js";
+import { animeDetailsQuery, userActivityQuery, userQuery } from "./queries.js";
 import { isLoggedIn, retriveAccessToken } from "./auth.js";
 import {
   aniListEndpoint,
@@ -27,6 +27,17 @@ async function getUserInfoByUsername(username: string) {
     const response: any = await request.json();
     if (request.status === 200) {
       const user = response?.data?.User;
+      const { data } = await fetcher(
+        userActivityQuery,
+        {
+          id: user?.id,
+          page: 1,
+          perPage: 10,
+        },
+        headers
+      );
+      const activities = data?.Page?.activities;
+
       console.log(`\nID:\t\t${user?.id}`);
       console.log(`Name:\t\t${user?.name}`);
       console.log(`siteUrl:\t${user?.siteUrl}`);
@@ -47,11 +58,22 @@ async function getUserInfoByUsername(username: string) {
       console.log(`Color:\t${user?.options?.profileColor}`);
       console.log(`Timezone:\t${user?.options?.timezone}`);
       console.log(
-        `Statistics (Anime)\nCount: ${user?.statistics?.anime?.count} episodesWatched: ${user?.statistics?.anime?.episodesWatched} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
+        `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} episodesWatched: ${user?.statistics?.anime?.episodesWatched} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
       );
       console.log(
         `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
       );
+      console.log(`\nRecent Activities:`);
+      activities.length > 0 &&
+        activities.map(
+          ({ id, status, progress, createdAt, media }, idx: number) => {
+            progress
+              ? console.log(
+                  `${status} ${progress} of ${getTitle(media?.title)}`
+                )
+              : console.log(`${status} ${getTitle(media?.title)}`);
+          }
+        );
     } else {
       console.log(`Something went wrong. ${response?.errors[0]?.message}`);
     }
