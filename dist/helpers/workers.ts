@@ -11,6 +11,14 @@ function getTitle(title: { english?: string; romaji?: string }) {
   }
 }
 
+function formatDateObject(
+  dateObj: { day?: string; month?: string; year?: string } | null
+) {
+  if (!dateObj) return "null";
+  const { day = "", month = "", year = "" } = dateObj;
+  return [day, month, year].filter(Boolean).join("/");
+}
+
 function getNextSeasonAndYear() {
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
@@ -36,4 +44,30 @@ function getNextSeasonAndYear() {
   return { nextSeason, nextYear };
 }
 
-export { aniListEndpoint, redirectUri, getTitle, getNextSeasonAndYear };
+function removeHtmlAndMarkdown(input: string) {
+  if (input) {
+    input = input.replace(/<\/?[^>]+(>|$)/g, "");
+    input = input.replace(/(^|\n)#{1,6}\s+(.+?)(\n|$)/g, "$2 ");
+    input = input.replace(/(\*\*|__)(.*?)\1/g, "$2");
+    input = input.replace(/(\*|_)(.*?)\1/g, "$2");
+    input = input.replace(/`(.+?)`/g, "$1");
+    input = input.replace(/\[(.*?)\]\(.*?\)/g, "$1");
+    input = input.replace(/!\[(.*?)\]\(.*?\)/g, "$1");
+    input = input.replace(/(^|\n)>\s+(.+?)(\n|$)/g, "$2 ");
+    input = input.replace(/(^|\n)-\s+(.+?)(\n|$)/g, "$2 ");
+    input = input.replace(/(^|\n)\d+\.\s+(.+?)(\n|$)/g, "$2 ");
+    input = input.replace(/(^|\n)\s*([-*_]){3,}\s*(\n|$)/g, "$1");
+    input = input.replace(/~~(.*?)~~/g, "$1");
+    input = input.replace(/\s+/g, " ").trim();
+  }
+  return input;
+}
+
+export {
+  aniListEndpoint,
+  redirectUri,
+  getTitle,
+  getNextSeasonAndYear,
+  formatDateObject,
+  removeHtmlAndMarkdown,
+};

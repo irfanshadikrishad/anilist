@@ -1,7 +1,14 @@
 import fetch from "node-fetch";
-import { userQuery } from "./queries.js";
+import { animeDetailsQuery, userQuery } from "./queries.js";
 import { isLoggedIn, retriveAccessToken } from "./auth.js";
-import { aniListEndpoint } from "./workers.js";
+import {
+  aniListEndpoint,
+  formatDateObject,
+  getTitle,
+  removeHtmlAndMarkdown,
+} from "./workers.js";
+import { fetcher } from "./fetcher.js";
+import { colorize_Anilist, colorize_Brown } from "./colorize.js";
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -52,5 +59,54 @@ async function getUserInfoByUsername(username: string) {
     console.log(`Something went wrong. ${(error as Error).message}`);
   }
 }
+async function getAnimeDetailsByID(anilistID: number) {
+  const loggedIn = await isLoggedIn();
+  let query = animeDetailsQuery;
+  let variables = { id: anilistID };
+  let headers = { "content-type": "application/json" };
+  if (loggedIn) {
+    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
+  }
+  const details = await fetcher(query, variables, headers);
 
-export { getUserInfoByUsername };
+  if (details) {
+    const {
+      id,
+      idMal,
+      title,
+      description,
+      episodes,
+      nextAiringEpisode,
+      duration,
+      startDate,
+      endDate,
+      countryOfOrigin,
+      isAdult,
+      status,
+      season,
+      format,
+      genres,
+      siteUrl,
+      stats,
+    } = details?.data?.Media;
+    let titl = colorize_Anilist(title?.userPreffered || getTitle(title));
+    let st_tus = colorize_Anilist(String(status));
+    let descri = colorize_Brown(removeHtmlAndMarkdown(description));
+
+    console.log(`\nID: ${id}`);
+    console.log(`Title: `, titl);
+    console.log(`Description: `, descri);
+    console.log(`Episode Duration: ${duration}min`);
+    console.log(`Origin: ${countryOfOrigin}`);
+    console.log(`Status: `, st_tus);
+    console.log(`Format: ${format}`);
+    console.log(`Genres: ${genres.join(", ")}`);
+    console.log(`Season: ${season}`);
+    console.log(`Url: `, siteUrl);
+    console.log(`isAdult: ${isAdult}`);
+    console.log(`Released: ${formatDateObject(startDate)}`);
+    console.log(`Finished: ${formatDateObject(endDate)}`);
+  }
+}
+
+export { getUserInfoByUsername, getAnimeDetailsByID };

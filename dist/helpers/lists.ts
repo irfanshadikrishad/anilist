@@ -10,11 +10,6 @@ import {
 } from "./queries.js";
 import { currentUserAnimeList, currentUserMangaList } from "./queries.js";
 import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js";
-import {
-  colorize_Anilist,
-  colorize_Error,
-  colorize_Normal,
-} from "./colorize.js";
 
 async function getTrending(count: number) {
   try {
@@ -389,12 +384,10 @@ async function getUpcomingAnimes(count: number) {
         );
       });
     } else {
-      colorize_Error(`Something went wrong. ${response?.errors[0]?.message}`);
+      console.error(`Something went wrong. ${response?.errors[0]?.message}`);
     }
   } catch (error) {
-    colorize_Error(
-      `Error getting upcoming animes. ${(error as Error).message}`
-    );
+    console.error(`Error getting upcoming animes. ${(error as Error).message}`);
   }
 }
 

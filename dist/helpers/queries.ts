@@ -206,6 +206,53 @@ query GetNextSeasonAnime($nextSeason: MediaSeason, $nextYear: Int, $perPage: Int
   }
 }
 `;
+const animeDetailsQuery = `
+query ($id: Int) {
+  Media(id: $id) {
+    id
+    idMal
+    title {
+      romaji
+      english
+      native
+      userPreferred
+    }
+    episodes
+    nextAiringEpisode {
+      id
+    }
+    duration
+    startDate {
+      year
+      month
+      day
+    }
+    endDate {
+      day
+      year
+      month
+    }
+    countryOfOrigin
+    description
+    isAdult
+    status
+    season
+    format
+    genres
+    siteUrl
+    stats {
+      scoreDistribution {
+        score
+        amount
+      }
+      statusDistribution {
+        status
+        amount
+      }
+    }
+  }
+}
+`;
 
 export {
   currentUserQuery,
@@ -217,4 +264,5 @@ export {
   deleteMediaEntryMutation,
   deleteMangaEntryMutation,
   upcomingAnimesQuery,
+  animeDetailsQuery,
 };
