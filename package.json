@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Unofficial AniList CLI",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
