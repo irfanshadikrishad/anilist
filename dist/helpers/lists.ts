@@ -1,11 +1,12 @@
 import fetch from "node-fetch";
 import inquirer from "inquirer";
-import { aniListEndpoint, getTitle } from "./workers.js";
+import { aniListEndpoint, getNextSeasonAndYear, getTitle } from "./workers.js";
 import {
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   popularQuery,
   trendingQuery,
+  upcomingAnimesQuery,
 } from "./queries.js";
 import { currentUserAnimeList, currentUserMangaList } from "./queries.js";
 import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js";
@@ -350,10 +351,50 @@ async function deleteMangaByMangaId(id: number, title?: any) {
     console.log(`Error deleting manga. ${id} ${(error as Error).message}`);
   }
 }
+async function getUpcomingAnimes(count: number) {
+  try {
+    const { nextSeason, nextYear } = getNextSeasonAndYear();
+    const loggedIn = await isLoggedIn();
+    let headers = {
+      "content-type": "application/json",
+    };
+    if (loggedIn) {
+      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
+    }
+    const request = await fetch(aniListEndpoint, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({
+        query: upcomingAnimesQuery,
+        variables: { nextSeason, nextYear, perPage: count },
+      }),
+    });
+    const response: any = await request.json();
+    if (request.status === 200) {
+      const upcoming = response?.data?.Page?.media ?? [];
+      console.log("");
+      upcoming.forEach(({ id, title, startDate, genres }, idx: number) => {
+        const titleName = title?.userPreffered || getTitle(title);
+        const formattedDate = `${startDate?.day ? `${startDate?.day}/` : ""}${
+          startDate?.month
+        }/${startDate?.year}`;
+
+        console.log(
+          `[${idx + 1}] ${titleName}\n\t${formattedDate} • ${genres.join(", ")}`
+        );
+      });
+    } else {
+      console.error(`Something went wrong. ${response?.errors[0]?.message}`);
+    }
+  } catch (error) {
+    console.error(`Error getting upcoming animes. ${(error as Error).message}`);
+  }
+}
 
 export {
   getTrending,
   getPopular,
+  getUpcomingAnimes,
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
   deleteAnimeCollection,

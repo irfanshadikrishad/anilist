@@ -10,14 +10,15 @@ import {
   deleteMangaCollection,
   getPopular,
   getTrending,
+  getUpcomingAnimes,
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
 } from "./helpers/lists.js";
-import { getUserInfoByUsername } from "./helpers/more.js";
+import { getAnimeDetailsByID, getUserInfoByUsername } from "./helpers/more.js";
 
 const cli = new Command();
 
-cli.name("anilist").description("Unofficial AniList CLI").version("1.0.0");
+cli.name("anilist").description("Unofficial AniList CLI").version("1.0.1");
 
 cli
   .command("login")
@@ -74,7 +75,7 @@ cli
   .option("-m, --manga", "For manga list of authenticated user", false)
   .action(async ({ anime, manga }) => {
     if ((!anime && !manga) || (anime && manga)) {
-      console.log(`Must select an option, either --anime or --manga`);
+      console.error(`Must select an option, either --anime or --manga`);
     } else if (anime) {
       await loggedInUsersAnimeLists();
     } else if (manga) {
@@ -89,11 +90,31 @@ cli
   .option("-m, --manga", "For manga list of authenticated user", false)
   .action(async ({ anime, manga }) => {
     if ((!anime && !manga) || (anime && manga)) {
-      console.log(`Must select an option, either --anime or --manga`);
+      console.error(`Must select an option, either --anime or --manga`);
     } else if (anime) {
       await deleteAnimeCollection();
     } else if (manga) {
       await deleteMangaCollection();
+    }
+  });
+cli
+  .command("upcoming")
+  .alias("up")
+  .description("Anime that will be released in upcoming season")
+  .option("-c, --count <number>", "Number of items to get", "10")
+  .action(async ({ count }) => {
+    await getUpcomingAnimes(Number(count));
+  });
+cli
+  .command("anime [id]")
+  .description("Get anime details by their ID")
+  .action(async (id) => {
+    if (id && !Number.isNaN(Number(id))) {
+      await getAnimeDetailsByID(Number(id));
+    } else {
+      console.error(
+        "Invalid or missing ID. Please provide a valid numeric ID."
+      );
     }
   });
 
