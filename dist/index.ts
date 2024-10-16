@@ -126,7 +126,7 @@ cli
     await getUpcomingAnimes(Number(count));
   });
 cli
-  .command("anime [id]")
+  .command("anime <id>")
   .description("Get anime details by their ID")
   .action(async (id) => {
     if (id && !Number.isNaN(Number(id))) {

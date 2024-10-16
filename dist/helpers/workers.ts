@@ -2,21 +2,17 @@ const aniListEndpoint = `https://graphql.anilist.co`;
 const redirectUri = "https://anilist.co/api/v2/oauth/pin";
 
 function getTitle(title: { english?: string; romaji?: string }) {
-  if (title?.english) {
-    return title?.english;
-  } else if (title?.romaji) {
-    return title?.romaji;
-  } else {
-    return "???";
-  }
+  return title?.english || title?.romaji || "???";
 }
 
 function formatDateObject(
   dateObj: { day?: string; month?: string; year?: string } | null
 ) {
   if (!dateObj) return "null";
-  const { day = "", month = "", year = "" } = dateObj;
-  return [day, month, year].filter(Boolean).join("/");
+  return (
+    [dateObj.day, dateObj.month, dateObj.year].filter(Boolean).join("/") ||
+    "null"
+  );
 }
 
 function getNextSeasonAndYear() {

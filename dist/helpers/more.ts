@@ -20,7 +20,6 @@ import {
   removeHtmlAndMarkdown,
 } from "./workers.js";
 import { fetcher } from "./fetcher.js";
-import { colorize_Anilist, colorize_Brown } from "./colorize.js";
 import inquirer from "inquirer";
 import {
   addAnimeToListMutation,
@@ -37,20 +36,20 @@ async function getUserInfoByUsername(username: string) {
     if (loggedIn) {
       headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
     }
-    const request = await fetch(aniListEndpoint, {
+    const request: any = await fetch(aniListEndpoint, {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ query: userQuery, variables: { username } }),
     });
     const response: any = await request.json();
     if (request.status === 200) {
-      const user = response?.data?.User;
-      const { data } = await fetcher(userActivityQuery, {
+      const user: any = response?.data?.User;
+      const responseUserActivity: any = await fetcher(userActivityQuery, {
         id: user?.id,
         page: 1,
         perPage: 10,
       });
-      const activities = data?.Page?.activities;
+      const activities = responseUserActivity?.data?.Page?.activities || [];
 
       console.log(`\nID:\t\t${user?.id}`);
       console.log(`Name:\t\t${user?.name}`);
@@ -98,7 +97,7 @@ async function getUserInfoByUsername(username: string) {
 async function getAnimeDetailsByID(anilistID: number) {
   let query = animeDetailsQuery;
   let variables = { id: anilistID };
-  const details = await fetcher(query, variables);
+  const details: any = await fetcher(query, variables);
 
   if (details) {
     const {
@@ -120,16 +119,13 @@ async function getAnimeDetailsByID(anilistID: number) {
       siteUrl,
       stats,
     } = details?.data?.Media;
-    let titl = colorize_Anilist(title?.userPreffered || getTitle(title));
-    let st_tus = colorize_Anilist(String(status));
-    let descri = colorize_Brown(removeHtmlAndMarkdown(description));
 
     console.log(`\nID: ${id}`);
-    console.log(`Title: `, titl);
-    console.log(`Description: `, descri);
+    console.log(`Title: ${title?.userPreffered || getTitle(title)}`);
+    console.log(`Description: ${removeHtmlAndMarkdown(description)}`);
     console.log(`Episode Duration: ${duration}min`);
     console.log(`Origin: ${countryOfOrigin}`);
-    console.log(`Status: `, st_tus);
+    console.log(`Status: ${String(status)}`);
     console.log(`Format: ${format}`);
     console.log(`Genres: ${genres.join(", ")}`);
     console.log(`Season: ${season}`);
@@ -143,10 +139,10 @@ async function getAnimeSearchResults(search: string, count: number) {
   const query = animeSearchQuery;
   const variables = { search, page: 1, perPage: count };
 
-  const { data } = await fetcher(query, variables);
+  const searchResults: any = await fetcher(query, variables);
 
-  if (data) {
-    const results = data?.Page?.media;
+  if (searchResults) {
+    const results = searchResults?.data?.Page?.media;
     const { selectedList } = await inquirer.prompt([
       {
         type: "list",
@@ -179,7 +175,7 @@ async function getAnimeSearchResults(search: string, count: number) {
       const query = addAnimeToListMutation;
       const variables = { mediaId: selectedList, status: selectedListType };
 
-      const response = await fetcher(query, variables);
+      const response: any = await fetcher(query, variables);
 
       if (response) {
         const saved = response?.data?.SaveMediaListEntry;
@@ -197,10 +193,10 @@ async function getMangaSearchResults(search: string, count: number) {
   const query = mangaSearchQuery;
   const variables = { search, page: 1, perPage: count };
 
-  const { data } = await fetcher(query, variables);
+  const mangaSearchResult: any = await fetcher(query, variables);
 
-  if (data) {
-    const results = data?.Page?.media;
+  if (mangaSearchResult) {
+    const results = mangaSearchResult?.data?.Page?.media;
     // List of manga search results
     const { selectedMangaId } = await inquirer.prompt([
       {
@@ -234,7 +230,8 @@ async function getMangaSearchResults(search: string, count: number) {
     if (ISLOGGEDIN) {
       const mutation = addMangaToListMutation;
       const variables = { mediaId: selectedMangaId, status: selectedListType };
-      const response = await fetcher(mutation, variables);
+      const response: any = await fetcher(mutation, variables);
+
       if (response) {
         const saved = response?.data?.SaveMediaListEntry;
         console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
@@ -287,7 +284,7 @@ async function deleteUserActivities() {
         query = activityMessageQuery;
         break;
     }
-    const response = await fetcher(query, variables);
+    const response: any = await fetcher(query, variables);
 
     if (response) {
       const activities = response?.data?.Page?.activities;
@@ -296,7 +293,7 @@ async function deleteUserActivities() {
       } else {
         for (let act of activities) {
           const activityID = act?.id;
-          const deleteResponse = await fetcher(deleteActivityMutation, {
+          const deleteResponse: any = await fetcher(deleteActivityMutation, {
             id: activityID,
           });
           const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;

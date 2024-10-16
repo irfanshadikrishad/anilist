@@ -12,18 +12,22 @@ const home_dir = os.homedir();
 const save_path = path.join(home_dir, ".anilist_token");
 
 async function getAccessTokenFromUser() {
-  const answers = await inquirer.prompt([
+  const { token } = await inquirer.prompt([
     {
       type: "password",
       name: "token",
       message: "Please enter your AniList access token:",
     },
   ]);
-  return answers.token;
+  return token;
 }
 
 async function storeAccessToken(token: string) {
-  fs.writeFileSync(save_path, token, { encoding: "utf8" });
+  try {
+    fs.writeFileSync(save_path, token, { encoding: "utf8" });
+  } catch (error) {
+    console.error(`Error storing acess-token.`);
+  }
 }
 
 async function retriveAccessToken() {
@@ -34,9 +38,9 @@ async function retriveAccessToken() {
   }
 }
 
-async function anilistUserLogin(cID: number, cSECRET: string) {
+async function anilistUserLogin(clientId: number, clientSecret: string) {
   console.log("Starting AniList login...");
-  const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${cID}&redirect_uri=${redirectUri}&response_type=code`;
+  const authUrl = `https://anilist.co/api/v2/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
   console.log("Opening browser for AniList login...");
   open(authUrl);
 
@@ -49,8 +53,8 @@ async function anilistUserLogin(cID: number, cSECRET: string) {
     },
     body: JSON.stringify({
       grant_type: "authorization_code",
-      client_id: String(cID),
-      client_secret: cSECRET,
+      client_id: String(clientId),
+      client_secret: clientSecret,
       redirect_uri: redirectUri,
       code: authCode,
     }),
@@ -89,7 +93,7 @@ async function currentUserInfo() {
 
     if (request.status === 200) {
       const user = data?.Viewer;
-      const activiResponse = await fetcher(userActivityQuery, {
+      const activiResponse: any = await fetcher(userActivityQuery, {
         id: user?.id,
         page: 1,
         perPage: 10,

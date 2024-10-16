@@ -2,7 +2,20 @@ import fetch from "node-fetch";
 import { aniListEndpoint } from "./workers.js";
 import { isLoggedIn, retriveAccessToken } from "./auth.js";
 
-async function fetcher(query: string, variables: object) {
+/**
+ * Sends a GraphQL request to the AniList API.
+ *
+ * This function constructs a request with the provided query and variables,
+ * handles authorization, and processes the API response.
+ *
+ * @param {string} query - The AniList GraphQL query to be executed.
+ * @param {object} variables - An object containing the variables for the query.
+ * @returns {Promise<object|null>} The response from the API as a JSON object if successful; otherwise, null.
+ */
+async function fetcher(
+  query: string,
+  variables: object
+): Promise<object | null> {
   try {
     const LOGGEDIN = await isLoggedIn();
     const headers = {
