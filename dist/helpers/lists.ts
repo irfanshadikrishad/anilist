@@ -10,6 +10,8 @@ import {
 } from "./queries.js";
 import { currentUserAnimeList, currentUserMangaList } from "./queries.js";
 import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js";
+import { addAnimeToListMutation } from "./mutations.js";
+import { fetcher } from "./fetcher.js";
 
 async function getTrending(count: number) {
   try {
@@ -24,17 +26,57 @@ async function getTrending(count: number) {
       }),
     });
     const response: any = await request.json();
+
     if (request.status === 200) {
       const media = response?.data?.Page?.media;
+
       if (media?.length > 0) {
-        media.map(
-          (
-            tr: { id: number; title: { english?: string; romaji?: string } },
-            idx: number
-          ) => {
-            console.log(`${idx + 1}\t${getTitle(tr?.title)}`);
+        const { selectedAnime } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices: media.map((upx: any) => ({
+              name: getTitle(upx?.title),
+              value: upx?.id,
+            })),
+          },
+        ]);
+        // Where to save
+        const { selectedListType } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedListType",
+            message: "Select the list where you want to save this anime:",
+            choices: [
+              { name: "Planning", value: "PLANNING" },
+              { name: "Watching", value: "CURRENT" },
+              { name: "Completed", value: "COMPLETED" },
+              { name: "Paused", value: "PAUSED" },
+              { name: "Dropped", value: "DROPPED" },
+            ],
+          },
+        ]);
+        // Lets save to the list now
+        const ISLOGGEDIN = await isLoggedIn();
+        if (ISLOGGEDIN) {
+          const query = addAnimeToListMutation;
+          const variables = {
+            mediaId: selectedAnime,
+            status: selectedListType,
+          };
+
+          const response: any = await fetcher(query, variables);
+
+          if (response) {
+            const saved = response?.data?.SaveMediaListEntry;
+            console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
           }
-        );
+        } else {
+          console.error(`Please log in first to use this feature.`);
+        }
+      } else {
+        console.log(`\nNo trending available at the moment.`);
       }
     } else {
       console.log(`Something went wrong. ${response?.errors[0]?.message}`);
@@ -58,15 +100,54 @@ async function getPopular(count: number) {
     const response: any = await request.json();
     if (request.status === 200) {
       const media = response?.data?.Page?.media;
+
       if (media?.length > 0) {
-        media.map(
-          (
-            tr: { id: number; title: { english?: string; romaji?: string } },
-            idx: number
-          ) => {
-            console.log(`${idx + 1}\t${getTitle(tr?.title)}`);
+        const { selectedAnime } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices: media.map((upx: any) => ({
+              name: getTitle(upx?.title),
+              value: upx?.id,
+            })),
+          },
+        ]);
+        // Where to save
+        const { selectedListType } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedListType",
+            message: "Select the list where you want to save this anime:",
+            choices: [
+              { name: "Planning", value: "PLANNING" },
+              { name: "Watching", value: "CURRENT" },
+              { name: "Completed", value: "COMPLETED" },
+              { name: "Paused", value: "PAUSED" },
+              { name: "Dropped", value: "DROPPED" },
+            ],
+          },
+        ]);
+        // Lets save to the list now
+        const ISLOGGEDIN = await isLoggedIn();
+        if (ISLOGGEDIN) {
+          const query = addAnimeToListMutation;
+          const variables = {
+            mediaId: selectedAnime,
+            status: selectedListType,
+          };
+
+          const response: any = await fetcher(query, variables);
+
+          if (response) {
+            const saved = response?.data?.SaveMediaListEntry;
+            console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
           }
-        );
+        } else {
+          console.error(`Please log in first to use this feature.`);
+        }
+      } else {
+        console.log(`No popular available at this moment.`);
       }
     } else {
       console.log(`Something went wrong. ${response?.errors[0]?.message}`);
@@ -370,19 +451,50 @@ async function getUpcomingAnimes(count: number) {
       }),
     });
     const response: any = await request.json();
+
     if (request.status === 200) {
       const upcoming = response?.data?.Page?.media ?? [];
-      console.log("");
-      upcoming.forEach(({ id, title, startDate, genres }, idx: number) => {
-        const titleName = title?.userPreffered || getTitle(title);
-        const formattedDate = `${startDate?.day ? `${startDate?.day}/` : ""}${
-          startDate?.month
-        }/${startDate?.year}`;
+      const { selectedAnime } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedAnime",
+          message: "Select anime to add to the list:",
+          choices: upcoming.map((upx: any) => ({
+            name: getTitle(upx?.title),
+            value: upx?.id,
+          })),
+        },
+      ]);
+      // Where to save
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ]);
+      // Lets save to the list now
+      const ISLOGGEDIN = await isLoggedIn();
+      if (ISLOGGEDIN) {
+        const query = addAnimeToListMutation;
+        const variables = { mediaId: selectedAnime, status: selectedListType };
 
-        console.log(
-          `[${idx + 1}] ${titleName}\n\t${formattedDate} • ${genres.join(", ")}`
-        );
-      });
+        const response: any = await fetcher(query, variables);
+
+        if (response) {
+          const saved = response?.data?.SaveMediaListEntry;
+          console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
+        }
+      } else {
+        console.error(`Please log in first to use this feature.`);
+      }
     } else {
       console.error(`Something went wrong. ${response?.errors[0]?.message}`);
     }
