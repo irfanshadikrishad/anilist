@@ -1,9 +1,6 @@
 const addAnimeToListMutation = `
 mutation($mediaId: Int, $status: MediaListStatus) {
-  SaveMediaListEntry(mediaId: $mediaId, status: $status) {
-    id
-    status
-  }
+  SaveMediaListEntry(mediaId: $mediaId, status: $status) { id status }
 }
 `;
 const addMangaToListMutation = `
@@ -11,12 +8,7 @@ const addMangaToListMutation = `
     SaveMediaListEntry(mediaId: $mediaId, status: $status) {
       id
       status
-      media {
-        title {
-          romaji
-          english
-        }
-      }
+      media { title { romaji english } }
     }
   }
 `;

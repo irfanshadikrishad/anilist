@@ -35,15 +35,11 @@ async function getUserInfoByUsername(username: string) {
     const response: any = await request.json();
     if (request.status === 200) {
       const user = response?.data?.User;
-      const { data } = await fetcher(
-        userActivityQuery,
-        {
-          id: user?.id,
-          page: 1,
-          perPage: 10,
-        },
-        headers
-      );
+      const { data } = await fetcher(userActivityQuery, {
+        id: user?.id,
+        page: 1,
+        perPage: 10,
+      });
       const activities = data?.Page?.activities;
 
       console.log(`\nID:\t\t${user?.id}`);
@@ -90,14 +86,9 @@ async function getUserInfoByUsername(username: string) {
   }
 }
 async function getAnimeDetailsByID(anilistID: number) {
-  const loggedIn = await isLoggedIn();
   let query = animeDetailsQuery;
   let variables = { id: anilistID };
-  let headers = { "content-type": "application/json" };
-  if (loggedIn) {
-    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
-  }
-  const details = await fetcher(query, variables, headers);
+  const details = await fetcher(query, variables);
 
   if (details) {
     const {
@@ -141,14 +132,9 @@ async function getAnimeDetailsByID(anilistID: number) {
 async function getAnimeSearchResults(search: string, count: number) {
   const query = animeSearchQuery;
   const variables = { search, page: 1, perPage: count };
-  const headers = {
-    "content-type": "application/json",
-  };
-  const loggedIn = await isLoggedIn();
-  if (loggedIn) {
-    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
-  }
-  const { data } = await fetcher(query, variables, headers);
+
+  const { data } = await fetcher(query, variables);
+
   if (data) {
     const results = data?.Page?.media;
     const { selectedList } = await inquirer.prompt([
@@ -182,11 +168,9 @@ async function getAnimeSearchResults(search: string, count: number) {
     if (ISLOGGEDIN) {
       const query = addAnimeToListMutation;
       const variables = { mediaId: selectedList, status: selectedListType };
-      const headers = {
-        "content-type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
-      };
-      const response = await fetcher(query, variables, headers);
+
+      const response = await fetcher(query, variables);
+
       if (response) {
         const saved = response?.data?.SaveMediaListEntry;
         console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
@@ -202,19 +186,11 @@ async function getAnimeSearchResults(search: string, count: number) {
 async function getMangaSearchResults(search: string, count: number) {
   const query = mangaSearchQuery;
   const variables = { search, page: 1, perPage: count };
-  const headers = {
-    "content-type": "application/json",
-  };
 
-  const loggedIn = await isLoggedIn();
-  if (loggedIn) {
-    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
-  }
+  const { data } = await fetcher(query, variables);
 
-  const { data } = await fetcher(query, variables, headers);
   if (data) {
     const results = data?.Page?.media;
-
     // List of manga search results
     const { selectedMangaId } = await inquirer.prompt([
       {
@@ -227,7 +203,6 @@ async function getMangaSearchResults(search: string, count: number) {
         })),
       },
     ]);
-
     // Options to save to the list
     const { selectedListType } = await inquirer.prompt([
       {
@@ -249,11 +224,7 @@ async function getMangaSearchResults(search: string, count: number) {
     if (ISLOGGEDIN) {
       const mutation = addMangaToListMutation;
       const variables = { mediaId: selectedMangaId, status: selectedListType };
-      const headers = {
-        "content-type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
-      };
-      const response = await fetcher(mutation, variables, headers);
+      const response = await fetcher(mutation, variables);
       if (response) {
         const saved = response?.data?.SaveMediaListEntry;
         console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);

@@ -59,8 +59,13 @@ async function anilistUserLogin(cID: number, cSECRET: string) {
   const token_Data: any = await tokenResponse.json();
 
   if (token_Data?.access_token) {
-    console.log("Login successful!");
     await storeAccessToken(token_Data?.access_token);
+    const name = await currentUsersName();
+    if (name) {
+      console.log(`\nWelcome Back, ${name}!`);
+    } else {
+      console.log(`Logged in successfull!`);
+    }
   } else {
     console.error("Failed to get access token:", token_Data);
   }
@@ -84,15 +89,11 @@ async function currentUserInfo() {
 
     if (request.status === 200) {
       const user = data?.Viewer;
-      const activiResponse = await fetcher(
-        userActivityQuery,
-        {
-          id: user?.id,
-          page: 1,
-          perPage: 10,
-        },
-        headers
-      );
+      const activiResponse = await fetcher(userActivityQuery, {
+        id: user?.id,
+        page: 1,
+        perPage: 10,
+      });
       const activities = activiResponse?.data?.Page?.activities;
 
       console.log(`\nID:\t\t\t${user?.id}`);
@@ -127,13 +128,16 @@ async function currentUserInfo() {
               : console.log(`${status} ${getTitle(media?.title)}`);
           }
         );
+      return user;
     } else {
       console.log(
         `Something went wrong. Please log in again. ${errors[0].message}`
       );
+      return null;
     }
   } else {
     console.log(`User not logged in. Please login first.`);
+    return null;
   }
 }
 
@@ -150,7 +154,7 @@ async function logoutUser() {
   if (fs.existsSync(save_path)) {
     try {
       fs.unlinkSync(save_path);
-      console.log("Logout successful.");
+      console.log("\nLogout successful.");
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -176,6 +180,23 @@ async function currentUsersId() {
   }
 }
 
+async function currentUsersName() {
+  const request = await fetch(aniListEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await retriveAccessToken()}`,
+    },
+    body: JSON.stringify({ query: currentUserQuery }),
+  });
+  const { data }: any = await request.json();
+  if (request.status === 200) {
+    return data?.Viewer?.name;
+  } else {
+    return null;
+  }
+}
+
 export {
   getAccessTokenFromUser,
   storeAccessToken,
@@ -185,4 +206,5 @@ export {
   isLoggedIn,
   logoutUser,
   currentUsersId,
+  currentUsersName,
 };
