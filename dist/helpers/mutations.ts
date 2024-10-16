@@ -12,5 +12,14 @@ const addMangaToListMutation = `
     }
   }
 `;
+const deleteActivityMutation = `
+mutation($id: Int!) {
+  DeleteActivity(id: $id) { deleted }
+}
+`;
 
-export { addAnimeToListMutation, addMangaToListMutation };
+export {
+  addAnimeToListMutation,
+  addMangaToListMutation,
+  deleteActivityMutation,
+};

@@ -1,12 +1,18 @@
 import fetch from "node-fetch";
 import {
+  activityAllQuery,
+  activityAnimeListQuery,
+  activityMangaListQuery,
+  activityMediaList,
+  activityMessageQuery,
+  activityTextQuery,
   animeDetailsQuery,
   animeSearchQuery,
   mangaSearchQuery,
   userActivityQuery,
   userQuery,
 } from "./queries.js";
-import { isLoggedIn, retriveAccessToken } from "./auth.js";
+import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js";
 import {
   aniListEndpoint,
   formatDateObject,
@@ -16,7 +22,11 @@ import {
 import { fetcher } from "./fetcher.js";
 import { colorize_Anilist, colorize_Brown } from "./colorize.js";
 import inquirer from "inquirer";
-import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js";
+import {
+  addAnimeToListMutation,
+  addMangaToListMutation,
+  deleteActivityMutation,
+} from "./mutations.js";
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -156,7 +166,7 @@ async function getAnimeSearchResults(search: string, count: number) {
         message: "Select the list where you want to save this anime:",
         choices: [
           { name: "Planning", value: "PLANNING" },
-          { name: "Watching", value: "WATCHING" },
+          { name: "Watching", value: "CURRENT" },
           { name: "Completed", value: "COMPLETED" },
           { name: "Paused", value: "PAUSED" },
           { name: "Dropped", value: "DROPPED" },
@@ -236,10 +246,77 @@ async function getMangaSearchResults(search: string, count: number) {
     console.error(`Something went wrong.`);
   }
 }
+async function deleteUserActivities() {
+  const LOGGEDIN = await isLoggedIn();
+  if (LOGGEDIN) {
+    const { activityType } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "activityType",
+        message: "What type of activity you want to delete?",
+        choices: [
+          { name: "All Activity", value: 0 },
+          { name: "Text Activity", value: 1 },
+          { name: "Media List Activity", value: 2 },
+          { name: "Anime List Activity", value: 3 },
+          { name: "Manga List Activity", value: 4 },
+          { name: "Message Activity", value: 5 },
+        ],
+      },
+    ]);
+    let query = ``;
+    const userId = await currentUsersId();
+    let variables = { page: 1, perPage: 100, userId };
+    switch (activityType) {
+      case 0:
+        query = activityAllQuery;
+        break;
+      case 1:
+        query = activityTextQuery;
+        break;
+      case 2:
+        query = activityMediaList;
+        break;
+      case 3:
+        query = activityAnimeListQuery;
+        break;
+      case 4:
+        query = activityMangaListQuery;
+        break;
+      case 5:
+        query = activityMessageQuery;
+        break;
+    }
+    const response = await fetcher(query, variables);
+
+    if (response) {
+      const activities = response?.data?.Page?.activities;
+      if (activities.length <= 0) {
+        console.log(`\nNo activities available of this type.`);
+      } else {
+        for (let act of activities) {
+          const activityID = act?.id;
+          const deleteResponse = await fetcher(deleteActivityMutation, {
+            id: activityID,
+          });
+          const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
+
+          console.log(`${activityID} ${isDeleted ? "✅" : "❌"}`);
+
+          // avoiding rate-limit
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+      }
+    }
+  } else {
+    console.error(`Please log in to use this feature.`);
+  }
+}
 
 export {
   getUserInfoByUsername,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
+  deleteUserActivities,
 };

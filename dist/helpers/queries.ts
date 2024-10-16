@@ -134,6 +134,162 @@ query ($search: String, $perPage: Int) {
   }
 }
 `;
+const activityTextQuery = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: TEXT) {
+      ... on TextActivity {
+        id
+        type
+        text
+        createdAt
+        user {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+`;
+const activityAnimeListQuery = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: ANIME_LIST) {
+      ... on ListActivity {
+        id
+        type
+        status
+        progress
+        createdAt
+        media {
+          id
+          title {
+            romaji
+            english
+            native
+          }
+        }
+      }
+    }
+  }
+}
+`;
+const activityMangaListQuery = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: MANGA_LIST) {
+      ... on ListActivity {
+        id
+        type
+        status
+        progress
+        createdAt
+        media {
+          id
+          title {
+            romaji
+            english
+            native
+          }
+        }
+      }
+    }
+  }
+}
+`;
+const activityMessageQuery = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: MESSAGE) {
+      ... on MessageActivity {
+        id
+        type
+        message
+        recipient {
+          id
+          name
+        }
+        createdAt
+      }
+    }
+  }
+}
+`;
+const activityAllQuery = `
+query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId) {
+      ... on TextActivity {
+        id
+        type
+        text
+        createdAt
+        user {
+          id
+          name
+        }
+      }
+      ... on ListActivity {
+        id
+        type
+        status
+        progress
+        createdAt
+        media {
+          id
+          title {
+            romaji
+            english
+            native
+          }
+        }
+      }
+      ... on MessageActivity {
+        id
+        type
+        message
+        recipient {
+          id
+          name
+        }
+        createdAt
+      }
+    }
+  }
+}
+`;
+const activityMediaList = `
+query ($userId: Int, $page: Int, $perPage: Int, $type: ActivityType) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      total
+      currentPage
+      lastPage
+      hasNextPage
+      perPage
+    }
+    activities(userId: $userId, type: $type) {
+      ... on ListActivity {
+        id
+        type
+        status
+        progress
+        media {
+          id
+          title {
+            romaji
+            english
+            native
+          }
+          format
+        }
+        createdAt
+      }
+    }
+  }
+}
+`;
 
 export {
   currentUserQuery,
@@ -149,4 +305,10 @@ export {
   userActivityQuery,
   animeSearchQuery,
   mangaSearchQuery,
+  activityAllQuery,
+  activityMediaList,
+  activityAnimeListQuery,
+  activityMangaListQuery,
+  activityMessageQuery,
+  activityTextQuery,
 };

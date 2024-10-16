@@ -50,7 +50,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`popular`** <br> _(alias: `plr`)_       | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)        |
 | **`user`**                                | `-un (username)`                                                        | Get information about a specific AniList user    |
 | **`lists`** <br> _(alias: `ls`)_          | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user |
-| **`delete`** <br> _(alias: `del`)_        | `-a, --anime` <br> `-m, --manga`                                        | Delete collections of anime or manga             |
+| **`delete`** <br> _(alias: `del`)_        | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities |
 | **`upcoming`** <br> _(alias:`up`)_        | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
 | **`anime`**                               | `anime Id`                                                              | Get anime details by Anime Id                    |
 | **`search`** <br> _(alias:`srch`/`find`)_ | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
@@ -116,6 +116,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 - **Options**:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
+  - `-ac, --activity`: Delete all or any type of activities you want.
 - **Description**: Delete the entire anime or manga collection from the logged-in user's profile.
 
 #### `anime`

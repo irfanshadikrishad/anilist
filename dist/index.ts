@@ -18,6 +18,7 @@ import {
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
+  deleteUserActivities,
   getUserInfoByUsername,
 } from "./helpers/more.js";
 
@@ -90,16 +91,30 @@ cli
 cli
   .command("delete")
   .alias("del")
-  .description("Delete entire collections of anime or mang")
+  .description("Delete entire collections of anime or manga")
   .option("-a, --anime", "For anime list of authenticated user", false)
   .option("-m, --manga", "For manga list of authenticated user", false)
-  .action(async ({ anime, manga }) => {
-    if ((!anime && !manga) || (anime && manga)) {
-      console.error(`Must select an option, either --anime or --manga`);
-    } else if (anime) {
+  .option("-ac, --activity", "For activity of authenticated user", false)
+  .action(async ({ anime, manga, activity }) => {
+    const selectedOptions = [anime, manga, activity].filter(Boolean).length;
+    if (selectedOptions === 0) {
+      console.error(
+        `Must select one option: either --anime, --manga, or --activity`
+      );
+      process.exit(1);
+    }
+    if (selectedOptions > 1) {
+      console.error(
+        `Only one option can be selected at a time: --anime, --manga, or --activity`
+      );
+      process.exit(1);
+    }
+    if (anime) {
       await deleteAnimeCollection();
     } else if (manga) {
       await deleteMangaCollection();
+    } else if (activity) {
+      await deleteUserActivities();
     }
   });
 cli
