@@ -1,118 +1,139 @@
-const currentUserQuery = `
-{
+const currentUserQuery = `{
   Viewer {
-    id name about bans siteUrl
-    options { profileColor timezone activityMergeTime }
-    donatorTier donatorBadge createdAt updatedAt
-    unreadNotificationCount
-    previousNames { name createdAt updatedAt }
-    moderatorRoles
-    favourites {
-      anime { nodes { id title { romaji english } } }
-      manga { nodes { id title { romaji english } } }
+    id name about bans siteUrl options { profileColor timezone activityMergeTime }
+    donatorTier donatorBadge createdAt updatedAt unreadNotificationCount
+    previousNames { name createdAt updatedAt } moderatorRoles
+    favourites { anime { nodes { id title { romaji english } } } manga { nodes { id title { romaji english } } }
     }
-    statistics {
-      anime { count meanScore minutesWatched }
-      manga { count chaptersRead volumesRead }
-    }
-    mediaListOptions {
-      scoreFormat rowOrder
-      animeList { sectionOrder }
-      mangaList { sectionOrder }
-    }
+    statistics { anime { count meanScore minutesWatched } manga { count chaptersRead volumesRead } }
+    mediaListOptions { scoreFormat rowOrder animeList { sectionOrder } mangaList { sectionOrder } }
   }
 }`;
 
-const trendingQuery = `
-query ($page: Int, $perPage: Int) {
+const trendingQuery = `query ($page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    media(sort: TRENDING_DESC, type: ANIME) {
-      id title { romaji english }
-    }
+    media(sort: TRENDING_DESC, type: ANIME) { id title { romaji english } }
   }
 }`;
 
-const popularQuery = `
-query ($page: Int, $perPage: Int) {
+const popularQuery = `query ($page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    media(sort: POPULARITY_DESC, type: ANIME) {
-      id title { romaji english }
-    }
+    media(sort: POPULARITY_DESC, type: ANIME) { id title { romaji english } }
   }
 }`;
 
-const userQuery = `
-query ($username: String) {
+const userQuery = `query ($username: String) {
   User(name: $username) {
-    id name siteUrl donatorTier donatorBadge createdAt updatedAt
-    previousNames { name createdAt updatedAt }
-    isBlocked isFollower isFollowing
-    options { profileColor timezone activityMergeTime }
-    statistics {
-      anime { count episodesWatched minutesWatched }
-      manga { count chaptersRead volumesRead }
-    }
+    id name siteUrl donatorTier donatorBadge createdAt updatedAt previousNames { name createdAt updatedAt }
+    isBlocked isFollower isFollowing options { profileColor timezone activityMergeTime }
+    statistics { anime { count episodesWatched minutesWatched } manga { count chaptersRead volumesRead } }
   }
 }`;
 
-const currentUserAnimeList = `
-query ($id: Int) {
+const currentUserAnimeList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: ANIME) {
     lists { name entries { id media { id title { romaji english } } } }
   }
 }`;
 
-const currentUserMangaList = `
-query ($id: Int) {
+const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
     lists { name entries { id media { title { romaji english } } } }
   }
 }`;
 
-const deleteMediaEntryMutation = `
-mutation($id: Int!) {
+const deleteMediaEntryMutation = `mutation($id: Int!) {
   DeleteMediaListEntry(id: $id) { deleted }
 }`;
 
-const deleteMangaEntryMutation = `
-mutation ($id: Int) {
+const deleteMangaEntryMutation = `mutation ($id: Int) {
   DeleteMediaListEntry(id: $id) { deleted }
 }`;
 
-const upcomingAnimesQuery = `
-query GetNextSeasonAnime($nextSeason: MediaSeason, $nextYear: Int, $perPage: Int) {
+const upcomingAnimesQuery = `query GetNextSeasonAnime($nextSeason: MediaSeason, $nextYear: Int, $perPage: Int) {
   Page(perPage: $perPage) {
     media(season: $nextSeason, seasonYear: $nextYear, type: ANIME, sort: POPULARITY_DESC) {
-      id title { romaji english native userPreferred }
-      season seasonYear startDate { year month day }
+      id title { romaji english native userPreferred } season seasonYear startDate { year month day }
       episodes description genres
     }
   }
 }`;
 
-const animeDetailsQuery = `
-query ($id: Int) {
+const animeDetailsQuery = `query ($id: Int) {
   Media(id: $id) {
-    id idMal title { romaji english native userPreferred }
-    episodes nextAiringEpisode { id }
-    duration startDate { year month day }
-    endDate { year month day }
-    countryOfOrigin description isAdult status season format genres siteUrl
-    stats {
-      scoreDistribution { score amount }
-      statusDistribution { status amount }
+    id idMal title { romaji english native userPreferred } episodes nextAiringEpisode { id }
+    duration startDate { year month day } endDate { year month day } countryOfOrigin description isAdult status season format genres siteUrl
+    stats { scoreDistribution { score amount } statusDistribution { status amount } }
+  }
+}`;
+
+const userActivityQuery = `query ($id: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $id, type_in: [ANIME_LIST, MANGA_LIST], sort: ID_DESC) {
+      ... on ListActivity { id status progress createdAt media { id title { romaji english } } }
     }
   }
 }`;
 
-const userActivityQuery = `
-query ($id: Int, $page: Int, $perPage: Int) {
+const animeSearchQuery = `query ($search: String, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(search: $search, type: ANIME) { id title { romaji english native userPreferred } episodes status description }
+  }
+}`;
+
+const mangaSearchQuery = `query ($search: String, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(search: $search, type: MANGA) { id title { romaji english native userPreferred } chapters status description }
+  }
+}`;
+
+const activityTextQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $id, type_in: [ANIME_LIST, MANGA_LIST], sort: ID_DESC) {
-      ... on ListActivity {
-        id status progress createdAt
-        media { id title { romaji english } }
-      }
+    activities(userId: $userId, type: TEXT) {
+      ... on TextActivity { id type text createdAt user { id name } }
+    }
+  }
+}`;
+
+const activityAnimeListQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: ANIME_LIST) {
+      ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
+    }
+  }
+}`;
+
+const activityMangaListQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: MANGA_LIST) {
+      ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
+    }
+  }
+}`;
+
+const activityMessageQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, type: MESSAGE) {
+      ... on MessageActivity { id type message recipient { id name } createdAt }
+    }
+  }
+}`;
+
+const activityAllQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId) {
+      ... on TextActivity { id type text createdAt user { id name } }
+      ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
+      ... on MessageActivity { id type message recipient { id name } createdAt }
+    }
+  }
+}`;
+
+const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type: ActivityType) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo { total currentPage lastPage hasNextPage perPage }
+    activities(userId: $userId, type: $type) {
+      ... on ListActivity { id type status progress media { id title { romaji english native } format } createdAt }
     }
   }
 }`;
@@ -129,4 +150,12 @@ export {
   upcomingAnimesQuery,
   animeDetailsQuery,
   userActivityQuery,
+  animeSearchQuery,
+  mangaSearchQuery,
+  activityAllQuery,
+  activityMediaList,
+  activityAnimeListQuery,
+  activityMangaListQuery,
+  activityMessageQuery,
+  activityTextQuery,
 };

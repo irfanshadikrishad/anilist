@@ -39,20 +39,21 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### CLI Commands Overview
 
-| **Command**                         | **Options**                      | **Description**                                  |
-| ----------------------------------- | -------------------------------- | ------------------------------------------------ |
-| **`login`**                         | `-i, --id` `-s, --secret`        | Log in with your AniList credentials             |
-| **`logout`**                        | _None_                           | Log out from your AniList account                |
-| **`me`**                            | _None_                           | Display information about the logged-in user     |
-| **`-V, --version`**                 | _None_                           | Display the current version of the CLI           |
-| **`-h, --help`**                    | _None_                           | Display available commands and options           |
-| **`trending`** <br> _(alias: `tr`)_ | `-c (default: 10)`               | Fetch trending anime (default count is 10)       |
-| **`popular`** <br> _(alias: `plr`)_ | `-c (default: 10)`               | Fetch popular anime (default count is 10)        |
-| **`user`**                          | `-un (username)`                 | Get information about a specific AniList user    |
-| **`lists`** <br> _(alias: `ls`)_    | `-a, --anime` <br> `-m, --manga` | Fetch anime or manga lists of the logged-in user |
-| **`delete`** <br> _(alias: `del`)_  | `-a, --anime` <br> `-m, --manga` | Delete collections of anime or manga             |
-| **`upcoming`** <br> _(alias:`up`)_  | `-c (default: 10)`               | Fetch upcoming anime (default count is 10)       |
-| **`anime`**                         | `anime Id`                       | Get anime details by Anime Id                    |
+| **Command**                               | **Options**                                                             | **Description**                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| **`login`**                               | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials             |
+| **`logout`**                              | _None_                                                                  | Log out from your AniList account                |
+| **`me`**                                  | _None_                                                                  | Display information about the logged-in user     |
+| **`-V, --version`**                       | _None_                                                                  | Display the current version of the CLI           |
+| **`-h, --help`**                          | _None_                                                                  | Display available commands and options           |
+| **`trending`** <br> _(alias: `tr`)_       | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)       |
+| **`popular`** <br> _(alias: `plr`)_       | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)        |
+| **`user`**                                | `-un (username)`                                                        | Get information about a specific AniList user    |
+| **`lists`** <br> _(alias: `ls`)_          | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user |
+| **`delete`** <br> _(alias: `del`)_        | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities |
+| **`upcoming`** <br> _(alias:`up`)_        | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
+| **`anime`**                               | `anime Id`                                                              | Get anime details by Anime Id                    |
+| **`search`** <br> _(alias:`srch`/`find`)_ | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
 
 #### Command Breakdown:
 
@@ -115,6 +116,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 - **Options**:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
+  - `-ac, --activity`: Delete all or any type of activities you want.
 - **Description**: Delete the entire anime or manga collection from the logged-in user's profile.
 
 #### `anime`
@@ -122,6 +124,15 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 - **Options**
   - `anime Id` _(eg: 21)_ : Id of the anime you want to get details of.
 - **Description**: Get anime details by anime Id.
+
+#### `search` _(alias: `srch`/`find`)_:
+
+- **Options**:
+  - `<query>` : What you want to search (eg: naruto).
+  - `-a, --anime`: To get results of anime search.
+  - `-m, --manga`: To get results of manga search.
+  - `-c (count)`: Specify how many items to fetch (default: 10).
+- **Description**: Get anime/manga search results
 
 #### Security
 

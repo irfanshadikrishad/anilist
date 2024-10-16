@@ -14,11 +14,17 @@ import {
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
 } from "./helpers/lists.js";
-import { getAnimeDetailsByID, getUserInfoByUsername } from "./helpers/more.js";
+import {
+  getAnimeDetailsByID,
+  getAnimeSearchResults,
+  getMangaSearchResults,
+  deleteUserActivities,
+  getUserInfoByUsername,
+} from "./helpers/more.js";
 
 const cli = new Command();
 
-cli.name("anilist").description("Unofficial AniList CLI").version("1.0.1");
+cli.name("anilist").description("Unofficial AniList CLI").version("1.0.2");
 
 cli
   .command("login")
@@ -85,16 +91,30 @@ cli
 cli
   .command("delete")
   .alias("del")
-  .description("Delete entire collections of anime or mang")
+  .description("Delete entire collections of anime or manga")
   .option("-a, --anime", "For anime list of authenticated user", false)
   .option("-m, --manga", "For manga list of authenticated user", false)
-  .action(async ({ anime, manga }) => {
-    if ((!anime && !manga) || (anime && manga)) {
-      console.error(`Must select an option, either --anime or --manga`);
-    } else if (anime) {
+  .option("-ac, --activity", "For activity of authenticated user", false)
+  .action(async ({ anime, manga, activity }) => {
+    const selectedOptions = [anime, manga, activity].filter(Boolean).length;
+    if (selectedOptions === 0) {
+      console.error(
+        `Must select one option: either --anime, --manga, or --activity`
+      );
+      process.exit(1);
+    }
+    if (selectedOptions > 1) {
+      console.error(
+        `Only one option can be selected at a time: --anime, --manga, or --activity`
+      );
+      process.exit(1);
+    }
+    if (anime) {
       await deleteAnimeCollection();
     } else if (manga) {
       await deleteMangaCollection();
+    } else if (activity) {
+      await deleteUserActivities();
     }
   });
 cli
@@ -106,7 +126,7 @@ cli
     await getUpcomingAnimes(Number(count));
   });
 cli
-  .command("anime [id]")
+  .command("anime <id>")
   .description("Get anime details by their ID")
   .action(async (id) => {
     if (id && !Number.isNaN(Number(id))) {
@@ -115,6 +135,27 @@ cli
       console.error(
         "Invalid or missing ID. Please provide a valid numeric ID."
       );
+    }
+  });
+cli
+  .command("search <query>")
+  .alias("srch")
+  .alias("find")
+  .description("Search anime or manga.")
+  .option("-a, --anime", "To get the anime search results.", false)
+  .option("-m, --manga", "To get the manga search results.", false)
+  .option("-c, --count", "Number of search results to show.", "10")
+  .action(async (query, { anime, manga, count }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.error(`Must select an option, either --anime or --manga`);
+    } else {
+      if (anime) {
+        await getAnimeSearchResults(query, Number(count));
+      } else if (manga) {
+        await getMangaSearchResults(query, Number(count));
+      } else {
+        console.error(`Must select an option, either --anime or --manga`);
+      }
     }
   });
 
