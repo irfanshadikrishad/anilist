@@ -116,6 +116,42 @@ query ($id: Int, $page: Int, $perPage: Int) {
     }
   }
 }`;
+const animeSearchQuery = `
+query ($search: String, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(search: $search, type: ANIME) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      episodes
+      status
+      description
+    }
+  }
+}
+`;
+const mangaSearchQuery = `
+query ($search: String, $perPage: Int) {
+  Page(perPage: $perPage) {
+    media(search: $search, type: MANGA) {
+      id
+      title {
+        romaji
+        english
+        native
+        userPreferred
+      }
+      chapters
+      status
+      description
+    }
+  }
+}
+`;
 
 export {
   currentUserQuery,
@@ -129,4 +165,6 @@ export {
   upcomingAnimesQuery,
   animeDetailsQuery,
   userActivityQuery,
+  animeSearchQuery,
+  mangaSearchQuery,
 };

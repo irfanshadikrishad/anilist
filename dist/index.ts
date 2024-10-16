@@ -14,7 +14,12 @@ import {
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
 } from "./helpers/lists.js";
-import { getAnimeDetailsByID, getUserInfoByUsername } from "./helpers/more.js";
+import {
+  getAnimeDetailsByID,
+  getAnimeSearchResults,
+  getMangaSearchResults,
+  getUserInfoByUsername,
+} from "./helpers/more.js";
 
 const cli = new Command();
 
@@ -115,6 +120,27 @@ cli
       console.error(
         "Invalid or missing ID. Please provide a valid numeric ID."
       );
+    }
+  });
+cli
+  .command("search <query>")
+  .alias("srch")
+  .alias("find")
+  .description("Search anime or manga.")
+  .option("-a, --anime", "To get the anime search results.", false)
+  .option("-m, --manga", "To get the manga search results.", false)
+  .option("-c, --count", "Number of search results to show.", "10")
+  .action(async (query, { anime, manga, count }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.error(`Must select an option, either --anime or --manga`);
+    } else {
+      if (anime) {
+        await getAnimeSearchResults(query, Number(count));
+      } else if (manga) {
+        await getMangaSearchResults(query, Number(count));
+      } else {
+        console.error(`Must select an option, either --anime or --manga`);
+      }
     }
   });
 

@@ -1,5 +1,11 @@
 import fetch from "node-fetch";
-import { animeDetailsQuery, userActivityQuery, userQuery } from "./queries.js";
+import {
+  animeDetailsQuery,
+  animeSearchQuery,
+  mangaSearchQuery,
+  userActivityQuery,
+  userQuery,
+} from "./queries.js";
 import { isLoggedIn, retriveAccessToken } from "./auth.js";
 import {
   aniListEndpoint,
@@ -9,6 +15,8 @@ import {
 } from "./workers.js";
 import { fetcher } from "./fetcher.js";
 import { colorize_Anilist, colorize_Brown } from "./colorize.js";
+import inquirer from "inquirer";
+import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js";
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -130,5 +138,137 @@ async function getAnimeDetailsByID(anilistID: number) {
     console.log(`Finished: ${formatDateObject(endDate)}`);
   }
 }
+async function getAnimeSearchResults(search: string, count: number) {
+  const query = animeSearchQuery;
+  const variables = { search, page: 1, perPage: count };
+  const headers = {
+    "content-type": "application/json",
+  };
+  const loggedIn = await isLoggedIn();
+  if (loggedIn) {
+    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
+  }
+  const { data } = await fetcher(query, variables, headers);
+  if (data) {
+    const results = data?.Page?.media;
+    const { selectedList } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedList",
+        message: "Select anime to add to your list:",
+        choices: results.map((res: any, idx: number) => ({
+          name: getTitle(res?.title),
+          value: res?.id,
+        })),
+      },
+    ]);
+    // Where to save
+    const { selectedListType } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedListType",
+        message: "Select the list where you want to save this anime:",
+        choices: [
+          { name: "Planning", value: "PLANNING" },
+          { name: "Watching", value: "WATCHING" },
+          { name: "Completed", value: "COMPLETED" },
+          { name: "Paused", value: "PAUSED" },
+          { name: "Dropped", value: "DROPPED" },
+        ],
+      },
+    ]);
+    // Lets save to the list now
+    const ISLOGGEDIN = await isLoggedIn();
+    if (ISLOGGEDIN) {
+      const query = addAnimeToListMutation;
+      const variables = { mediaId: selectedList, status: selectedListType };
+      const headers = {
+        "content-type": "application/json",
+        Authorization: `Bearer ${await retriveAccessToken()}`,
+      };
+      const response = await fetcher(query, variables, headers);
+      if (response) {
+        const saved = response?.data?.SaveMediaListEntry;
+        console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
+      }
+    } else {
+      console.error(`Please log in first to use this feature.`);
+    }
+  } else {
+    console.error(`Something went wrong.`);
+  }
+}
 
-export { getUserInfoByUsername, getAnimeDetailsByID };
+async function getMangaSearchResults(search: string, count: number) {
+  const query = mangaSearchQuery;
+  const variables = { search, page: 1, perPage: count };
+  const headers = {
+    "content-type": "application/json",
+  };
+
+  const loggedIn = await isLoggedIn();
+  if (loggedIn) {
+    headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
+  }
+
+  const { data } = await fetcher(query, variables, headers);
+  if (data) {
+    const results = data?.Page?.media;
+
+    // List of manga search results
+    const { selectedMangaId } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedMangaId",
+        message: "Select manga to add to your list:",
+        choices: results.map((res: any) => ({
+          name: getTitle(res?.title),
+          value: res?.id,
+        })),
+      },
+    ]);
+
+    // Options to save to the list
+    const { selectedListType } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedListType",
+        message: "Select the list where you want to save this manga:",
+        choices: [
+          { name: "Planning", value: "PLANNING" },
+          { name: "Reading", value: "CURRENT" },
+          { name: "Completed", value: "COMPLETED" },
+          { name: "Paused", value: "PAUSED" },
+          { name: "Dropped", value: "DROPPED" },
+        ],
+      },
+    ]);
+
+    // If logged in save to the list
+    const ISLOGGEDIN = await isLoggedIn();
+    if (ISLOGGEDIN) {
+      const mutation = addMangaToListMutation;
+      const variables = { mediaId: selectedMangaId, status: selectedListType };
+      const headers = {
+        "content-type": "application/json",
+        Authorization: `Bearer ${await retriveAccessToken()}`,
+      };
+      const response = await fetcher(mutation, variables, headers);
+      if (response) {
+        const saved = response?.data?.SaveMediaListEntry;
+        console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
+      }
+    } else {
+      console.error(`Please log in first to use this feature.`);
+    }
+  } else {
+    console.error(`Something went wrong.`);
+  }
+}
+
+export {
+  getUserInfoByUsername,
+  getAnimeDetailsByID,
+  getAnimeSearchResults,
+  getMangaSearchResults,
+};
