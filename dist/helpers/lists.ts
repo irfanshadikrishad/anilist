@@ -377,7 +377,7 @@ async function loggedInUsersMangaLists() {
               console.log("No manga entries found in the selected list.");
             }
           } else {
-            console.log("You don't seem to have any manga in your lists.");
+            console.log("\nYou don't seem to have any manga in your lists.");
           }
         } else {
           console.error(
@@ -417,32 +417,37 @@ async function deleteAnimeCollection() {
 
       if (request.status === 200) {
         const lists = response?.data?.MediaListCollection?.lists;
-        const { selectedList } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedList",
-            message: "Select an anime list:",
-            choices: lists.map((list: any) => list.name),
-            pageSize: 10,
-          },
-        ]);
-        const selectedEntries = lists.find(
-          (list: any) => list.name === selectedList
-        );
-        if (selectedEntries) {
-          console.log(`\nDeleting entries of '${selectedEntries.name}':`);
 
-          for (const [idx, entry] of selectedEntries.entries.entries()) {
-            if (entry?.id) {
-              await deleteAnimeByAnimeId(entry?.id, entry?.media?.title);
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-            } else {
-              console.log(`No id in entry.`);
-              console.log(entry);
+        if (lists.length > 0) {
+          const { selectedList } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedList",
+              message: "Select an anime list:",
+              choices: lists.map((list: any) => list.name),
+              pageSize: 10,
+            },
+          ]);
+          const selectedEntries = lists.find(
+            (list: any) => list.name === selectedList
+          );
+          if (selectedEntries) {
+            console.log(`\nDeleting entries of '${selectedEntries.name}':`);
+
+            for (const [idx, entry] of selectedEntries.entries.entries()) {
+              if (entry?.id) {
+                await deleteAnimeByAnimeId(entry?.id, entry?.media?.title);
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+              } else {
+                console.log(`No id in entry.`);
+                console.log(entry);
+              }
             }
+          } else {
+            console.log("No entries found.");
           }
         } else {
-          console.log("No entries found.");
+          console.log(`\nNo anime(s) found in any list.`);
         }
       } else {
         console.log(`Something went wrong. ${response?.errors[0]?.message}`);
@@ -503,32 +508,36 @@ async function deleteMangaCollection() {
 
       if (request.status === 200) {
         const lists = response?.data?.MediaListCollection?.lists;
-        const { selectedList } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedList",
-            message: "Select a manga list:",
-            choices: lists.map((list: any) => list.name),
-            pageSize: 10,
-          },
-        ]);
-        const selectedEntries = lists.find(
-          (list: any) => list.name === selectedList
-        );
-        if (selectedEntries) {
-          console.log(`\nDeleting entries of '${selectedEntries.name}':`);
+        if (lists.length > 0) {
+          const { selectedList } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedList",
+              message: "Select a manga list:",
+              choices: lists.map((list: any) => list.name),
+              pageSize: 10,
+            },
+          ]);
+          const selectedEntries = lists.find(
+            (list: any) => list.name === selectedList
+          );
+          if (selectedEntries) {
+            console.log(`\nDeleting entries of '${selectedEntries.name}':`);
 
-          for (const [idx, entry] of selectedEntries.entries.entries()) {
-            if (entry?.id) {
-              await deleteMangaByMangaId(entry?.id, entry?.media?.title);
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-            } else {
-              console.log(`No id in entry.`);
-              console.log(entry);
+            for (const [idx, entry] of selectedEntries.entries.entries()) {
+              if (entry?.id) {
+                await deleteMangaByMangaId(entry?.id, entry?.media?.title);
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+              } else {
+                console.log(`No id in entry.`);
+                console.log(entry);
+              }
             }
+          } else {
+            console.log("No entries found.");
           }
         } else {
-          console.log("No entries found.");
+          console.log(`\nNo manga(s) found in any list.`);
         }
       } else {
         console.log(`Something went wrong. ${response?.errors[0]?.message}`);
