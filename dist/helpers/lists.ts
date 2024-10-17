@@ -74,16 +74,16 @@ async function getTrending(count: number) {
             console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
           }
         } else {
-          console.error(`Please log in first to use this feature.`);
+          console.error(`\nPlease log in first to use this feature.`);
         }
       } else {
         console.log(`\nNo trending available at the moment.`);
       }
     } else {
-      console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+      console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`);
     }
   } catch (error) {
-    console.log(`Something went wrong. ${(error as Error).message}`);
+    console.log(`\nSomething went wrong. ${(error as Error).message}`);
   }
 }
 async function getPopular(count: number) {
@@ -146,16 +146,16 @@ async function getPopular(count: number) {
             console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
           }
         } else {
-          console.error(`Please log in first to use this feature.`);
+          console.error(`\nPlease log in first to use this feature.`);
         }
       } else {
-        console.log(`No popular available at this moment.`);
+        console.log(`\nNo popular available at this moment.`);
       }
     } else {
-      console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+      console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`);
     }
   } catch (error) {
-    console.log(`Something went wrong. ${(error as Error).message}`);
+    console.log(`\nSomething went wrong. ${(error as Error).message}`);
   }
 }
 
@@ -244,28 +244,30 @@ async function loggedInUsersAnimeLists() {
                     );
                   }
                 } else {
-                  console.error(`Please log in first to use this feature.`);
+                  console.error(`\nPlease log in first to use this feature.`);
                 }
               } else {
-                console.log(`Not available at this moment.`);
+                console.log(`\nNot available at this moment.`);
               }
             } else {
-              console.log("No entries found.");
+              console.log("\nNo entries found.");
             }
           } else {
             console.log(`\nYou seems to have no anime(s) in your lists.`);
           }
         } else {
-          console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+          console.log(
+            `\nSomething went wrong. ${response?.errors[0]?.message}`
+          );
         }
       } else {
-        console.log(`Failed getting current user Id.`);
+        console.log(`\nFailed getting current user Id.`);
       }
     } else {
-      console.log(`Please log in first.`);
+      console.error(`\nPlease log in first to access your lists.`);
     }
   } catch (error) {
-    console.log(`Something went wrong. ${(error as Error).message}`);
+    console.log(`\nSomething went wrong. ${(error as Error).message}`);
   }
 }
 
@@ -365,35 +367,35 @@ async function loggedInUsersMangaLists() {
                   console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`);
                 } else {
                   console.error(
-                    `Failed to save the manga. ${
+                    `\nFailed to save the manga. ${
                       saveResponse?.errors?.[0]?.message || "Unknown error"
                     }`
                   );
                 }
               } else {
-                console.error(`Please log in first to use this feature.`);
+                console.error(`\nPlease log in first to use this feature.`);
               }
             } else {
-              console.log("No manga entries found in the selected list.");
+              console.log("\nNo manga entries found in the selected list.");
             }
           } else {
             console.log("\nYou don't seem to have any manga in your lists.");
           }
         } else {
           console.error(
-            `Failed to fetch manga lists. ${
+            `\nFailed to fetch manga lists. ${
               response?.errors?.[0]?.message || "Unknown error"
             }`
           );
         }
       } else {
-        console.error(`Failed to get the current user ID.`);
+        console.error(`\nFailed to get the current user ID.`);
       }
     } else {
-      console.error("Please log in first.");
+      console.error(`\nPlease log in first to access your lists.`);
     }
   } catch (error) {
-    console.error(`Something went wrong. ${error.message}`);
+    console.error(`\nSomething went wrong. ${error.message}`);
   }
 }
 
@@ -450,13 +452,13 @@ async function deleteAnimeCollection() {
           console.log(`\nNo anime(s) found in any list.`);
         }
       } else {
-        console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+        console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`);
       }
     } else {
-      console.log(`Failed getting current user Id.`);
+      console.log(`\nFailed getting current user Id.`);
     }
   } else {
-    console.log(`Please log in first.`);
+    console.error(`\nPlease log in first to delete your lists.`);
   }
 }
 
@@ -480,11 +482,11 @@ async function deleteAnimeByAnimeId(id: number, title?: any) {
         `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
       );
     } else {
-      console.log(`Error deleting anime. ${response?.errors[0]?.message}`);
+      console.log(`\nError deleting anime. ${response?.errors[0]?.message}`);
       console.log(response);
     }
   } catch (error) {
-    console.log(`Error deleting anime. ${id} ${(error as Error).message}`);
+    console.log(`\nError deleting anime. ${id} ${(error as Error).message}`);
   }
 }
 
@@ -534,19 +536,21 @@ async function deleteMangaCollection() {
               }
             }
           } else {
-            console.log("No entries found.");
+            console.error("\nNo entries found.");
           }
         } else {
-          console.log(`\nNo manga(s) found in any list.`);
+          console.error(`\nNo manga(s) found in any list.`);
         }
       } else {
-        console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+        console.error(
+          `\nSomething went wrong. ${response?.errors[0]?.message}`
+        );
       }
     } else {
-      console.log(`Failed getting current user Id.`);
+      console.error(`\nFailed getting current user Id.`);
     }
   } else {
-    console.log(`Please log in first.`);
+    console.error(`\nPlease log in first to delete your lists.`);
   }
 }
 async function deleteMangaByMangaId(id: number, title?: any) {
@@ -569,11 +573,11 @@ async function deleteMangaByMangaId(id: number, title?: any) {
         `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
       );
     } else {
-      console.log(`Error deleting manga. ${response?.errors[0]?.message}`);
+      console.log(`\nError deleting manga. ${response?.errors[0]?.message}`);
       console.log(response);
     }
   } catch (error) {
-    console.log(`Error deleting manga. ${id} ${(error as Error).message}`);
+    console.log(`\nError deleting manga. ${id} ${(error as Error).message}`);
   }
 }
 async function getUpcomingAnimes(count: number) {
@@ -638,13 +642,15 @@ async function getUpcomingAnimes(count: number) {
           console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
         }
       } else {
-        console.error(`Please log in first to use this feature.`);
+        console.error(`\nPlease log in first to use this feature.`);
       }
     } else {
-      console.error(`Something went wrong. ${response?.errors[0]?.message}`);
+      console.error(`\nSomething went wrong. ${response?.errors[0]?.message}`);
     }
   } catch (error) {
-    console.error(`Error getting upcoming animes. ${(error as Error).message}`);
+    console.error(
+      `\nError getting upcoming animes. ${(error as Error).message}`
+    );
   }
 }
 

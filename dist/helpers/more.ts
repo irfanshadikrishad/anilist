@@ -184,13 +184,13 @@ async function getAnimeSearchResults(search: string, count: number) {
           console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
         }
       } else {
-        console.error(`Please log in first to use this feature.`);
+        console.error(`\nPlease log in first to use this feature.`);
       }
     } else {
       console.log(`\nNo search results!`);
     }
   } else {
-    console.error(`Something went wrong.`);
+    console.error(`\nSomething went wrong.`);
   }
 }
 
@@ -243,10 +243,10 @@ async function getMangaSearchResults(search: string, count: number) {
         console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
       }
     } else {
-      console.error(`Please log in first to use this feature.`);
+      console.error(`\nPlease log in first to use this feature.`);
     }
   } else {
-    console.error(`Something went wrong.`);
+    console.error(`\nSomething went wrong.`);
   }
 }
 async function deleteUserActivities() {
@@ -316,7 +316,7 @@ async function deleteUserActivities() {
       }
     }
   } else {
-    console.error(`Please log in to use this feature.`);
+    console.error(`\nPlease log in to delete your activities.`);
   }
 }
 
