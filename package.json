@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Unofficial AniList CLI",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -29,7 +29,7 @@
   },
   "license": "MPL-2.0",
   "devDependencies": {
-    "@types/node": "^22.7.5",
+    "@types/node": "^22.7.6",
     "typescript": "^5.6.3"
   },
   "dependencies": {

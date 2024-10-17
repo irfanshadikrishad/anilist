@@ -48,16 +48,20 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`-h, --help`**                          | _None_                                                                  | Display available commands and options           |
 | **`trending`** <br> _(alias: `tr`)_       | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)       |
 | **`popular`** <br> _(alias: `plr`)_       | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)        |
-| **`user`**                                | `-un (username)`                                                        | Get information about a specific AniList user    |
+| **`user`**                                | `<username>`                                                            | Get information about a specific AniList user    |
 | **`lists`** <br> _(alias: `ls`)_          | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user |
 | **`delete`** <br> _(alias: `del`)_        | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities |
 | **`upcoming`** <br> _(alias:`up`)_        | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
-| **`anime`**                               | `anime Id`                                                              | Get anime details by Anime Id                    |
+| **`anime`**                               | `<anime-id>`                                                            | Get anime details by Anime Id                    |
 | **`search`** <br> _(alias:`srch`/`find`)_ | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
 
 #### Command Breakdown:
 
 #### `login`:
+
+```bash
+anilist login -i <client-id> -s <client-secret>
+```
 
 - **Options**:
   - `-i, --id`: Specify AniList Client ID
@@ -66,21 +70,41 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### `logout`:
 
+```bash
+anilist logout
+```
+
 - **Description**: End the current session and log out from your AniList account.
 
 #### `me`:
+
+```bash
+anilist me
+```
 
 - **Description**: Retrieve and display information about the currently logged-in user, including stats and profile details.
 
 #### `-V, --version`:
 
+```bash
+anilist -V
+```
+
 - **Description**: Quickly check which version of the CLI you are running.
 
 #### `-h, --help`:
 
+```bash
+anilist -h
+```
+
 - **Description**: List all available commands and their usage details for quick reference.
 
 #### `trending` _(alias: `tr`)_:
+
+```bash
+anilist tr -c 15
+```
 
 - **Options**:
   - `-c (count)`: Specify how many trending anime to fetch (default: 10).
@@ -88,11 +112,19 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### `popular` _(alias: `plr`)_:
 
+```bash
+anilist popular
+```
+
 - **Options**:
   - `-c (count)`: Specify how many popular anime to fetch (default: 10).
 - **Description**: Fetch the most popular anime series, with the option to customize how many results to display.
 
 #### `upcoming` _(alias: `up`)_:
+
+```bash
+anilist up -c 25
+```
 
 - **Options**:
   - `-c (count)`: Specify how many upcoming anime to fetch (default: 10).
@@ -100,11 +132,19 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### `user`:
 
+```bash
+anilist user <username>
+```
+
 - **Options**:
-  - `-un (username)`: Specify the AniList username to fetch.
+  - `<username>`: Specify the AniList username to fetch.
 - **Description**: Retrieve profile information about a specific AniList user.
 
 #### `lists` _(alias: `ls`)_:
+
+```bash
+anilist ls -a
+```
 
 - **Options**:
   - `-a, --anime`: Fetch the authenticated user's anime list.
@@ -112,6 +152,10 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 - **Description**: Get the anime or manga lists of the logged-in user.
 
 #### `delete` _(alias: `del`)_:
+
+```bash
+anilist del -ac
+```
 
 - **Options**:
   - `-a, --anime`: Delete your specific anime collection that you want.
@@ -121,11 +165,19 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### `anime`
 
+```bash
+anilist anime <anime-id>
+```
+
 - **Options**
-  - `anime Id` _(eg: 21)_ : Id of the anime you want to get details of.
+  - `<anime-id>` _(eg: 21)_ : Id of the anime you want to get details of.
 - **Description**: Get anime details by anime Id.
 
 #### `search` _(alias: `srch`/`find`)_:
+
+```bash
+anilist search <query> -a -c 20
+```
 
 - **Options**:
   - `<query>` : What you want to search (eg: naruto).

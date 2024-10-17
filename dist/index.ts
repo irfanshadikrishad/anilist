@@ -24,7 +24,7 @@ import {
 
 const cli = new Command();
 
-cli.name("anilist").description("Unofficial AniList CLI").version("1.0.2");
+cli.name("anilist").description("Unofficial AniList CLI").version("1.0.3");
 
 cli
   .command("login")
@@ -61,10 +61,9 @@ cli
     await getPopular(Number(count));
   });
 cli
-  .command("user")
+  .command("user <username>")
   .description("Get user information")
-  .requiredOption("-un, --username <string>", "null")
-  .action(async ({ username }) => {
+  .action(async (username) => {
     await getUserInfoByUsername(username);
   });
 cli
@@ -144,7 +143,7 @@ cli
   .description("Search anime or manga.")
   .option("-a, --anime", "To get the anime search results.", false)
   .option("-m, --manga", "To get the manga search results.", false)
-  .option("-c, --count", "Number of search results to show.", "10")
+  .option("-c, --count <number>", "Number of search results to show.", "10")
   .action(async (query, { anime, manga, count }) => {
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`Must select an option, either --anime or --manga`);

@@ -38,9 +38,22 @@ const currentUserAnimeList = `query ($id: Int) {
 
 const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
-    lists { name entries { id media { title { romaji english } } } }
+    lists {
+      name
+      entries {
+        id
+        media {
+          id
+          title {
+            romaji
+            english
+          }
+        }
+      }
+    }
   }
-}`;
+}
+`;
 
 const deleteMediaEntryMutation = `mutation($id: Int!) {
   DeleteMediaListEntry(id: $id) { deleted }

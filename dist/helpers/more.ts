@@ -143,46 +143,51 @@ async function getAnimeSearchResults(search: string, count: number) {
 
   if (searchResults) {
     const results = searchResults?.data?.Page?.media;
-    const { selectedList } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "selectedList",
-        message: "Select anime to add to your list:",
-        choices: results.map((res: any, idx: number) => ({
-          name: getTitle(res?.title),
-          value: res?.id,
-        })),
-      },
-    ]);
-    // Where to save
-    const { selectedListType } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "selectedListType",
-        message: "Select the list where you want to save this anime:",
-        choices: [
-          { name: "Planning", value: "PLANNING" },
-          { name: "Watching", value: "CURRENT" },
-          { name: "Completed", value: "COMPLETED" },
-          { name: "Paused", value: "PAUSED" },
-          { name: "Dropped", value: "DROPPED" },
-        ],
-      },
-    ]);
-    // Lets save to the list now
-    const ISLOGGEDIN = await isLoggedIn();
-    if (ISLOGGEDIN) {
-      const query = addAnimeToListMutation;
-      const variables = { mediaId: selectedList, status: selectedListType };
+    if (results.length > 0) {
+      const { selectedList } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedList",
+          message: "Select anime to add to your list:",
+          choices: results.map((res: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(res?.title)}`,
+            value: res?.id,
+          })),
+          pageSize: 10,
+        },
+      ]);
+      // Where to save
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ]);
+      // Lets save to the list now
+      const ISLOGGEDIN = await isLoggedIn();
+      if (ISLOGGEDIN) {
+        const query = addAnimeToListMutation;
+        const variables = { mediaId: selectedList, status: selectedListType };
 
-      const response: any = await fetcher(query, variables);
+        const response: any = await fetcher(query, variables);
 
-      if (response) {
-        const saved = response?.data?.SaveMediaListEntry;
-        console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
+        if (response) {
+          const saved = response?.data?.SaveMediaListEntry;
+          console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
+        }
+      } else {
+        console.error(`Please log in first to use this feature.`);
       }
     } else {
-      console.error(`Please log in first to use this feature.`);
+      console.log(`\nNo search results!`);
     }
   } else {
     console.error(`Something went wrong.`);
@@ -203,10 +208,11 @@ async function getMangaSearchResults(search: string, count: number) {
         type: "list",
         name: "selectedMangaId",
         message: "Select manga to add to your list:",
-        choices: results.map((res: any) => ({
-          name: getTitle(res?.title),
+        choices: results.map((res: any, idx: number) => ({
+          name: `[${idx + 1}] ${getTitle(res?.title)}`,
           value: res?.id,
         })),
+        pageSize: 10,
       },
     ]);
     // Options to save to the list
