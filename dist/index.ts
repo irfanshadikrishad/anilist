@@ -61,10 +61,9 @@ cli
     await getPopular(Number(count));
   });
 cli
-  .command("user")
+  .command("user <username>")
   .description("Get user information")
-  .requiredOption("-un, --username <string>", "null")
-  .action(async ({ username }) => {
+  .action(async (username) => {
     await getUserInfoByUsername(username);
   });
 cli
