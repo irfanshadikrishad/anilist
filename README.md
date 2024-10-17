@@ -1,6 +1,6 @@
-#### AniList
+#### @irfanshadikrishad/anilist
 
-Unofficial Anilist CLI
+Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.
 
 #### How to install?
 

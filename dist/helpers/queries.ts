@@ -1,10 +1,8 @@
 const currentUserQuery = `{
   Viewer {
     id name about bans siteUrl options { profileColor timezone activityMergeTime }
-    donatorTier donatorBadge createdAt updatedAt unreadNotificationCount
-    previousNames { name createdAt updatedAt } moderatorRoles
-    favourites { anime { nodes { id title { romaji english } } } manga { nodes { id title { romaji english } } }
-    }
+    donatorTier donatorBadge createdAt updatedAt unreadNotificationCount previousNames { name createdAt updatedAt }
+    moderatorRoles favourites { anime { nodes { id title { romaji english } } } manga { nodes { id title { romaji english } } } }
     statistics { anime { count meanScore minutesWatched } manga { count chaptersRead volumesRead } }
     mediaListOptions { scoreFormat rowOrder animeList { sectionOrder } mangaList { sectionOrder } }
   }
@@ -38,28 +36,15 @@ const currentUserAnimeList = `query ($id: Int) {
 
 const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
-    lists {
-      name
-      entries {
-        id
-        media {
-          id
-          title {
-            romaji
-            english
-          }
-        }
-      }
-    }
+    lists { name entries { id media { id title { romaji english } } } }
   }
-}
-`;
+}`;
 
 const deleteMediaEntryMutation = `mutation($id: Int!) {
   DeleteMediaListEntry(id: $id) { deleted }
 }`;
 
-const deleteMangaEntryMutation = `mutation ($id: Int) {
+const deleteMangaEntryMutation = `mutation($id: Int) {
   DeleteMediaListEntry(id: $id) { deleted }
 }`;
 
@@ -102,7 +87,7 @@ const mangaSearchQuery = `query ($search: String, $perPage: Int) {
 
 const activityTextQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $userId, type: TEXT) {
+    activities(userId: $userId, type: TEXT, sort: ID_DESC) {
       ... on TextActivity { id type text createdAt user { id name } }
     }
   }
@@ -110,7 +95,7 @@ const activityTextQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
 
 const activityAnimeListQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $userId, type: ANIME_LIST) {
+    activities(userId: $userId, type: ANIME_LIST, sort: ID_DESC) {
       ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
     }
   }
@@ -118,7 +103,7 @@ const activityAnimeListQuery = `query ($userId: Int, $page: Int, $perPage: Int) 
 
 const activityMangaListQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $userId, type: MANGA_LIST) {
+    activities(userId: $userId, type: MANGA_LIST, sort: ID_DESC) {
       ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
     }
   }
@@ -126,7 +111,7 @@ const activityMangaListQuery = `query ($userId: Int, $page: Int, $perPage: Int) 
 
 const activityMessageQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $userId, type: MESSAGE) {
+    activities(userId: $userId, type: MESSAGE, sort: ID_DESC) {
       ... on MessageActivity { id type message recipient { id name } createdAt }
     }
   }
@@ -134,7 +119,7 @@ const activityMessageQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
 
 const activityAllQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
-    activities(userId: $userId) {
+    activities(userId: $userId, sort: ID_DESC) {
       ... on TextActivity { id type text createdAt user { id name } }
       ... on ListActivity { id type status progress createdAt media { id title { romaji english native } } }
       ... on MessageActivity { id type message recipient { id name } createdAt }
@@ -145,7 +130,7 @@ const activityAllQuery = `query ($userId: Int, $page: Int, $perPage: Int) {
 const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type: ActivityType) {
   Page(page: $page, perPage: $perPage) {
     pageInfo { total currentPage lastPage hasNextPage perPage }
-    activities(userId: $userId, type: $type) {
+    activities(userId: $userId, type: $type, sort: ID_DESC) {
       ... on ListActivity { id type status progress media { id title { romaji english native } format } createdAt }
     }
   }

@@ -24,7 +24,12 @@ import {
 
 const cli = new Command();
 
-cli.name("anilist").description("Unofficial AniList CLI").version("1.0.3");
+cli
+  .name("anilist")
+  .description(
+    "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
+  )
+  .version("1.0.3");
 
 cli
   .command("login")
@@ -35,7 +40,7 @@ cli
     if (id && secret) {
       await anilistUserLogin(id, secret);
     } else {
-      console.log("Tokens not provided correctly!");
+      console.log("\nMust provide both ClientId and ClientSecret!");
     }
   });
 cli
@@ -80,7 +85,7 @@ cli
   .option("-m, --manga", "For manga list of authenticated user", false)
   .action(async ({ anime, manga }) => {
     if ((!anime && !manga) || (anime && manga)) {
-      console.error(`Must select an option, either --anime or --manga`);
+      console.error(`\nMust select an option, either --anime or --manga`);
     } else if (anime) {
       await loggedInUsersAnimeLists();
     } else if (manga) {
@@ -98,13 +103,13 @@ cli
     const selectedOptions = [anime, manga, activity].filter(Boolean).length;
     if (selectedOptions === 0) {
       console.error(
-        `Must select one option: either --anime, --manga, or --activity`
+        `\nMust select one option: either --anime, --manga, or --activity`
       );
       process.exit(1);
     }
     if (selectedOptions > 1) {
       console.error(
-        `Only one option can be selected at a time: --anime, --manga, or --activity`
+        `\nOnly one option can be selected at a time: --anime, --manga, or --activity`
       );
       process.exit(1);
     }
@@ -132,7 +137,7 @@ cli
       await getAnimeDetailsByID(Number(id));
     } else {
       console.error(
-        "Invalid or missing ID. Please provide a valid numeric ID."
+        `\nInvalid or missing ID (${id}). Please provide a valid numeric ID.`
       );
     }
   });
@@ -146,14 +151,14 @@ cli
   .option("-c, --count <number>", "Number of search results to show.", "10")
   .action(async (query, { anime, manga, count }) => {
     if ((!anime && !manga) || (anime && manga)) {
-      console.error(`Must select an option, either --anime or --manga`);
+      console.error(`\nMust select an option, either --anime or --manga`);
     } else {
       if (anime) {
         await getAnimeSearchResults(query, Number(count));
       } else if (manga) {
         await getMangaSearchResults(query, Number(count));
       } else {
-        console.error(`Must select an option, either --anime or --manga`);
+        console.error(`\nMust select an option, either --anime or --manga`);
       }
     }
   });
