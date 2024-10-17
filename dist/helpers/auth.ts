@@ -134,13 +134,13 @@ async function currentUserInfo() {
         );
       return user;
     } else {
-      console.log(
-        `Something went wrong. Please log in again. ${errors[0].message}`
+      console.error(
+        `\nSomething went wrong. Please log in again. ${errors[0].message}`
       );
       return null;
     }
   } else {
-    console.log(`User not logged in. Please login first.`);
+    console.error(`\nPlease login first to use this feature.`);
     return null;
   }
 }
@@ -160,10 +160,10 @@ async function logoutUser() {
       fs.unlinkSync(save_path);
       console.log("\nLogout successful.");
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("\nError logging out:", error);
     }
   } else {
-    console.log("You may already be logged out.");
+    console.error("\nYou may already be logged out.");
   }
 }
 

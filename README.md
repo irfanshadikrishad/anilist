@@ -1,6 +1,6 @@
-#### AniList
+#### @irfanshadikrishad/anilist
 
-Unofficial Anilist CLI
+Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.
 
 #### How to install?
 
@@ -39,21 +39,22 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 
 #### CLI Commands Overview
 
-| **Command**                               | **Options**                                                             | **Description**                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
-| **`login`**                               | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials             |
-| **`logout`**                              | _None_                                                                  | Log out from your AniList account                |
-| **`me`**                                  | _None_                                                                  | Display information about the logged-in user     |
-| **`-V, --version`**                       | _None_                                                                  | Display the current version of the CLI           |
-| **`-h, --help`**                          | _None_                                                                  | Display available commands and options           |
-| **`trending`** <br> _(alias: `tr`)_       | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)       |
-| **`popular`** <br> _(alias: `plr`)_       | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)        |
-| **`user`**                                | `<username>`                                                            | Get information about a specific AniList user    |
-| **`lists`** <br> _(alias: `ls`)_          | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user |
-| **`delete`** <br> _(alias: `del`)_        | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities |
-| **`upcoming`** <br> _(alias:`up`)_        | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
-| **`anime`**                               | `<anime-id>`                                                            | Get anime details by Anime Id                    |
-| **`search`** <br> _(alias:`srch`/`find`)_ | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
+| **Command**                                 | **Options**                                                             | **Description**                                  |
+| ------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------ |
+| **`login`**                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials             |
+| **`logout`**                                | _None_                                                                  | Log out from your AniList account                |
+| **`me`**                                    | _None_                                                                  | Display information about the logged-in user     |
+| **`-V, --version`**                         | _None_                                                                  | Display the current version of the CLI           |
+| **`-h, --help`**                            | _None_                                                                  | Display available commands and options           |
+| **`trending`** <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)       |
+| **`popular`** <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)        |
+| **`user`**                                  | `<username>`                                                            | Get information about a specific AniList user    |
+| **`lists`** <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user |
+| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities |
+| **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
+| **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                    |
+| **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
+| **`status`** <br> _(alias: `write`/`post`)_ | `<status>` (text/markdown/html but wrap it with quotation mark).        | Write a status...                                |
 
 #### Command Breakdown:
 
@@ -184,6 +185,16 @@ anilist search <query> -a -c 20
   - `-a, --anime`: To get results of anime search.
   - `-m, --manga`: To get results of manga search.
   - `-c (count)`: Specify how many items to fetch (default: 10).
+- **Description**: Get anime/manga search results
+
+#### `status` _(alias: `write`/`post`)_:
+
+```bash
+anilist write <status>
+```
+
+- **Options**:
+  - `<status>` : This is what you want to write, It can be HTML, Markdown and/or Text. But wrap it with quotation mark (") else it might get cut-off.
 - **Description**: Get anime/manga search results
 
 #### Security
