@@ -144,7 +144,7 @@ cli
   .description("Search anime or manga.")
   .option("-a, --anime", "To get the anime search results.", false)
   .option("-m, --manga", "To get the manga search results.", false)
-  .option("-c, --count", "Number of search results to show.", "10")
+  .option("-c, --count <number>", "Number of search results to show.", "10")
   .action(async (query, { anime, manga, count }) => {
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`Must select an option, either --anime or --manga`);

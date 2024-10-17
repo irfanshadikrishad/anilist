@@ -8,7 +8,7 @@ const addMangaToListMutation = `
     SaveMediaListEntry(mediaId: $mediaId, status: $status) {
       id
       status
-      media { title { romaji english } }
+      media { id title { romaji english } }
     }
   }
 `;
