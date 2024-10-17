@@ -24,7 +24,7 @@ import {
 
 const cli = new Command();
 
-cli.name("anilist").description("Unofficial AniList CLI").version("1.0.2");
+cli.name("anilist").description("Unofficial AniList CLI").version("1.0.3");
 
 cli
   .command("login")
