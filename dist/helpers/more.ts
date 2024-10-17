@@ -25,6 +25,7 @@ import {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
+  saveTextActivityMutation,
 } from "./mutations.js";
 
 async function getUserInfoByUsername(username: string) {
@@ -320,10 +321,39 @@ async function deleteUserActivities() {
   }
 }
 
+async function writeTextActivity(status: string) {
+  try {
+    if (await isLoggedIn()) {
+      const query = saveTextActivityMutation;
+      const addTagInStatus: string =
+        status +
+        `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`;
+      const variables = { status: addTagInStatus };
+
+      const data: any = await fetcher(query, variables);
+
+      if (data) {
+        const savedActivity = data?.data?.SaveTextActivity;
+
+        if (savedActivity?.id) {
+          console.log(`\n[${savedActivity?.id}] status saved successfully!`);
+        }
+      } else {
+        console.error(`\nSomething went wrong. ${data}.`);
+      }
+    } else {
+      console.error(`\nPlease login to use this feature.`);
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
+
 export {
   getUserInfoByUsername,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
   deleteUserActivities,
+  writeTextActivity,
 };

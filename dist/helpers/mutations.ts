@@ -17,9 +17,15 @@ mutation($id: Int!) {
   DeleteActivity(id: $id) { deleted }
 }
 `;
+const saveTextActivityMutation = `
+mutation SaveTextActivity($status: String!) {
+  SaveTextActivity(text: $status) { id text userId createdAt }
+}
+`;
 
 export {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
+  saveTextActivityMutation,
 };

@@ -20,6 +20,7 @@ import {
   getMangaSearchResults,
   deleteUserActivities,
   getUserInfoByUsername,
+  writeTextActivity,
 } from "./helpers/more.js";
 
 const cli = new Command();
@@ -161,6 +162,14 @@ cli
         console.error(`\nMust select an option, either --anime or --manga`);
       }
     }
+  });
+cli
+  .command("status <status>")
+  .alias("post")
+  .alias("write")
+  .description("Write a status...")
+  .action(async (status) => {
+    await writeTextActivity(status);
   });
 
 cli.parse(process.argv);
