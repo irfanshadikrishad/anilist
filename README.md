@@ -225,4 +225,8 @@ anilist import -m
 
 Since you are creating your own API client for login no else else can get your credentials and the generated access token will be stored in your own system. So, As long as you don't share your device (in case you do, just logout) you are safe.
 
+#### Contribution
+
+Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
+
 #### **_Thanks for visiting 💙_**
