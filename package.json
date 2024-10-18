@@ -17,7 +17,25 @@
   },
   "keywords": [
     "anilist",
-    "CLI"
+    "CLI",
+    "anime",
+    "manga",
+    "anime list",
+    "manga list",
+    "anime tracker",
+    "manga tracker",
+    "anilist API",
+    "anime progress",
+    "manga progress",
+    "media list",
+    "export anime",
+    "import anime",
+    "export manga",
+    "import manga",
+    "status tracker",
+    "watchlist",
+    "reading list",
+    "graphql"
   ],
   "repository": {
     "type": "git",
