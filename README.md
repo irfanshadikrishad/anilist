@@ -55,6 +55,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                    |
 | **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
 | **`status`** <br> _(alias: `write`/`post`)_ | `<status>` (text/markdown/html but wrap it with quotation mark).        | Write a status...                                |
+| **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list                       |
 
 #### Command Breakdown:
 
@@ -196,6 +197,17 @@ anilist write <status>
 - **Options**:
   - `<status>` : This is what you want to write, It can be HTML, Markdown and/or Text. But wrap it with quotation mark (") else it might get cut-off.
 - **Description**: Get anime/manga search results
+
+#### `export` _(alias: `exp`)_:
+
+```bash
+anilist export -a
+```
+
+- **Options**:
+  - `-a, --anime`: To export anime list.
+  - `-m, --manga`: To export manga list.
+- **Description**: Export anime or manga list
 
 #### Security
 
