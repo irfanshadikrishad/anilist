@@ -22,6 +22,7 @@ import {
   getUserInfoByUsername,
   writeTextActivity,
   exportAnimeList,
+  exportMangaList,
 } from "./helpers/more.js";
 
 const cli = new Command();
@@ -185,7 +186,7 @@ cli
       if (anime) {
         await exportAnimeList();
       } else if (manga) {
-        console.log(manga);
+        await exportMangaList();
       }
     }
   });

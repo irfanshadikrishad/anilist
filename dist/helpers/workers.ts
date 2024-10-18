@@ -91,12 +91,17 @@ function getFormattedDate(): string {
   return `${day}-${month}-${year}-${hours}-${minutes}`;
 }
 
-async function saveJSONasJSON(js0n: object): Promise<void> {
+/**
+ * Export JSON as JSON
+ * @param js0n
+ * @param dataType (eg: anime/manga)
+ */
+async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
   try {
     const jsonData = JSON.stringify(js0n, null, 2);
     const path = join(
       getDownloadFolderPath(),
-      `@irfanshadikrishad-anilist-anime-${getFormattedDate()}.json`
+      `@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`
     );
     await writeFile(path, jsonData, "utf8");
     console.log(`\nSaved as JSON successfully.`);
@@ -106,12 +111,17 @@ async function saveJSONasJSON(js0n: object): Promise<void> {
   }
 }
 
-async function saveJSONasCSV(js0n: object): Promise<void> {
+/**
+ * Export JSON as CSV
+ * @param js0n
+ * @param dataType (eg: anime/manga)
+ */
+async function saveJSONasCSV(js0n: object, dataType: string): Promise<void> {
   try {
     const csvData = parse(js0n);
     const path = join(
       getDownloadFolderPath(),
-      `@irfanshadikrishad-anilist-anime-${getFormattedDate()}.csv`
+      `@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`
     );
     await writeFile(path, csvData, "utf8");
     console.log(`\nSaved as CSV successfully.`);

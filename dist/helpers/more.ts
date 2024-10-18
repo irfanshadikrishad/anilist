@@ -9,6 +9,7 @@ import {
   animeDetailsQuery,
   animeSearchQuery,
   currentUserAnimeList,
+  currentUserMangaList,
   mangaSearchQuery,
   userActivityQuery,
   userQuery,
@@ -387,10 +388,10 @@ async function exportAnimeList() {
 
       switch (exportType) {
         case 1:
-          await saveJSONasCSV(mediaWithProgress);
+          await saveJSONasCSV(mediaWithProgress, "anime");
           break;
         case 2:
-          await saveJSONasJSON(mediaWithProgress);
+          await saveJSONasJSON(mediaWithProgress, "anime");
           break;
       }
     } else {
@@ -398,6 +399,58 @@ async function exportAnimeList() {
     }
   } else {
     console.error(`\nMust login to use this feature.`);
+  }
+}
+
+async function exportMangaList() {
+  if (await isLoggedIn()) {
+    const mangaLists: any = await fetcher(currentUserMangaList, {
+      id: await currentUsersId(),
+    });
+    if (mangaLists) {
+      const lists = mangaLists?.data?.MediaListCollection?.lists || [];
+      if (lists.length > 0) {
+        const { exportType } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "exportType",
+            message: "Choose export type:",
+            choices: [
+              { name: "CSV", value: 1 },
+              { name: "JSON", value: 2 },
+            ],
+            pageSize: 10,
+          },
+        ]);
+        const mediaWithProgress = lists.flatMap((list: any) =>
+          list.entries.map((entry: any) => ({
+            id: entry?.media?.id,
+            title:
+              exportType === 1
+                ? getTitle(entry?.media?.title)
+                : entry?.media?.title,
+            private: entry.private,
+            chapters: entry.media.chapters,
+            progress: entry.progress,
+            hiddenFromStatusLists: entry.hiddenFromStatusLists,
+          }))
+        );
+        switch (exportType) {
+          case 1:
+            await saveJSONasCSV(mediaWithProgress, "manga");
+            break;
+          case 2:
+            await saveJSONasJSON(mediaWithProgress, "manga");
+            break;
+        }
+      } else {
+        console.log(`\nList seems to be empty.`);
+      }
+    } else {
+      console.error(`\nCould not get manga list.`);
+    }
+  } else {
+    console.error(`\nPlease login to use this feature.`);
   }
 }
 
@@ -409,4 +462,5 @@ export {
   deleteUserActivities,
   writeTextActivity,
   exportAnimeList,
+  exportMangaList,
 };

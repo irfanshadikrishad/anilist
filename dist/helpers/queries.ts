@@ -30,29 +30,17 @@ const userQuery = `query ($username: String) {
 
 const currentUserAnimeList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: ANIME) {
-    lists {
-      name
-      entries {
-        id
-        progress
-        hiddenFromStatusLists
-        media {
-          id
-          title { romaji english }
-          episodes
-          siteUrl
-        }
-      }
-    }
+    lists { name entries { id progress hiddenFromStatusLists media { id title { romaji english } episodes siteUrl } } }
   }
 }
 `;
 
 const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
-    lists { name entries { id media { id title { romaji english } } } }
+    lists { name entries { id progress hiddenFromStatusLists private media { id title { romaji english } chapters } } }
   }
-}`;
+}
+`;
 
 const deleteMediaEntryMutation = `mutation($id: Int!) {
   DeleteMediaListEntry(id: $id) { deleted }
