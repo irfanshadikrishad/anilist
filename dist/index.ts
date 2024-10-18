@@ -21,6 +21,10 @@ import {
   deleteUserActivities,
   getUserInfoByUsername,
   writeTextActivity,
+  exportAnimeList,
+  exportMangaList,
+  importAnimeList,
+  importMangaList,
 } from "./helpers/more.js";
 
 const cli = new Command();
@@ -170,6 +174,40 @@ cli
   .description("Write a status...")
   .action(async (status) => {
     await writeTextActivity(status);
+  });
+cli
+  .command("export")
+  .alias("exp")
+  .description("Export your anime or manga list.")
+  .option("-a, --anime", "To get the anime search results.", false)
+  .option("-m, --manga", "To get the manga search results.", false)
+  .action(async ({ anime, manga }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.error(`\nMust select an option, either --anime or --manga`);
+    } else {
+      if (anime) {
+        await exportAnimeList();
+      } else if (manga) {
+        await exportMangaList();
+      }
+    }
+  });
+cli
+  .command("import")
+  .alias("imp")
+  .description("Import your anime or manga from anilist or other sources.")
+  .option("-a, --anime", "To get the anime search results.", false)
+  .option("-m, --manga", "To get the manga search results.", false)
+  .action(async ({ anime, manga }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.error(`\nMust select an option, either --anime or --manga`);
+    } else {
+      if (anime) {
+        await importAnimeList();
+      } else if (manga) {
+        await importMangaList();
+      }
+    }
   });
 
 cli.parse(process.argv);

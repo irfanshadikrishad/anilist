@@ -8,6 +8,8 @@ import {
   activityTextQuery,
   animeDetailsQuery,
   animeSearchQuery,
+  currentUserAnimeList,
+  currentUserMangaList,
   mangaSearchQuery,
   userActivityQuery,
   userQuery,
@@ -17,7 +19,11 @@ import {
   aniListEndpoint,
   formatDateObject,
   getTitle,
+  importAnimeListFromExportedJSON,
+  importMangaListFromExportedJSON,
   removeHtmlAndMarkdown,
+  saveJSONasCSV,
+  saveJSONasJSON,
 } from "./workers.js";
 import { fetcher } from "./fetcher.js";
 import inquirer from "inquirer";
@@ -349,6 +355,149 @@ async function writeTextActivity(status: string) {
   }
 }
 
+async function exportAnimeList() {
+  if (await isLoggedIn()) {
+    const { exportType } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "exportType",
+        message: "Choose export type:",
+        choices: [
+          { name: "CSV", value: 1 },
+          { name: "JSON", value: 2 },
+        ],
+        pageSize: 10,
+      },
+    ]);
+    const animeList: any = await fetcher(currentUserAnimeList, {
+      id: await currentUsersId(),
+    });
+    if (animeList) {
+      const lists = animeList?.data?.MediaListCollection?.lists ?? [];
+      const mediaWithProgress = lists.flatMap((list: any) =>
+        list.entries.map((entry: any) => ({
+          id: entry?.media?.id,
+          title:
+            exportType === 1
+              ? getTitle(entry?.media?.title)
+              : entry?.media?.title,
+          episodes: entry?.media?.episodes,
+          siteUrl: entry?.media?.siteUrl,
+          progress: entry.progress,
+          status: entry?.status,
+          hiddenFromStatusLists: entry.hiddenFromStatusLists,
+        }))
+      );
+
+      switch (exportType) {
+        case 1:
+          await saveJSONasCSV(mediaWithProgress, "anime");
+          break;
+        case 2:
+          await saveJSONasJSON(mediaWithProgress, "anime");
+          break;
+      }
+    } else {
+      console.error(`\nNo anime(s) found in your lists.`);
+    }
+  } else {
+    console.error(`\nMust login to use this feature.`);
+  }
+}
+
+async function exportMangaList() {
+  if (await isLoggedIn()) {
+    const mangaLists: any = await fetcher(currentUserMangaList, {
+      id: await currentUsersId(),
+    });
+    if (mangaLists) {
+      const lists = mangaLists?.data?.MediaListCollection?.lists || [];
+      if (lists.length > 0) {
+        const { exportType } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "exportType",
+            message: "Choose export type:",
+            choices: [
+              { name: "CSV", value: 1 },
+              { name: "JSON", value: 2 },
+            ],
+            pageSize: 10,
+          },
+        ]);
+        const mediaWithProgress = lists.flatMap((list: any) =>
+          list.entries.map((entry: any) => ({
+            id: entry?.media?.id,
+            title:
+              exportType === 1
+                ? getTitle(entry?.media?.title)
+                : entry?.media?.title,
+            private: entry.private,
+            chapters: entry.media.chapters,
+            progress: entry.progress,
+            status: entry?.status,
+            hiddenFromStatusLists: entry.hiddenFromStatusLists,
+          }))
+        );
+        switch (exportType) {
+          case 1:
+            await saveJSONasCSV(mediaWithProgress, "manga");
+            break;
+          case 2:
+            await saveJSONasJSON(mediaWithProgress, "manga");
+            break;
+        }
+      } else {
+        console.log(`\nList seems to be empty.`);
+      }
+    } else {
+      console.error(`\nCould not get manga list.`);
+    }
+  } else {
+    console.error(`\nPlease login to use this feature.`);
+  }
+}
+async function importAnimeList() {
+  try {
+    const { source } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "source",
+        message: "Select a source:",
+        choices: [{ name: "Exported JSON file.", value: 1 }],
+        pageSize: 10,
+      },
+    ]);
+    switch (source) {
+      case 1:
+        await importAnimeListFromExportedJSON();
+        break;
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
+async function importMangaList() {
+  try {
+    const { source } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "source",
+        message: "Select a source:",
+        choices: [{ name: "Exported JSON file.", value: 1 }],
+        pageSize: 10,
+      },
+    ]);
+    switch (source) {
+      case 1:
+        await importMangaListFromExportedJSON();
+        break;
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
+
 export {
   getUserInfoByUsername,
   getAnimeDetailsByID,
@@ -356,4 +505,8 @@ export {
   getMangaSearchResults,
   deleteUserActivities,
   writeTextActivity,
+  exportAnimeList,
+  exportMangaList,
+  importAnimeList,
+  importMangaList,
 };
