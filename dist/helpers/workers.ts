@@ -1,3 +1,9 @@
+import { writeFile } from "fs/promises";
+import { join } from "path";
+import { homedir } from "os";
+import open from "open";
+import { parse } from "json2csv";
+
 const aniListEndpoint = `https://graphql.anilist.co`;
 const redirectUri = "https://anilist.co/api/v2/oauth/pin";
 
@@ -58,6 +64,62 @@ function removeHtmlAndMarkdown(input: string) {
   }
   return input;
 }
+function getDownloadFolderPath(): string {
+  const homeDirectory = homedir();
+
+  // Determine the Downloads folder path based on the platform
+  if (process.platform === "win32") {
+    return join(homeDirectory, "Downloads");
+  } else if (process.platform === "darwin" || process.platform === "linux") {
+    return join(homeDirectory, "Downloads");
+  }
+
+  return homeDirectory;
+}
+
+function getFormattedDate(): string {
+  const date = new Date();
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  // Format as DD-MM-YYYY-HH-MM
+  return `${day}-${month}-${year}-${hours}-${minutes}`;
+}
+
+async function saveJSONasJSON(js0n: object): Promise<void> {
+  try {
+    const jsonData = JSON.stringify(js0n, null, 2);
+    const path = join(
+      getDownloadFolderPath(),
+      `@irfanshadikrishad-anilist-anime-${getFormattedDate()}.json`
+    );
+    await writeFile(path, jsonData, "utf8");
+    console.log(`\nSaved as JSON successfully.`);
+    open(getDownloadFolderPath());
+  } catch (error) {
+    console.error("\nError saving JSON data:", error);
+  }
+}
+
+async function saveJSONasCSV(js0n: object): Promise<void> {
+  try {
+    const csvData = parse(js0n);
+    const path = join(
+      getDownloadFolderPath(),
+      `@irfanshadikrishad-anilist-anime-${getFormattedDate()}.csv`
+    );
+    await writeFile(path, csvData, "utf8");
+    console.log(`\nSaved as CSV successfully.`);
+    open(getDownloadFolderPath());
+  } catch (error) {
+    console.error("\nError saving CSV data:", error);
+  }
+}
 
 export {
   aniListEndpoint,
@@ -66,4 +128,6 @@ export {
   getNextSeasonAndYear,
   formatDateObject,
   removeHtmlAndMarkdown,
+  saveJSONasJSON,
+  saveJSONasCSV,
 };

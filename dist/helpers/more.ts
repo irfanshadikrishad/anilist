@@ -8,6 +8,7 @@ import {
   activityTextQuery,
   animeDetailsQuery,
   animeSearchQuery,
+  currentUserAnimeList,
   mangaSearchQuery,
   userActivityQuery,
   userQuery,
@@ -18,6 +19,8 @@ import {
   formatDateObject,
   getTitle,
   removeHtmlAndMarkdown,
+  saveJSONasCSV,
+  saveJSONasJSON,
 } from "./workers.js";
 import { fetcher } from "./fetcher.js";
 import inquirer from "inquirer";
@@ -349,6 +352,55 @@ async function writeTextActivity(status: string) {
   }
 }
 
+async function exportAnimeList() {
+  if (await isLoggedIn()) {
+    const { exportType } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "exportType",
+        message: "Choose export type:",
+        choices: [
+          { name: "CSV", value: 1 },
+          { name: "JSON", value: 2 },
+        ],
+        pageSize: 10,
+      },
+    ]);
+    const animeList: any = await fetcher(currentUserAnimeList, {
+      id: await currentUsersId(),
+    });
+    if (animeList) {
+      const lists = animeList?.data?.MediaListCollection?.lists ?? [];
+      const mediaWithProgress = lists.flatMap((list: any) =>
+        list.entries.map((entry: any) => ({
+          id: entry?.media?.id,
+          title:
+            exportType === 1
+              ? getTitle(entry?.media?.title)
+              : entry?.media?.title,
+          episodes: entry?.media?.episodes,
+          siteUrl: entry?.media?.siteUrl,
+          progress: entry.progress,
+          hiddenFromStatusLists: entry.hiddenFromStatusLists,
+        }))
+      );
+
+      switch (exportType) {
+        case 1:
+          await saveJSONasCSV(mediaWithProgress);
+          break;
+        case 2:
+          await saveJSONasJSON(mediaWithProgress);
+          break;
+      }
+    } else {
+      console.error(`\nNo anime(s) found in your lists.`);
+    }
+  } else {
+    console.error(`\nMust login to use this feature.`);
+  }
+}
+
 export {
   getUserInfoByUsername,
   getAnimeDetailsByID,
@@ -356,4 +408,5 @@ export {
   getMangaSearchResults,
   deleteUserActivities,
   writeTextActivity,
+  exportAnimeList,
 };
