@@ -23,6 +23,7 @@ import {
   writeTextActivity,
   exportAnimeList,
   exportMangaList,
+  importAnimeList,
 } from "./helpers/more.js";
 
 const cli = new Command();
@@ -187,6 +188,23 @@ cli
         await exportAnimeList();
       } else if (manga) {
         await exportMangaList();
+      }
+    }
+  });
+cli
+  .command("import")
+  .alias("imp")
+  .description("Import your anime or manga from anilist or other sources.")
+  .option("-a, --anime", "To get the anime search results.", false)
+  .option("-m, --manga", "To get the manga search results.", false)
+  .action(async ({ anime, manga }) => {
+    if ((!anime && !manga) || (anime && manga)) {
+      console.error(`\nMust select an option, either --anime or --manga`);
+    } else {
+      if (anime) {
+        await importAnimeList();
+      } else if (manga) {
+        console.log(`\nNot yet implemented!`);
       }
     }
   });

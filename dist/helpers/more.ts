@@ -19,6 +19,7 @@ import {
   aniListEndpoint,
   formatDateObject,
   getTitle,
+  importAnimeListFromExportedJSON,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
@@ -382,6 +383,7 @@ async function exportAnimeList() {
           episodes: entry?.media?.episodes,
           siteUrl: entry?.media?.siteUrl,
           progress: entry.progress,
+          status: entry?.status,
           hiddenFromStatusLists: entry.hiddenFromStatusLists,
         }))
       );
@@ -432,6 +434,7 @@ async function exportMangaList() {
             private: entry.private,
             chapters: entry.media.chapters,
             progress: entry.progress,
+            status: entry?.status,
             hiddenFromStatusLists: entry.hiddenFromStatusLists,
           }))
         );
@@ -453,6 +456,26 @@ async function exportMangaList() {
     console.error(`\nPlease login to use this feature.`);
   }
 }
+async function importAnimeList() {
+  try {
+    const { source } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "source",
+        message: "Select a source:",
+        choices: [{ name: "Exported JSON file.", value: 1 }],
+        pageSize: 10,
+      },
+    ]);
+    switch (source) {
+      case 1:
+        await importAnimeListFromExportedJSON();
+        break;
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
 
 export {
   getUserInfoByUsername,
@@ -463,4 +486,5 @@ export {
   writeTextActivity,
   exportAnimeList,
   exportMangaList,
+  importAnimeList,
 };
