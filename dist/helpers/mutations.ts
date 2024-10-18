@@ -25,14 +25,14 @@ mutation SaveTextActivity($status: String!) {
 const saveAnimeWithProgressMutation = `
 mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromStatusLists: Boolean) {
   SaveMediaListEntry(mediaId: $mediaId, progress: $progress, status: $status, hiddenFromStatusLists: $hiddenFromStatusLists) {
-    id progress status hiddenFromStatusLists
+    id progress hiddenFromStatusLists
   }
 }
 `;
 const saveMangaWithProgressMutation = `
 mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromStatusLists: Boolean, $private: Boolean) {
   SaveMediaListEntry( mediaId: $mediaId, progress: $progress, status: $status, hiddenFromStatusLists: $hiddenFromStatusLists, private: $private
-  ) { id progress status hiddenFromStatusLists private }
+  ) { id progress hiddenFromStatusLists private }
 }
 `;
 

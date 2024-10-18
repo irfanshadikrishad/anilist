@@ -177,7 +177,7 @@ async function importAnimeListFromExportedJSON() {
         mediaId: anime?.id,
         progress: anime?.progress,
         status: anime?.status,
-        hiddenFromStatusLists: anime?.hiddenFromStatusLists,
+        hiddenFromStatusLists: false,
       };
       const save: any = await fetcher(query, variables);
       if (save) {
@@ -205,7 +205,7 @@ async function importMangaListFromExportedJSON() {
         mediaId: manga?.id,
         progress: manga?.progress,
         status: manga?.status,
-        hiddenFromStatusLists: manga?.hiddenFromStatusLists,
+        hiddenFromStatusLists: false,
         private: manga?.private,
       };
       const save: any = await fetcher(query, variables);
