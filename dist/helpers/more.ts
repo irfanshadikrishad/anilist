@@ -25,6 +25,7 @@ import {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
+  saveTextActivityMutation,
 } from "./mutations.js";
 
 async function getUserInfoByUsername(username: string) {
@@ -88,10 +89,10 @@ async function getUserInfoByUsername(username: string) {
           }
         );
     } else {
-      console.log(`Something went wrong. ${response?.errors[0]?.message}`);
+      console.error(`\n${request.status} ${response?.errors[0]?.message}`);
     }
   } catch (error) {
-    console.log(`Something went wrong. ${(error as Error).message}`);
+    console.error(`\nSomething went wrong. ${(error as Error).message}`);
   }
 }
 async function getAnimeDetailsByID(anilistID: number) {
@@ -184,13 +185,13 @@ async function getAnimeSearchResults(search: string, count: number) {
           console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
         }
       } else {
-        console.error(`Please log in first to use this feature.`);
+        console.error(`\nPlease log in first to use this feature.`);
       }
     } else {
       console.log(`\nNo search results!`);
     }
   } else {
-    console.error(`Something went wrong.`);
+    console.error(`\nSomething went wrong.`);
   }
 }
 
@@ -243,10 +244,10 @@ async function getMangaSearchResults(search: string, count: number) {
         console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`);
       }
     } else {
-      console.error(`Please log in first to use this feature.`);
+      console.error(`\nPlease log in first to use this feature.`);
     }
   } else {
-    console.error(`Something went wrong.`);
+    console.error(`\nSomething went wrong.`);
   }
 }
 async function deleteUserActivities() {
@@ -298,21 +299,53 @@ async function deleteUserActivities() {
         console.log(`\nNo activities available of this type.`);
       } else {
         for (let act of activities) {
-          const activityID = act?.id;
-          const deleteResponse: any = await fetcher(deleteActivityMutation, {
-            id: activityID,
-          });
-          const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
+          // Making sure to have ID
+          // to avoid unintended errors
+          if (act?.id) {
+            const activityID = act?.id;
+            const deleteResponse: any = await fetcher(deleteActivityMutation, {
+              id: activityID,
+            });
+            const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
 
-          console.log(`${activityID} ${isDeleted ? "✅" : "❌"}`);
+            console.log(`${activityID} ${isDeleted ? "✅" : "❌"}`);
 
-          // avoiding rate-limit
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+            // avoiding rate-limit
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          }
         }
       }
     }
   } else {
-    console.error(`Please log in to use this feature.`);
+    console.error(`\nPlease log in to delete your activities.`);
+  }
+}
+
+async function writeTextActivity(status: string) {
+  try {
+    if (await isLoggedIn()) {
+      const query = saveTextActivityMutation;
+      const addTagInStatus: string =
+        status +
+        `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`;
+      const variables = { status: addTagInStatus };
+
+      const data: any = await fetcher(query, variables);
+
+      if (data) {
+        const savedActivity = data?.data?.SaveTextActivity;
+
+        if (savedActivity?.id) {
+          console.log(`\n[${savedActivity?.id}] status saved successfully!`);
+        }
+      } else {
+        console.error(`\nSomething went wrong. ${data}.`);
+      }
+    } else {
+      console.error(`\nPlease login to use this feature.`);
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
   }
 }
 
@@ -322,4 +355,5 @@ export {
   getAnimeSearchResults,
   getMangaSearchResults,
   deleteUserActivities,
+  writeTextActivity,
 };

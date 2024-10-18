@@ -33,11 +33,11 @@ async function fetcher(
     if (request.status === 200) {
       return response;
     } else {
-      console.error(`Error from fetcher. ${response?.errors[0]?.message}.`);
+      console.error(`\n${request.status} ${response?.errors[0]?.message}.`);
       return null;
     }
   } catch (error) {
-    console.error(`Something went wrong. ${(error as Error).message}.`);
+    console.error(`\nSomething went wrong. ${(error as Error).message}.`);
     return null;
   }
 }
