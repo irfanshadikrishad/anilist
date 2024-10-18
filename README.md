@@ -54,7 +54,7 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
 | **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                    |
 | **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
-| **`status`** <br> _(alias: `write`/`post`)_ | `<status>` (text/markdown/html but wrap it with quotation mark).        | Write a status...                                |
+| **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)           |
 | **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list                       |
 | **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list                       |
 
