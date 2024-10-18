@@ -24,6 +24,7 @@ import {
   exportAnimeList,
   exportMangaList,
   importAnimeList,
+  importMangaList,
 } from "./helpers/more.js";
 
 const cli = new Command();
@@ -204,7 +205,7 @@ cli
       if (anime) {
         await importAnimeList();
       } else if (manga) {
-        console.log(`\nNot yet implemented!`);
+        await importMangaList();
       }
     }
   });

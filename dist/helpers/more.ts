@@ -20,6 +20,7 @@ import {
   formatDateObject,
   getTitle,
   importAnimeListFromExportedJSON,
+  importMangaListFromExportedJSON,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
@@ -476,6 +477,26 @@ async function importAnimeList() {
     console.error(`\n${(error as Error).message}`);
   }
 }
+async function importMangaList() {
+  try {
+    const { source } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "source",
+        message: "Select a source:",
+        choices: [{ name: "Exported JSON file.", value: 1 }],
+        pageSize: 10,
+      },
+    ]);
+    switch (source) {
+      case 1:
+        await importMangaListFromExportedJSON();
+        break;
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
 
 export {
   getUserInfoByUsername,
@@ -487,4 +508,5 @@ export {
   exportAnimeList,
   exportMangaList,
   importAnimeList,
+  importMangaList,
 };

@@ -29,6 +29,12 @@ mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromSt
   }
 }
 `;
+const saveMangaWithProgressMutation = `
+mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromStatusLists: Boolean, $private: Boolean) {
+  SaveMediaListEntry( mediaId: $mediaId, progress: $progress, status: $status, hiddenFromStatusLists: $hiddenFromStatusLists, private: $private
+  ) { id progress status hiddenFromStatusLists private }
+}
+`;
 
 export {
   addAnimeToListMutation,
@@ -36,4 +42,5 @@ export {
   deleteActivityMutation,
   saveTextActivityMutation,
   saveAnimeWithProgressMutation,
+  saveMangaWithProgressMutation,
 };

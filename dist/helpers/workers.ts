@@ -1,11 +1,14 @@
 import inquirer from "inquirer";
 import open from "open";
-import { join, resolve } from "path";
+import { join } from "path";
 import { homedir } from "os";
 import { parse } from "json2csv";
 import { writeFile, readdir, readFile } from "fs/promises";
 import { currentUsersName } from "./auth.js";
-import { saveAnimeWithProgressMutation } from "./mutations.js";
+import {
+  saveAnimeWithProgressMutation,
+  saveMangaWithProgressMutation,
+} from "./mutations.js";
 import { fetcher } from "./fetcher.js";
 
 const aniListEndpoint = `https://graphql.anilist.co`;
@@ -190,6 +193,35 @@ async function importAnimeListFromExportedJSON() {
     console.error(`\n${(error as Error).message}`);
   }
 }
+async function importMangaListFromExportedJSON() {
+  try {
+    const filename = await selectFile();
+    const filePath = join(getDownloadFolderPath(), filename);
+    const fileContent = await readFile(filePath, "utf8");
+    const importedData = JSON.parse(fileContent);
+    for (let manga of importedData) {
+      const query = saveMangaWithProgressMutation;
+      const variables = {
+        mediaId: manga?.id,
+        progress: manga?.progress,
+        status: manga?.status,
+        hiddenFromStatusLists: manga?.hiddenFromStatusLists,
+        private: manga?.private,
+      };
+      const save: any = await fetcher(query, variables);
+      if (save) {
+        const id = save?.data?.SaveMediaListEntry?.id;
+        console.log(`${manga?.id}-${id} ✅`);
+      } else {
+        console.error(`\nError saving ${manga?.id}`);
+      }
+      // avoiding rate-limit
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  } catch (error) {
+    console.error(`\n${(error as Error).message}`);
+  }
+}
 
 export {
   aniListEndpoint,
@@ -201,4 +233,5 @@ export {
   saveJSONasJSON,
   saveJSONasCSV,
   importAnimeListFromExportedJSON,
+  importMangaListFromExportedJSON,
 };
