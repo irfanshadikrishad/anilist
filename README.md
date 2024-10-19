@@ -54,7 +54,9 @@ here `<client-id>` and `<client-secret>` should be replaced by the ones that you
 | **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)       |
 | **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                    |
 | **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                   |
-| **`status`** <br> _(alias: `write`/`post`)_ | `<status>` (text/markdown/html but wrap it with quotation mark).        | Write a status...                                |
+| **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)           |
+| **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list                       |
+| **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list                       |
 
 #### Command Breakdown:
 
@@ -197,8 +199,34 @@ anilist write <status>
   - `<status>` : This is what you want to write, It can be HTML, Markdown and/or Text. But wrap it with quotation mark (") else it might get cut-off.
 - **Description**: Get anime/manga search results
 
+#### `export` _(alias: `exp`)_:
+
+```bash
+anilist export -a
+```
+
+- **Options**:
+  - `-a, --anime`: To export anime list.
+  - `-m, --manga`: To export manga list.
+- **Description**: Export anime or manga list
+
+#### `import` _(alias: `imp`)_:
+
+```bash
+anilist import -m
+```
+
+- **Options**:
+  - `-a, --anime`: To import anime list.
+  - `-m, --manga`: To import manga list.
+- **Description**: Import anime or manga list
+
 #### Security
 
 Since you are creating your own API client for login no else else can get your credentials and the generated access token will be stored in your own system. So, As long as you don't share your device (in case you do, just logout) you are safe.
+
+#### Contribution
+
+Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
 
 #### **_Thanks for visiting 💙_**

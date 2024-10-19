@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -17,7 +17,25 @@
   },
   "keywords": [
     "anilist",
-    "CLI"
+    "CLI",
+    "anime",
+    "manga",
+    "anime list",
+    "manga list",
+    "anime tracker",
+    "manga tracker",
+    "anilist API",
+    "anime progress",
+    "manga progress",
+    "media list",
+    "export anime",
+    "import anime",
+    "export manga",
+    "import manga",
+    "status tracker",
+    "watchlist",
+    "reading list",
+    "graphql"
   ],
   "repository": {
     "type": "git",
@@ -29,12 +47,14 @@
   },
   "license": "MPL-2.0",
   "devDependencies": {
-    "@types/node": "^22.7.6",
+    "@types/json2csv": "^5.0.7",
+    "@types/node": "^22.7.7",
     "typescript": "^5.6.3"
   },
   "dependencies": {
     "commander": "^12.1.0",
     "inquirer": "^12.0.0",
+    "json2csv": "^6.0.0-alpha.2",
     "node-fetch": "^3.3.2",
     "open": "^10.1.0"
   }
