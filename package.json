@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -48,7 +48,7 @@
   "license": "MPL-2.0",
   "devDependencies": {
     "@types/json2csv": "^5.0.7",
-    "@types/node": "^22.7.6",
+    "@types/node": "^22.7.7",
     "typescript": "^5.6.3"
   },
   "dependencies": {

@@ -35,7 +35,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.0.5");
+  .version("1.0.6");
 
 cli
   .command("login")
