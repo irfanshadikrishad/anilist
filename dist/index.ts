@@ -3,6 +3,7 @@ import { Command } from "commander";
 import {
   anilistUserLogin,
   currentUserInfo,
+  isLoggedIn,
   logoutUser,
 } from "./helpers/auth.js";
 import {
@@ -202,10 +203,14 @@ cli
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`\nMust select an option, either --anime or --manga`);
     } else {
-      if (anime) {
-        await importAnimeList();
-      } else if (manga) {
-        await importMangaList();
+      if (await isLoggedIn()) {
+        if (anime) {
+          await importAnimeList();
+        } else if (manga) {
+          await importMangaList();
+        }
+      } else {
+        console.error(`\nPlease login to use this feature.`);
       }
     }
   });

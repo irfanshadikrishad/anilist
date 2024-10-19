@@ -157,8 +157,9 @@ async function isLoggedIn(): Promise<Boolean> {
 async function logoutUser() {
   if (fs.existsSync(save_path)) {
     try {
+      const username = await currentUsersName();
       fs.unlinkSync(save_path);
-      console.log("\nLogout successful.");
+      console.log(`\nLogout successful. See you soon, ${username}.`);
     } catch (error) {
       console.error("\nError logging out:", error);
     }
