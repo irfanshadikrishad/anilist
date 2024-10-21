@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import process from "process";
 import { Command } from "commander";
 import {
   anilistUserLogin,

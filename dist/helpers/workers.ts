@@ -2,6 +2,7 @@ import inquirer from "inquirer";
 import open from "open";
 import { join } from "path";
 import { homedir } from "os";
+import process from "process";
 import { parse } from "json2csv";
 import { writeFile, readdir, readFile } from "fs/promises";
 import { currentUsersName } from "./auth.js";
@@ -180,30 +181,35 @@ async function importAnimeListFromExportedJSON() {
       const batch = importedData.slice(i, i + batchSize);
 
       await Promise.all(
-        batch.map(async (anime: any) => {
-          const query = saveAnimeWithProgressMutation;
-          const variables = {
-            mediaId: anime?.id,
-            progress: anime?.progress,
-            status: anime?.status,
-            hiddenFromStatusLists: false,
-          };
+        batch.map(
+          async (anime: { id: number; progress: number; status: string }) => {
+            const query = saveAnimeWithProgressMutation;
+            const variables = {
+              mediaId: anime?.id,
+              progress: anime?.progress,
+              status: anime?.status,
+              hiddenFromStatusLists: false,
+            };
 
-          try {
-            const save: any = await fetcher(query, variables);
-            if (save) {
-              const id = save?.data?.SaveMediaListEntry?.id;
-              count++;
-              console.log(`[${count}] ${anime?.id}-${id} ✅`);
-            } else {
-              console.error(`\nError saving ${anime?.id}`);
+            try {
+              const save: {
+                data?: { SaveMediaListEntry: { id: number } };
+                errors?: { message: string };
+              } = await fetcher(query, variables);
+              if (save) {
+                const id = save?.data?.SaveMediaListEntry?.id;
+                count++;
+                console.log(`[${count}] ${anime?.id}-${id} ✅`);
+              } else {
+                console.error(`\nError saving ${anime?.id}`);
+              }
+            } catch (error) {
+              console.error(
+                `\nError saving ${anime?.id}: ${(error as Error).message}`
+              );
             }
-          } catch (error) {
-            console.error(
-              `\nError saving ${anime?.id}: ${(error as Error).message}`
-            );
           }
-        })
+        )
       );
 
       // Avoid rate-limiting: Wait before sending the next batch
@@ -232,29 +238,39 @@ async function importMangaListFromExportedJSON() {
       const batch = importedData.slice(i, i + batchSize);
 
       await Promise.all(
-        batch.map(async (manga: any) => {
-          const query = saveMangaWithProgressMutation;
-          const variables = {
-            mediaId: manga?.id,
-            progress: manga?.progress,
-            status: manga?.status,
-            hiddenFromStatusLists: false,
-            private: manga?.private,
-          };
+        batch.map(
+          async (manga: {
+            id: number;
+            progress: number;
+            status: string;
+            private: boolean;
+          }) => {
+            const query = saveMangaWithProgressMutation;
+            const variables = {
+              mediaId: manga?.id,
+              progress: manga?.progress,
+              status: manga?.status,
+              hiddenFromStatusLists: false,
+              private: manga?.private,
+            };
 
-          try {
-            const save: any = await fetcher(query, variables);
-            if (save) {
-              const id = save?.data?.SaveMediaListEntry?.id;
-              count++;
-              console.log(`[${count}] ${manga?.id}-${id} ✅`);
+            try {
+              const save: {
+                data?: { SaveMediaListEntry: { id: number } };
+                errors?: { message: string };
+              } = await fetcher(query, variables);
+              if (save) {
+                const id = save?.data?.SaveMediaListEntry?.id;
+                count++;
+                console.log(`[${count}] ${manga?.id}-${id} ✅`);
+              }
+            } catch (err) {
+              console.error(
+                `\nError saving ${manga?.id}: ${(err as Error).message}`
+              );
             }
-          } catch (err) {
-            console.error(
-              `\nError saving ${manga?.id}: ${(err as Error).message}`
-            );
           }
-        })
+        )
       );
 
       // Avoid rate-limit by adding delay after processing each batch

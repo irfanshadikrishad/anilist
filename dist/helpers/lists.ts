@@ -429,7 +429,7 @@ async function deleteAnimeCollection() {
           if (selectedEntries) {
             console.log(`\nDeleting entries of '${selectedEntries.name}':`);
 
-            for (const [idx, entry] of selectedEntries.entries.entries()) {
+            for (const [entry] of selectedEntries.entries.entries()) {
               if (entry?.id) {
                 await deleteAnimeByAnimeId(entry?.id, entry?.media?.title);
                 await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -518,7 +518,7 @@ async function deleteMangaCollection() {
           if (selectedEntries) {
             console.log(`\nDeleting entries of '${selectedEntries.name}':`);
 
-            for (const [idx, entry] of selectedEntries.entries.entries()) {
+            for (const [entry] of selectedEntries.entries.entries()) {
               if (entry?.id) {
                 await deleteMangaByMangaId(entry?.id, entry?.media?.title);
                 await new Promise((resolve) => setTimeout(resolve, 2000));

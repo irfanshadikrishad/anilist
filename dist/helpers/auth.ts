@@ -26,7 +26,7 @@ async function storeAccessToken(token: string) {
   try {
     fs.writeFileSync(save_path, token, { encoding: "utf8" });
   } catch (error) {
-    console.error(`Error storing acess-token.`);
+    console.error(`\nError storing acess-token. ${(error as Error).message}`);
   }
 }
 
@@ -97,38 +97,41 @@ async function currentUserInfo() {
       });
       const activities = activiResponse?.data?.Page?.activities;
 
-      console.log(`\nID:\t\t\t${user?.id}`);
-      console.log(`Name:\t\t\t${user?.name}`);
-      console.log(`siteUrl:\t\t${user?.siteUrl}`);
-      console.log(`profileColor:\t\t${user?.options?.profileColor}`);
-      console.log(`timeZone:\t\t${user?.options?.timezone}`);
-      console.log(`activityMergeTime:\t${user?.options?.activityMergeTime}`);
-      console.log(`donatorTier:\t\t${user?.donatorTier}`);
-      console.log(`donatorBadge:\t\t${user?.donatorBadge}`);
-      console.log(`unreadNotificationCount:${user?.unreadNotificationCount}`);
-      console.log(
-        `Account Created:\t${new Date(user?.createdAt * 1000).toUTCString()}`
-      );
-      console.log(
-        `Account Updated:\t${new Date(user?.updatedAt * 1000).toUTCString()}`
-      );
-      console.log(
-        `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} meanScore: ${user?.statistics?.anime?.meanScore} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
-      );
-      console.log(
-        `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
-      );
+      console.log(`
+ID:                     ${user?.id}
+Name:                   ${user?.name}
+siteUrl:                ${user?.siteUrl}
+profileColor:           ${user?.options?.profileColor}
+timeZone:               ${user?.options?.timezone}
+activityMergeTime:      ${user?.options?.activityMergeTime}
+donatorTier:            ${user?.donatorTier}
+donatorBadge:           ${user?.donatorBadge}
+unreadNotificationCount:${user?.unreadNotificationCount}
+Account Created:        ${new Date(user?.createdAt * 1000).toUTCString()}
+Account Updated:        ${new Date(user?.updatedAt * 1000).toUTCString()}
+      
+Statistics (Anime):
+  Count:                ${user?.statistics?.anime?.count}
+  Mean Score:           ${user?.statistics?.anime?.meanScore}
+  Minutes Watched:      ${user?.statistics?.anime?.minutesWatched}
+      
+Statistics (Manga):
+  Count:                ${user?.statistics?.manga?.count}
+  Chapters Read:        ${user?.statistics?.manga?.chaptersRead}
+  Volumes Read:         ${user?.statistics?.manga?.volumesRead}
+`);
+
       console.log(`\nRecent Activities:`);
-      activities.length > 0 &&
-        activities.map(
-          ({ id, status, progress, createdAt, media }, idx: number) => {
-            progress
-              ? console.log(
-                  `${status} ${progress} of ${getTitle(media?.title)}`
-                )
-              : console.log(`${status} ${getTitle(media?.title)}`);
-          }
-        );
+      if (activities.length > 0) {
+        activities.map(({ status, progress, media }) => {
+          console.log(
+            `${status} ${progress ? `${progress} of ` : ""}${getTitle(
+              media?.title
+            )}`
+          );
+        });
+      }
+
       return user;
     } else {
       console.error(
@@ -142,7 +145,7 @@ async function currentUserInfo() {
   }
 }
 
-async function isLoggedIn(): Promise<Boolean> {
+async function isLoggedIn(): Promise<boolean> {
   if ((await retriveAccessToken()) !== null) {
     return true;
   } else {

@@ -36,7 +36,7 @@ import {
 
 async function getUserInfoByUsername(username: string) {
   try {
-    let headers = {
+    const headers = {
       "content-type": "application/json",
     };
     if (await isLoggedIn()) {
@@ -47,7 +47,10 @@ async function getUserInfoByUsername(username: string) {
       headers: headers,
       body: JSON.stringify({ query: userQuery, variables: { username } }),
     });
-    const response: any = await request.json();
+    const response: {
+      data?: { User: { id: number } };
+      errors?: { message: string };
+    } = await request.json();
     if (request.status === 200) {
       const user: any = response?.data?.User;
       const responseUserActivity: any = await fetcher(userActivityQuery, {
@@ -62,11 +65,10 @@ async function getUserInfoByUsername(username: string) {
       console.log(`siteUrl:\t${user?.siteUrl}`);
       console.log(`Donator Tier:\t${user?.donatorTier}`);
       console.log(`Donator Badge:\t${user?.donatorBadge}`);
-      {
-        user?.createdAt &&
-          console.log(
-            `Account Created:${new Date(user?.createdAt * 1000).toUTCString()}`
-          );
+      if (user?.createdAt) {
+        console.log(
+          `Account Created: ${new Date(user.createdAt * 1000).toUTCString()}`
+        );
       }
       console.log(
         `Account Updated:${new Date(user?.updatedAt * 1000).toUTCString()}`
@@ -83,16 +85,15 @@ async function getUserInfoByUsername(username: string) {
         `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
       );
       console.log(`\nRecent Activities:`);
-      activities.length > 0 &&
-        activities.map(
-          ({ id, status, progress, createdAt, media }, idx: number) => {
-            progress
-              ? console.log(
-                  `${status} ${progress} of ${getTitle(media?.title)}`
-                )
-              : console.log(`${status} ${getTitle(media?.title)}`);
-          }
-        );
+      if (activities.length > 0) {
+        activities.map(({ status, progress, media }) => {
+          console.log(
+            `${status} ${progress ? `${progress} of ` : ""}${getTitle(
+              media?.title
+            )}`
+          );
+        });
+      }
     } else {
       console.error(`\n${request.status} ${response?.errors[0]?.message}`);
     }
@@ -101,18 +102,15 @@ async function getUserInfoByUsername(username: string) {
   }
 }
 async function getAnimeDetailsByID(anilistID: number) {
-  let query = animeDetailsQuery;
-  let variables = { id: anilistID };
+  const query = animeDetailsQuery;
+  const variables = { id: anilistID };
   const details: any = await fetcher(query, variables);
 
-  if (details) {
+  if (details?.data?.Media) {
     const {
       id,
-      idMal,
       title,
       description,
-      episodes,
-      nextAiringEpisode,
       duration,
       startDate,
       endDate,
@@ -123,8 +121,7 @@ async function getAnimeDetailsByID(anilistID: number) {
       format,
       genres,
       siteUrl,
-      stats,
-    } = details?.data?.Media;
+    } = details.data.Media;
 
     console.log(`\nID: ${id}`);
     console.log(`Title: ${title?.userPreffered || getTitle(title)}`);
@@ -271,7 +268,7 @@ async function deleteUserActivities() {
       },
     ]);
     const userId = await currentUsersId();
-    let variables = { page: 1, perPage: 100, userId };
+    const variables = { page: 1, perPage: 100, userId };
     const queryMap = {
       0: activityAllQuery,
       1: activityTextQuery,
@@ -289,7 +286,7 @@ async function deleteUserActivities() {
       if (activities.length <= 0) {
         console.log(`\nNo activities available of this type.`);
       } else {
-        for (let act of activities) {
+        for (const act of activities) {
           // Making sure to have ID
           // to avoid unintended errors
           if (act?.id) {
