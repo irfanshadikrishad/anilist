@@ -174,8 +174,8 @@ async function importAnimeListFromExportedJSON() {
     const importedData = JSON.parse(fileContent);
 
     let count = 0;
-    const batchSize = 5; // Number of requests in each batch
-    const delay = 2000; // 2 seconds delay to avoid rate-limiting
+    const batchSize = 1; // Number of requests in each batch
+    const delay = 2000; // delay to avoid rate-limiting
 
     for (let i = 0; i < importedData.length; i += batchSize) {
       const batch = importedData.slice(i, i + batchSize);
@@ -230,7 +230,7 @@ async function importMangaListFromExportedJSON() {
     const importedData = JSON.parse(fileContent);
 
     let count = 0;
-    const batchSize = 5; // Adjust batch size as per rate-limit constraints
+    const batchSize = 1; // Adjust batch size as per rate-limit constraints
     const delay = 2000; // 2 seconds delay to avoid rate-limit
 
     // Process in batches

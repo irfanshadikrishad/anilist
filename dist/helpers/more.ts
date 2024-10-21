@@ -279,29 +279,50 @@ async function deleteUserActivities() {
     };
     const query = queryMap[activityType];
 
-    const response: any = await fetcher(query, variables);
+    let hasMoreActivities = true;
 
-    if (response) {
-      const activities = response?.data?.Page?.activities;
-      if (activities.length <= 0) {
-        console.log(`\nNo activities available of this type.`);
-      } else {
-        for (const act of activities) {
-          // Making sure to have ID
-          // to avoid unintended errors
-          if (act?.id) {
-            const activityID = act?.id;
-            const deleteResponse: any = await fetcher(deleteActivityMutation, {
-              id: activityID,
-            });
-            const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
+    while (hasMoreActivities) {
+      const response: any = await fetcher(query, {
+        page: 1,
+        perPage: 50,
+        userId: await currentUsersId(),
+      });
 
-            console.log(`${activityID} ${isDeleted ? "✅" : "❌"}`);
+      if (response?.data?.Page?.activities) {
+        let count = 0;
+        const activities = response?.data?.Page?.activities;
 
-            // avoiding rate-limit
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (!activities || activities.length === 0) {
+          console.log(`\nNo more activities available.`);
+          hasMoreActivities = false;
+        } else {
+          for (const act of activities) {
+            // Ensure ID is present to avoid unintended errors
+            if (act?.id) {
+              const deleteResponse: any = await fetcher(
+                deleteActivityMutation,
+                {
+                  id: act?.id,
+                }
+              );
+              const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
+              count++;
+
+              console.log(
+                `[${count}/${activities.length}] ${act?.id} ${
+                  isDeleted ? "✅" : "❌"
+                }`
+              );
+
+              // Avoiding rate-limit
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
           }
         }
+      } else {
+        // In case of an unexpected null response, exit the loop
+        console.log(`\nProbably deleted all the activities of this type.`);
+        hasMoreActivities = false;
       }
     }
   } else {
