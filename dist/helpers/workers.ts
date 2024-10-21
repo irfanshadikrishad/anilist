@@ -171,55 +171,99 @@ async function importAnimeListFromExportedJSON() {
     const filePath = join(getDownloadFolderPath(), filename);
     const fileContent = await readFile(filePath, "utf8");
     const importedData = JSON.parse(fileContent);
-    for (let anime of importedData) {
-      const query = saveAnimeWithProgressMutation;
-      const variables = {
-        mediaId: anime?.id,
-        progress: anime?.progress,
-        status: anime?.status,
-        hiddenFromStatusLists: false,
-      };
-      const save: any = await fetcher(query, variables);
-      if (save) {
-        const id = save?.data?.SaveMediaListEntry?.id;
-        console.log(`${anime?.id}-${id} ✅`);
-      } else {
-        console.error(`\nError saving ${anime?.id}`);
-      }
-      // avoiding rate-limit
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    let count = 0;
+    const batchSize = 5; // Number of requests in each batch
+    const delay = 2000; // 2 seconds delay to avoid rate-limiting
+
+    for (let i = 0; i < importedData.length; i += batchSize) {
+      const batch = importedData.slice(i, i + batchSize);
+
+      await Promise.all(
+        batch.map(async (anime: any) => {
+          const query = saveAnimeWithProgressMutation;
+          const variables = {
+            mediaId: anime?.id,
+            progress: anime?.progress,
+            status: anime?.status,
+            hiddenFromStatusLists: false,
+          };
+
+          try {
+            const save: any = await fetcher(query, variables);
+            if (save) {
+              const id = save?.data?.SaveMediaListEntry?.id;
+              count++;
+              console.log(`[${count}] ${anime?.id}-${id} ✅`);
+            } else {
+              console.error(`\nError saving ${anime?.id}`);
+            }
+          } catch (error) {
+            console.error(
+              `\nError saving ${anime?.id}: ${(error as Error).message}`
+            );
+          }
+        })
+      );
+
+      // Avoid rate-limiting: Wait before sending the next batch
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
+
+    console.log(`\nTotal ${count} anime(s) imported successfully.`);
   } catch (error) {
     console.error(`\n${(error as Error).message}`);
   }
 }
+
 async function importMangaListFromExportedJSON() {
   try {
     const filename = await selectFile();
     const filePath = join(getDownloadFolderPath(), filename);
     const fileContent = await readFile(filePath, "utf8");
     const importedData = JSON.parse(fileContent);
-    for (let manga of importedData) {
-      const query = saveMangaWithProgressMutation;
-      const variables = {
-        mediaId: manga?.id,
-        progress: manga?.progress,
-        status: manga?.status,
-        hiddenFromStatusLists: false,
-        private: manga?.private,
-      };
-      const save: any = await fetcher(query, variables);
-      if (save) {
-        const id = save?.data?.SaveMediaListEntry?.id;
-        console.log(`${manga?.id}-${id} ✅`);
-      } else {
-        console.error(`\nError saving ${manga?.id}`);
-      }
-      // avoiding rate-limit
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    let count = 0;
+    const batchSize = 5; // Adjust batch size as per rate-limit constraints
+    const delay = 2000; // 2 seconds delay to avoid rate-limit
+
+    // Process in batches
+    for (let i = 0; i < importedData.length; i += batchSize) {
+      const batch = importedData.slice(i, i + batchSize);
+
+      await Promise.all(
+        batch.map(async (manga: any) => {
+          const query = saveMangaWithProgressMutation;
+          const variables = {
+            mediaId: manga?.id,
+            progress: manga?.progress,
+            status: manga?.status,
+            hiddenFromStatusLists: false,
+            private: manga?.private,
+          };
+
+          try {
+            const save: any = await fetcher(query, variables);
+            if (save) {
+              const id = save?.data?.SaveMediaListEntry?.id;
+              count++;
+              console.log(`[${count}] ${manga?.id}-${id} ✅`);
+            }
+          } catch (err) {
+            console.error(
+              `\nError saving ${manga?.id}: ${(err as Error).message}`
+            );
+          }
+        })
+      );
+
+      // Avoid rate-limit by adding delay after processing each batch
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
+
+    console.log(`\nTotal ${count} manga(s) imported successfully.`);
   } catch (error) {
-    console.error(`\n${(error as Error).message}`);
+    console.error(`\nError: ${(error as Error).message}`);
   }
 }
 

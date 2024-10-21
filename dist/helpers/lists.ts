@@ -12,6 +12,7 @@ import { currentUserAnimeList, currentUserMangaList } from "./queries.js";
 import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js";
 import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js";
 import { fetcher } from "./fetcher.js";
+import { DeleteMangaResponse } from "./types.js";
 
 async function getTrending(count: number) {
   try {
@@ -59,8 +60,7 @@ async function getTrending(count: number) {
           },
         ]);
         // Lets save to the list now
-        const ISLOGGEDIN = await isLoggedIn();
-        if (ISLOGGEDIN) {
+        if (await isLoggedIn()) {
           const query = addAnimeToListMutation;
           const variables = {
             mediaId: selectedAnime,
@@ -131,8 +131,7 @@ async function getPopular(count: number) {
           },
         ]);
         // Lets save to the list now
-        const ISLOGGEDIN = await isLoggedIn();
-        if (ISLOGGEDIN) {
+        if (await isLoggedIn()) {
           const query = addAnimeToListMutation;
           const variables = {
             mediaId: selectedAnime,
@@ -161,10 +160,8 @@ async function getPopular(count: number) {
 
 async function loggedInUsersAnimeLists() {
   try {
-    const loggedIn = await isLoggedIn();
-    if (loggedIn) {
-      const userID = await currentUsersId();
-      if (userID) {
+    if (await isLoggedIn()) {
+      if (await currentUsersId()) {
         const request = await fetch(aniListEndpoint, {
           method: "POST",
           headers: {
@@ -173,7 +170,7 @@ async function loggedInUsersAnimeLists() {
           },
           body: JSON.stringify({
             query: currentUserAnimeList,
-            variables: { id: userID },
+            variables: { id: await currentUsersId() },
           }),
         });
         const response: any = await request.json();
@@ -227,8 +224,7 @@ async function loggedInUsersAnimeLists() {
                   },
                 ]);
                 // Lets save to the list now
-                const ISLOGGEDIN = await isLoggedIn();
-                if (ISLOGGEDIN) {
+                if (await isLoggedIn()) {
                   const query = addAnimeToListMutation;
                   const variables = {
                     mediaId: selectedAnime,
@@ -273,8 +269,7 @@ async function loggedInUsersAnimeLists() {
 
 async function loggedInUsersMangaLists() {
   try {
-    const loggedIn = await isLoggedIn();
-    if (loggedIn) {
+    if (await isLoggedIn()) {
       const userID = await currentUsersId();
       if (userID) {
         const request = await fetch(aniListEndpoint, {
@@ -343,8 +338,7 @@ async function loggedInUsersMangaLists() {
               ]);
 
               // Save the selected manga to the selected list type
-              const ISLOGGEDIN = await isLoggedIn();
-              if (ISLOGGEDIN) {
+              if (await isLoggedIn()) {
                 const query = addMangaToListMutation;
                 const variables = {
                   mediaId: selectedManga,
@@ -400,8 +394,7 @@ async function loggedInUsersMangaLists() {
 }
 
 async function deleteAnimeCollection() {
-  const loggedIn = await isLoggedIn();
-  if (loggedIn) {
+  if (await isLoggedIn()) {
     const userID = await currentUsersId();
     if (userID) {
       const request = await fetch(aniListEndpoint, {
@@ -491,8 +484,7 @@ async function deleteAnimeByAnimeId(id: number, title?: any) {
 }
 
 async function deleteMangaCollection() {
-  const loggedIn = await isLoggedIn();
-  if (loggedIn) {
+  if (await isLoggedIn()) {
     const userID = await currentUsersId();
     if (userID) {
       const request = await fetch(aniListEndpoint, {
@@ -558,7 +550,7 @@ async function deleteMangaByMangaId(id: number, title?: any) {
     const request = await fetch(aniListEndpoint, {
       method: "POST",
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${await retriveAccessToken()}`,
       },
       body: JSON.stringify({
@@ -566,42 +558,38 @@ async function deleteMangaByMangaId(id: number, title?: any) {
         variables: { id },
       }),
     });
-    const response: any = await request.json();
-    if (request.status === 200) {
-      const deleted = response?.data?.DeleteMediaListEntry?.deleted;
-      console.log(
-        `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
-      );
+
+    const { data, errors }: DeleteMangaResponse = await request.json();
+
+    const statusMessage = title ? getTitle(title) : "";
+
+    if (request.ok) {
+      const deleted = data?.DeleteMediaListEntry?.deleted;
+      console.log(`del ${statusMessage} ${deleted ? "✅" : "❌"}`);
     } else {
-      console.log(`\nError deleting manga. ${response?.errors[0]?.message}`);
-      console.log(response);
+      console.error(`Error deleting manga. ${errors?.[0]?.message}`);
     }
   } catch (error) {
-    console.log(`\nError deleting manga. ${id} ${(error as Error).message}`);
+    console.error(
+      `Error deleting manga. ${id} ${
+        error instanceof Error ? error.message : error
+      }`
+    );
   }
 }
+
 async function getUpcomingAnimes(count: number) {
   try {
     const { nextSeason, nextYear } = getNextSeasonAndYear();
-    const loggedIn = await isLoggedIn();
-    let headers = {
-      "content-type": "application/json",
-    };
-    if (loggedIn) {
-      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
-    }
-    const request = await fetch(aniListEndpoint, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({
-        query: upcomingAnimesQuery,
-        variables: { nextSeason, nextYear, perPage: count },
-      }),
-    });
-    const response: any = await request.json();
 
-    if (request.status === 200) {
-      const upcoming = response?.data?.Page?.media ?? [];
+    const request: any = await fetcher(upcomingAnimesQuery, {
+      nextSeason,
+      nextYear,
+      perPage: count,
+    });
+
+    if (request) {
+      const upcoming = request?.data?.Page?.media ?? [];
       const { selectedAnime } = await inquirer.prompt([
         {
           type: "list",
@@ -630,8 +618,7 @@ async function getUpcomingAnimes(count: number) {
         },
       ]);
       // Lets save to the list now
-      const ISLOGGEDIN = await isLoggedIn();
-      if (ISLOGGEDIN) {
+      if (await isLoggedIn()) {
         const query = addAnimeToListMutation;
         const variables = { mediaId: selectedAnime, status: selectedListType };
 
@@ -645,7 +632,7 @@ async function getUpcomingAnimes(count: number) {
         console.error(`\nPlease log in first to use this feature.`);
       }
     } else {
-      console.error(`\nSomething went wrong. ${response?.errors[0]?.message}`);
+      console.error(`\nSomething went wrong. ${request?.errors[0]?.message}`);
     }
   } catch (error) {
     console.error(

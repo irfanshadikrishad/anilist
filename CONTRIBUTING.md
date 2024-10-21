@@ -43,11 +43,11 @@ Thank you for considering contributing to **@irfanshadikrishad/anilist**! We wel
 8.  Commit Your Changes
     Commit your changes with a clear and descriptive commit message:
     ```bash
-    git commit -m "Add new feature: [describe the feature]"
+    git commit -m "feature: [describe the feature]"
     ```
     or for bug fixes:
     ```bash
-    git commit -m "Fix: [describe the bug fix]"
+    git commit -m "fix: [describe the bug fix]"
     ```
 9.  Push to Your Fork
     Push your changes to your forked repository:

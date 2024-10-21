@@ -36,11 +36,10 @@ import {
 
 async function getUserInfoByUsername(username: string) {
   try {
-    const loggedIn = await isLoggedIn();
     let headers = {
       "content-type": "application/json",
     };
-    if (loggedIn) {
+    if (await isLoggedIn()) {
       headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
     }
     const request: any = await fetch(aniListEndpoint, {
@@ -179,8 +178,7 @@ async function getAnimeSearchResults(search: string, count: number) {
         },
       ]);
       // Lets save to the list now
-      const ISLOGGEDIN = await isLoggedIn();
-      if (ISLOGGEDIN) {
+      if (await isLoggedIn()) {
         const query = addAnimeToListMutation;
         const variables = { mediaId: selectedList, status: selectedListType };
 
@@ -239,8 +237,7 @@ async function getMangaSearchResults(search: string, count: number) {
     ]);
 
     // If logged in save to the list
-    const ISLOGGEDIN = await isLoggedIn();
-    if (ISLOGGEDIN) {
+    if (await isLoggedIn()) {
       const mutation = addMangaToListMutation;
       const variables = { mediaId: selectedMangaId, status: selectedListType };
       const response: any = await fetcher(mutation, variables);
@@ -257,8 +254,7 @@ async function getMangaSearchResults(search: string, count: number) {
   }
 }
 async function deleteUserActivities() {
-  const LOGGEDIN = await isLoggedIn();
-  if (LOGGEDIN) {
+  if (await isLoggedIn()) {
     const { activityType } = await inquirer.prompt([
       {
         type: "list",
@@ -274,29 +270,18 @@ async function deleteUserActivities() {
         ],
       },
     ]);
-    let query = ``;
     const userId = await currentUsersId();
     let variables = { page: 1, perPage: 100, userId };
-    switch (activityType) {
-      case 0:
-        query = activityAllQuery;
-        break;
-      case 1:
-        query = activityTextQuery;
-        break;
-      case 2:
-        query = activityMediaList;
-        break;
-      case 3:
-        query = activityAnimeListQuery;
-        break;
-      case 4:
-        query = activityMangaListQuery;
-        break;
-      case 5:
-        query = activityMessageQuery;
-        break;
-    }
+    const queryMap = {
+      0: activityAllQuery,
+      1: activityTextQuery,
+      2: activityMediaList,
+      3: activityAnimeListQuery,
+      4: activityMangaListQuery,
+      5: activityMessageQuery,
+    };
+    const query = queryMap[activityType];
+
     const response: any = await fetcher(query, variables);
 
     if (response) {
@@ -329,26 +314,29 @@ async function deleteUserActivities() {
 
 async function writeTextActivity(status: string) {
   try {
-    if (await isLoggedIn()) {
-      const query = saveTextActivityMutation;
-      const addTagInStatus: string =
-        status +
-        `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`;
-      const variables = { status: addTagInStatus };
-
-      const data: any = await fetcher(query, variables);
-
-      if (data) {
-        const savedActivity = data?.data?.SaveTextActivity;
-
-        if (savedActivity?.id) {
-          console.log(`\n[${savedActivity?.id}] status saved successfully!`);
-        }
-      } else {
-        console.error(`\nSomething went wrong. ${data}.`);
-      }
-    } else {
+    if (!(await isLoggedIn())) {
       console.error(`\nPlease login to use this feature.`);
+      return;
+    }
+
+    const query = saveTextActivityMutation;
+    const variables = {
+      status:
+        status +
+        `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
+    };
+
+    const data: any = await fetcher(query, variables);
+
+    if (!data) {
+      console.error(`\nSomething went wrong. ${data}.`);
+      return;
+    }
+
+    const savedActivity = data.data?.SaveTextActivity;
+
+    if (savedActivity?.id) {
+      console.log(`\n[${savedActivity.id}] status saved successfully!`);
     }
   } catch (error) {
     console.error(`\n${(error as Error).message}`);
@@ -472,6 +460,9 @@ async function importAnimeList() {
       case 1:
         await importAnimeListFromExportedJSON();
         break;
+      default:
+        console.log(`\nInvalid Choice.`);
+        break;
     }
   } catch (error) {
     console.error(`\n${(error as Error).message}`);
@@ -491,6 +482,9 @@ async function importMangaList() {
     switch (source) {
       case 1:
         await importMangaListFromExportedJSON();
+        break;
+      default:
+        console.log(`\nInvalid Choice.`);
         break;
     }
   } catch (error) {

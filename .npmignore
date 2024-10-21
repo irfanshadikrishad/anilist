@@ -1,3 +1,6 @@
 /dist
-tsconfig.json
 /.github
+tsconfig.json
+CODE_OF_CONDUCT.md
+CHANGELOG.md
+CONTRIBUTING.md

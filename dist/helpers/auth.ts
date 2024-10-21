@@ -68,21 +68,18 @@ async function anilistUserLogin(clientId: number, clientSecret: string) {
     if (name) {
       console.log(`\nWelcome Back, ${name}!`);
     } else {
-      console.log(`Logged in successfull!`);
+      console.log(`\nLogged in successfull!`);
     }
   } else {
-    console.error("Failed to get access token:", token_Data);
+    console.error("\nFailed to get access token:", token_Data);
   }
 }
 
 async function currentUserInfo() {
-  const loggedIn = await isLoggedIn();
-
-  if (loggedIn) {
-    const sToken = await retriveAccessToken();
+  if (await isLoggedIn()) {
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${sToken}`,
+      Authorization: `Bearer ${await retriveAccessToken()}`,
     };
     const request = await fetch(aniListEndpoint, {
       method: "POST",
@@ -146,8 +143,7 @@ async function currentUserInfo() {
 }
 
 async function isLoggedIn(): Promise<Boolean> {
-  const isTokenStored = await retriveAccessToken();
-  if (isTokenStored !== null) {
+  if ((await retriveAccessToken()) !== null) {
     return true;
   } else {
     return false;
@@ -157,9 +153,10 @@ async function isLoggedIn(): Promise<Boolean> {
 async function logoutUser() {
   if (fs.existsSync(save_path)) {
     try {
-      const username = await currentUsersName();
       fs.unlinkSync(save_path);
-      console.log(`\nLogout successful. See you soon, ${username}.`);
+      console.log(
+        `\nLogout successful. See you soon, ${await currentUsersName()}.`
+      );
     } catch (error) {
       console.error("\nError logging out:", error);
     }
@@ -169,6 +166,10 @@ async function logoutUser() {
 }
 
 async function currentUsersId() {
+  if (!(await isLoggedIn())) {
+    console.log(`\nUser not logged in.`);
+    return null;
+  }
   const request = await fetch(aniListEndpoint, {
     method: "POST",
     headers: {
@@ -186,6 +187,10 @@ async function currentUsersId() {
 }
 
 async function currentUsersName() {
+  if (!(await isLoggedIn())) {
+    console.log(`\nUser not logged in.`);
+    return null;
+  }
   const request = await fetch(aniListEndpoint, {
     method: "POST",
     headers: {

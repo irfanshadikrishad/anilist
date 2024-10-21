@@ -17,11 +17,10 @@ async function fetcher(
   variables: object
 ): Promise<object | null> {
   try {
-    const LOGGEDIN = await isLoggedIn();
     const headers = {
       "content-type": "application/json",
     };
-    if (LOGGEDIN) {
+    if (await isLoggedIn()) {
       headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
     }
     const request = await fetch(aniListEndpoint, {
