@@ -1,0 +1,38 @@
+name: Lint and Format
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint-and-prettier:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install # Use 'npm install' if you are not using a lockfile otherwise 'npm ci'
+
+      - name: Run Prettier
+        run: npm run format
+
+      - name: Run ESLint with fix
+        run: npm run lint:fix
+
+      - name: Commit and push changes if any
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git diff --quiet || git commit -m "chore: apply lint fixes and prettier formatting"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
