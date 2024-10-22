@@ -1,7 +1,7 @@
-import globals from "globals";
-import jsPlugin from "@eslint/js";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
+import globals from "globals"
+import jsPlugin from "@eslint/js"
+import tsPlugin from "@typescript-eslint/eslint-plugin"
+import tsParser from "@typescript-eslint/parser"
 
 export default [
   {
@@ -30,4 +30,4 @@ export default [
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
-];
+]

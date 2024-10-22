@@ -1,3 +1,6 @@
 /dist
 /.github
+/.vscode
 tsconfig.json
+eslint.config.js
+.prettierrc
