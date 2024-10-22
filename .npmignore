@@ -1,3 +1,6 @@
 /dist
-tsconfig.json
 /.github
+/.vscode
+tsconfig.json
+eslint.config.js
+.prettierrc

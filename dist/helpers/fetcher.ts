@@ -1,6 +1,6 @@
-import fetch from "node-fetch";
-import { aniListEndpoint } from "./workers.js";
-import { isLoggedIn, retriveAccessToken } from "./auth.js";
+import fetch from "node-fetch"
+import { aniListEndpoint } from "./workers.js"
+import { isLoggedIn, retriveAccessToken } from "./auth.js"
 
 /**
  * Sends a GraphQL request to the AniList API.
@@ -17,29 +17,28 @@ async function fetcher(
   variables: object
 ): Promise<object | null> {
   try {
-    const LOGGEDIN = await isLoggedIn();
     const headers = {
       "content-type": "application/json",
-    };
-    if (LOGGEDIN) {
-      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`;
+    }
+    if (await isLoggedIn()) {
+      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`
     }
     const request = await fetch(aniListEndpoint, {
       method: "POST",
       headers: headers,
       body: JSON.stringify({ query, variables }),
-    });
-    const response: any = await request.json();
+    })
+    const response: any = await request.json()
     if (request.status === 200) {
-      return response;
+      return response
     } else {
-      console.error(`\n${request.status} ${response?.errors[0]?.message}.`);
-      return null;
+      console.error(`\n${request.status} ${response?.errors[0]?.message}.`)
+      return null
     }
   } catch (error) {
-    console.error(`\nSomething went wrong. ${(error as Error).message}.`);
-    return null;
+    console.error(`\nSomething went wrong. ${(error as Error).message}.`)
+    return null
   }
 }
 
-export { fetcher };
+export { fetcher }
