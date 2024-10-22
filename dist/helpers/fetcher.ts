@@ -14,7 +14,7 @@ import { isLoggedIn, retriveAccessToken } from "./auth.js";
  */
 async function fetcher(
   query: string,
-  variables: object
+  variables: object,
 ): Promise<object | null> {
   try {
     const headers = {

@@ -67,11 +67,11 @@ async function getUserInfoByUsername(username: string) {
       console.log(`Donator Badge:\t${user?.donatorBadge}`);
       if (user?.createdAt) {
         console.log(
-          `Account Created: ${new Date(user.createdAt * 1000).toUTCString()}`
+          `Account Created: ${new Date(user.createdAt * 1000).toUTCString()}`,
         );
       }
       console.log(
-        `Account Updated:${new Date(user?.updatedAt * 1000).toUTCString()}`
+        `Account Updated:${new Date(user?.updatedAt * 1000).toUTCString()}`,
       );
       console.log(`I blocked?\t${user?.isBlocked}`);
       console.log(`My follower:\t${user?.isFollower}`);
@@ -79,18 +79,18 @@ async function getUserInfoByUsername(username: string) {
       console.log(`Color:\t${user?.options?.profileColor}`);
       console.log(`Timezone:\t${user?.options?.timezone}`);
       console.log(
-        `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} episodesWatched: ${user?.statistics?.anime?.episodesWatched} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
+        `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} episodesWatched: ${user?.statistics?.anime?.episodesWatched} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`,
       );
       console.log(
-        `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
+        `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`,
       );
       console.log(`\nRecent Activities:`);
       if (activities.length > 0) {
         activities.map(({ status, progress, media }) => {
           console.log(
             `${status} ${progress ? `${progress} of ` : ""}${getTitle(
-              media?.title
-            )}`
+              media?.title,
+            )}`,
           );
         });
       }
@@ -303,7 +303,7 @@ async function deleteUserActivities() {
                 deleteActivityMutation,
                 {
                   id: act?.id,
-                }
+                },
               );
               const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted;
               count++;
@@ -311,7 +311,7 @@ async function deleteUserActivities() {
               console.log(
                 `[${count}/${activities.length}] ${act?.id} ${
                   isDeleted ? "✅" : "❌"
-                }`
+                }`,
               );
 
               // Avoiding rate-limit
@@ -392,7 +392,7 @@ async function exportAnimeList() {
           progress: entry.progress,
           status: entry?.status,
           hiddenFromStatusLists: entry.hiddenFromStatusLists,
-        }))
+        })),
       );
 
       switch (exportType) {
@@ -443,7 +443,7 @@ async function exportMangaList() {
             progress: entry.progress,
             status: entry?.status,
             hiddenFromStatusLists: entry.hiddenFromStatusLists,
-          }))
+          })),
         );
         switch (exportType) {
           case 1:

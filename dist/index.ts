@@ -34,7 +34,7 @@ const cli = new Command();
 cli
   .name("anilist")
   .description(
-    "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
+    "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.",
   )
   .version("1.0.6");
 
@@ -110,13 +110,13 @@ cli
     const selectedOptions = [anime, manga, activity].filter(Boolean).length;
     if (selectedOptions === 0) {
       console.error(
-        `\nMust select one option: either --anime, --manga, or --activity`
+        `\nMust select one option: either --anime, --manga, or --activity`,
       );
       process.exit(1);
     }
     if (selectedOptions > 1) {
       console.error(
-        `\nOnly one option can be selected at a time: --anime, --manga, or --activity`
+        `\nOnly one option can be selected at a time: --anime, --manga, or --activity`,
       );
       process.exit(1);
     }
@@ -144,7 +144,7 @@ cli
       await getAnimeDetailsByID(Number(id));
     } else {
       console.error(
-        `\nInvalid or missing ID (${id}). Please provide a valid numeric ID.`
+        `\nInvalid or missing ID (${id}). Please provide a valid numeric ID.`,
       );
     }
   });

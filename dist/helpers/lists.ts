@@ -187,7 +187,7 @@ async function loggedInUsersAnimeLists() {
               },
             ]);
             const selectedEntries = lists.find(
-              (list: any) => list.name === selectedList
+              (list: any) => list.name === selectedList,
             );
             if (selectedEntries) {
               console.log(`\nEntries for '${selectedEntries.name}':`);
@@ -202,7 +202,7 @@ async function loggedInUsersAnimeLists() {
                       (upx: any, idx: number) => ({
                         name: `[${idx + 1}] ${getTitle(upx?.media?.title)}`,
                         value: upx?.media?.id,
-                      })
+                      }),
                     ),
                     pageSize: 10,
                   },
@@ -236,7 +236,7 @@ async function loggedInUsersAnimeLists() {
                   if (response) {
                     const saved = response?.data?.SaveMediaListEntry;
                     console.log(
-                      `\nEntry ${saved?.id}. Saved as ${saved?.status}.`
+                      `\nEntry ${saved?.id}. Saved as ${saved?.status}.`,
                     );
                   }
                 } else {
@@ -253,7 +253,7 @@ async function loggedInUsersAnimeLists() {
           }
         } else {
           console.log(
-            `\nSomething went wrong. ${response?.errors[0]?.message}`
+            `\nSomething went wrong. ${response?.errors[0]?.message}`,
           );
         }
       } else {
@@ -300,7 +300,7 @@ async function loggedInUsersMangaLists() {
             ]);
 
             const selectedEntries = lists.find(
-              (list: any) => list.name === selectedList
+              (list: any) => list.name === selectedList,
             );
 
             if (selectedEntries && selectedEntries.entries.length > 0) {
@@ -315,7 +315,7 @@ async function loggedInUsersMangaLists() {
                     (entry: any, idx: number) => ({
                       name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
                       value: entry?.media?.id,
-                    })
+                    }),
                   ),
                   pageSize: 10,
                 },
@@ -363,7 +363,7 @@ async function loggedInUsersMangaLists() {
                   console.error(
                     `\nFailed to save the manga. ${
                       saveResponse?.errors?.[0]?.message || "Unknown error"
-                    }`
+                    }`,
                   );
                 }
               } else {
@@ -379,7 +379,7 @@ async function loggedInUsersMangaLists() {
           console.error(
             `\nFailed to fetch manga lists. ${
               response?.errors?.[0]?.message || "Unknown error"
-            }`
+            }`,
           );
         }
       } else {
@@ -424,7 +424,7 @@ async function deleteAnimeCollection() {
             },
           ]);
           const selectedEntries = lists.find(
-            (list: any) => list.name === selectedList
+            (list: any) => list.name === selectedList,
           );
           if (selectedEntries) {
             console.log(`\nDeleting entries of '${selectedEntries.name}':`);
@@ -472,7 +472,7 @@ async function deleteAnimeByAnimeId(id: number, title?: any) {
     if (request.status === 200) {
       const deleted = response?.data?.DeleteMediaListEntry?.deleted;
       console.log(
-        `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
+        `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`,
       );
     } else {
       console.log(`\nError deleting anime. ${response?.errors[0]?.message}`);
@@ -513,7 +513,7 @@ async function deleteMangaCollection() {
             },
           ]);
           const selectedEntries = lists.find(
-            (list: any) => list.name === selectedList
+            (list: any) => list.name === selectedList,
           );
           if (selectedEntries) {
             console.log(`\nDeleting entries of '${selectedEntries.name}':`);
@@ -535,7 +535,7 @@ async function deleteMangaCollection() {
         }
       } else {
         console.error(
-          `\nSomething went wrong. ${response?.errors[0]?.message}`
+          `\nSomething went wrong. ${response?.errors[0]?.message}`,
         );
       }
     } else {
@@ -573,7 +573,7 @@ async function deleteMangaByMangaId(id: number, title?: any) {
     console.error(
       `Error deleting manga. ${id} ${
         error instanceof Error ? error.message : error
-      }`
+      }`,
     );
   }
 }
@@ -636,7 +636,7 @@ async function getUpcomingAnimes(count: number) {
     }
   } catch (error) {
     console.error(
-      `\nError getting upcoming animes. ${(error as Error).message}`
+      `\nError getting upcoming animes. ${(error as Error).message}`,
     );
   }
 }

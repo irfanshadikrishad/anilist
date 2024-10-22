@@ -126,8 +126,8 @@ Statistics (Manga):
         activities.map(({ status, progress, media }) => {
           console.log(
             `${status} ${progress ? `${progress} of ` : ""}${getTitle(
-              media?.title
-            )}`
+              media?.title,
+            )}`,
           );
         });
       }
@@ -135,7 +135,7 @@ Statistics (Manga):
       return user;
     } else {
       console.error(
-        `\nSomething went wrong. Please log in again. ${errors[0].message}`
+        `\nSomething went wrong. Please log in again. ${errors[0].message}`,
       );
       return null;
     }
@@ -158,7 +158,7 @@ async function logoutUser() {
     try {
       fs.unlinkSync(save_path);
       console.log(
-        `\nLogout successful. See you soon, ${await currentUsersName()}.`
+        `\nLogout successful. See you soon, ${await currentUsersName()}.`,
       );
     } catch (error) {
       console.error("\nError logging out:", error);

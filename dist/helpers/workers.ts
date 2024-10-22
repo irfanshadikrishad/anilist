@@ -20,7 +20,7 @@ function getTitle(title: { english?: string; romaji?: string }) {
 }
 
 function formatDateObject(
-  dateObj: { day?: string; month?: string; year?: string } | null
+  dateObj: { day?: string; month?: string; year?: string } | null,
 ) {
   if (!dateObj) return "null";
   return (
@@ -109,7 +109,7 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
     const jsonData = JSON.stringify(js0n, null, 2);
     const path = join(
       getDownloadFolderPath(),
-      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`
+      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`,
     );
     await writeFile(path, jsonData, "utf8");
     console.log(`\nSaved as JSON successfully.`);
@@ -129,7 +129,7 @@ async function saveJSONasCSV(js0n: object, dataType: string): Promise<void> {
     const csvData = parse(js0n);
     const path = join(
       getDownloadFolderPath(),
-      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`
+      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`,
     );
     await writeFile(path, csvData, "utf8");
     console.log(`\nSaved as CSV successfully.`);
@@ -205,11 +205,11 @@ async function importAnimeListFromExportedJSON() {
               }
             } catch (error) {
               console.error(
-                `\nError saving ${anime?.id}: ${(error as Error).message}`
+                `\nError saving ${anime?.id}: ${(error as Error).message}`,
               );
             }
-          }
-        )
+          },
+        ),
       );
 
       // Avoid rate-limiting: Wait before sending the next batch
@@ -266,11 +266,11 @@ async function importMangaListFromExportedJSON() {
               }
             } catch (err) {
               console.error(
-                `\nError saving ${manga?.id}: ${(err as Error).message}`
+                `\nError saving ${manga?.id}: ${(err as Error).message}`,
               );
             }
-          }
-        )
+          },
+        ),
       );
 
       // Avoid rate-limit by adding delay after processing each batch
