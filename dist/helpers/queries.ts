@@ -144,6 +144,12 @@ const malIdToAnilistAnimeId = `query ($malId: Int) {
 }
 `
 
+const malIdToAnilistMangaId = `query ($malId: Int) {
+  Media(idMal: $malId, type: MANGA) {
+    id title { romaji english } } 
+}
+`
+
 export {
   activityAllQuery,
   activityAnimeListQuery,
@@ -159,6 +165,7 @@ export {
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   malIdToAnilistAnimeId,
+  malIdToAnilistMangaId,
   mangaSearchQuery,
   popularQuery,
   trendingQuery,

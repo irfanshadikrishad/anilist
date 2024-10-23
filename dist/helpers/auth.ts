@@ -79,7 +79,7 @@ async function currentUserInfo() {
   if (await isLoggedIn()) {
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     }
     const request = await fetch(aniListEndpoint, {
       method: "POST",
@@ -177,7 +177,7 @@ async function currentUsersId() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     },
     body: JSON.stringify({ query: currentUserQuery }),
   })
@@ -198,7 +198,7 @@ async function currentUsersName() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     },
     body: JSON.stringify({ query: currentUserQuery }),
   })

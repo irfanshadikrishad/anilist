@@ -13,7 +13,7 @@ import {
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
 } from "./mutations.js"
-import { malIdToAnilistAnimeId } from "./queries.js"
+import { malIdToAnilistAnimeId, malIdToAnilistMangaId } from "./queries.js"
 import {
   AniListMediaStatus,
   MALAnimeXML,
@@ -318,9 +318,9 @@ class MALimport {
             const progress = anime.my_watched_episodes
             const statusMap = {
               "On-Hold": AniListMediaStatus.PAUSED,
-              Dropped: AniListMediaStatus.DROPPED,
-              Completed: AniListMediaStatus.COMPLETED,
-              Watching: AniListMediaStatus.CURRENT,
+              "Dropped": AniListMediaStatus.DROPPED,
+              "Completed": AniListMediaStatus.COMPLETED,
+              "Watching": AniListMediaStatus.CURRENT,
               "Plan to Watch": AniListMediaStatus.PLANNING,
             }
             const status = statusMap[anime.my_status]
@@ -357,6 +357,64 @@ class MALimport {
           }
         } else {
           console.log(`\nNo anime list seems to be found.`)
+        }
+      }
+    } catch (error) {
+      console.error(`\nError from MALimport. ${(error as Error).message}`)
+    }
+  }
+  static async Manga() {
+    try {
+      const filename = await selectFile(".xml")
+      const filePath = join(getDownloadFolderPath(), filename)
+      const fileContent = await readFile(filePath, "utf8")
+      const parser = new XMLParser()
+      if (fileContent) {
+        const XMLObject = parser.parse(fileContent)
+        if (XMLObject.myanimelist.manga.length > 0) {
+          let count = 0
+          const mangas = XMLObject.myanimelist.manga
+          for (let manga of mangas) {
+            const malId = manga.manga_mangadb_id
+            const progress = manga.my_read_chapters
+            const statusMap = {
+              "On-Hold": AniListMediaStatus.PAUSED,
+              "Dropped": AniListMediaStatus.DROPPED,
+              "Completed": AniListMediaStatus.COMPLETED,
+              "Reading": AniListMediaStatus.CURRENT,
+              "Plan to Read": AniListMediaStatus.PLANNING,
+            }
+            const status = statusMap[manga.my_status]
+
+            const anilist: MalIdToAnilistIdResponse = await fetcher(
+              malIdToAnilistMangaId,
+              {
+                malId: malId,
+              }
+            )
+            if (anilist?.data?.Media?.id) {
+              const anilistId = anilist?.data?.Media?.id
+              if (anilistId) {
+                const saveManga: saveAnimeWithProgressResponse = await fetcher(
+                  saveMangaWithProgressMutation,
+                  {
+                    mediaId: anilistId,
+                    progress: progress,
+                    status: status,
+                    hiddenFromStatusLists: false,
+                    private: false,
+                  }
+                )
+                if (saveManga) {
+                  const entryId = saveManga.data.SaveMediaListEntry.id
+                  count++
+                  console.log(`[${count}] ${entryId} ✅`)
+                }
+              }
+            }
+          }
+        } else {
+          console.log(`\nNo manga list seems to be found.`)
         }
       }
     } catch (error) {

@@ -167,7 +167,7 @@ async function loggedInUsersAnimeLists() {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            Authorization: `Bearer ${await retriveAccessToken()}`,
+            "Authorization": `Bearer ${await retriveAccessToken()}`,
           },
           body: JSON.stringify({
             query: currentUserAnimeList,
@@ -275,7 +275,7 @@ async function loggedInUsersMangaLists() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${await retriveAccessToken()}`,
+            "Authorization": `Bearer ${await retriveAccessToken()}`,
           },
           body: JSON.stringify({
             query: currentUserMangaList,
@@ -348,7 +348,7 @@ async function loggedInUsersMangaLists() {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${await retriveAccessToken()}`,
+                    "Authorization": `Bearer ${await retriveAccessToken()}`,
                   },
                   body: JSON.stringify({ query, variables }),
                 })
@@ -400,7 +400,7 @@ async function deleteAnimeCollection() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${await retriveAccessToken()}`,
+          "Authorization": `Bearer ${await retriveAccessToken()}`,
         },
         body: JSON.stringify({
           query: currentUserAnimeList,
@@ -460,7 +460,7 @@ async function deleteAnimeByAnimeId(id: number, title?: any) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
+        "Authorization": `Bearer ${await retriveAccessToken()}`,
       },
       body: JSON.stringify({
         query: deleteMediaEntryMutation,
@@ -490,7 +490,7 @@ async function deleteMangaCollection() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${await retriveAccessToken()}`,
+          "Authorization": `Bearer ${await retriveAccessToken()}`,
         },
         body: JSON.stringify({
           query: currentUserMangaList,
@@ -548,7 +548,7 @@ async function deleteMangaByMangaId(id: number, title?: any) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
+        "Authorization": `Bearer ${await retriveAccessToken()}`,
       },
       body: JSON.stringify({
         query: deleteMangaEntryMutation,

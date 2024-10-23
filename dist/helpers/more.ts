@@ -500,13 +500,19 @@ async function importMangaList() {
         type: "list",
         name: "source",
         message: "Select a source:",
-        choices: [{ name: "Exported JSON file.", value: 1 }],
+        choices: [
+          { name: "Exported JSON file.", value: 1 },
+          { name: "MyAnimeList (XML)", value: 2 },
+        ],
         pageSize: 10,
       },
     ])
     switch (source) {
       case 1:
         await importMangaListFromExportedJSON()
+        break
+      case 2:
+        await MALimport.Manga()
         break
       default:
         console.log(`\nInvalid Choice.`)

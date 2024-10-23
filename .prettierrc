@@ -11,5 +11,6 @@
   "endOfLine": "lf",
   "embeddedLanguageFormatting": "auto",
   "plugins": ["prettier-plugin-organize-imports"],
-  "organizeImportsSkipDestructiveCodeActions": true
+  "organizeImportsSkipDestructiveCodeActions": true,
+  "quoteProps": "consistent"
 }
