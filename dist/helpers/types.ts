@@ -101,7 +101,8 @@ interface MediaWithProgress {
   malId: number
   progress: number
   status: string
-  episodes: number
+  episodes?: number
+  chapters?: number
   title: { english?: string; romaji?: string }
 }
 

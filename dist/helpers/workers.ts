@@ -15,6 +15,7 @@ import {
 } from "./mutations.js"
 import {
   currentUserAnimeList,
+  currentUserMangaList,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
 } from "./queries.js"
@@ -24,6 +25,7 @@ import {
   MALAnimeStatus,
   MALAnimeXML,
   MalIdToAnilistIdResponse,
+  MALMangaStatus,
   MediaWithProgress,
   saveAnimeWithProgressResponse,
 } from "./types.js"
@@ -457,9 +459,9 @@ class MALexport {
           const xmlContent = createAnimeListXML(mediaWithProgress)
           const path = join(
             getDownloadFolderPath(),
-            `${await currentUsersName()}@irfanshadikrishad-anilist-myanimelist-${getFormattedDate()}.xml`
+            `${await currentUsersName()}@irfanshadikrishad-anilist-myanimelist(anime)-${getFormattedDate()}.xml`
           )
-          await writeFile(path, xmlContent, "utf8")
+          await writeFile(path, await xmlContent, "utf8")
           console.log(`Generated XML for MyAnimeList.`)
 
           open(getDownloadFolderPath())
@@ -475,7 +477,41 @@ class MALexport {
   }
   static async Manga() {
     try {
-      console.log(`\nNot yet implemented!`)
+      if (!(await isLoggedIn())) {
+        console.log(`\nPlease login to use this feature.`)
+        return
+      }
+      const mangaList: AnimeList = await fetcher(currentUserMangaList, {
+        id: await currentUsersId(),
+      })
+      if (mangaList && mangaList?.data?.MediaListCollection?.lists.length > 0) {
+        const lists = mangaList?.data?.MediaListCollection?.lists
+        const mediaWithProgress = lists.flatMap((list: any) =>
+          list.entries.map((entry: any) => ({
+            id: entry?.media?.id,
+            malId: entry?.media?.idMal,
+            title: entry?.media?.title,
+            private: entry.private,
+            chapters: entry.media.chapters,
+            progress: entry.progress,
+            status: entry?.status,
+            hiddenFromStatusLists: entry.hiddenFromStatusLists,
+          }))
+        )
+        const XMLContent = createMangaListXML(mediaWithProgress)
+        const path = join(
+          getDownloadFolderPath(),
+          `${await currentUsersName()}@irfanshadikrishad-anilist-myanimelist(manga)-${getFormattedDate()}.xml`
+        )
+        await writeFile(path, await XMLContent, "utf8")
+        console.log(`Generated XML for MyAnimeList.`)
+
+        open(getDownloadFolderPath())
+      } else {
+        console.log(
+          `\nHey, ${await currentUsersName()}. Your anime list seems to be empty.`
+        )
+      }
     } catch (error) {
       console.error(`\nError from MALexport. ${(error as Error).message}`)
     }
@@ -514,7 +550,36 @@ function createAnimeXML(
       <update_on_import>1</update_on_import>
     </anime>`
 }
-function createAnimeListXML(mediaWithProgress: MediaWithProgress[]): string {
+function createMangaXML(
+  malId: number,
+  progress: number,
+  status: MALMangaStatus,
+  chapters: number,
+  title: string
+): string {
+  return `
+    <manga>
+      <manga_mangadb_id>${malId}</manga_mangadb_id>
+      <manga_title><![CDATA[${title ? title : "unknown"}]]></manga_title>
+      <manga_volumes>0</manga_volumes>
+      <manga_chapters>${chapters ? chapters : 0}</manga_chapters>
+      <my_id>0</my_id>
+      <my_read_chapters>${progress}</my_read_chapters>
+      <my_start_date>0000-00-00</my_start_date>
+      <my_finish_date>0000-00-00</my_finish_date>
+      <my_score>0</my_score>
+      <my_status>${status}</my_status>
+      <my_reread_value></my_reread_value>
+      <my_priority>LOW</my_priority>
+      <my_rereading>0</my_rereading>
+      <my_discuss>0</my_discuss>
+      <update_on_import>1</update_on_import>
+    </manga>`
+}
+
+async function createAnimeListXML(
+  mediaWithProgress: MediaWithProgress[]
+): Promise<string> {
   const statusMap = {
     PLANNING: MALAnimeStatus.PLAN_TO_WATCH,
     COMPLETED: MALAnimeStatus.COMPLETED,
@@ -536,7 +601,7 @@ function createAnimeListXML(mediaWithProgress: MediaWithProgress[]): string {
   return `<myanimelist>
             <myinfo>
               <user_id/>
-              <user_name>irfanshadikrishad</user_name>
+              <user_name>${await currentUsersName()}</user_name>
               <user_export_type>1</user_export_type>
               <user_total_anime>0</user_total_anime>
               <user_total_watching>0</user_total_watching>
@@ -544,6 +609,42 @@ function createAnimeListXML(mediaWithProgress: MediaWithProgress[]): string {
               <user_total_onhold>0</user_total_onhold>
               <user_total_dropped>0</user_total_dropped>
               <user_total_plantowatch>0</user_total_plantowatch>
+            </myinfo>
+            \n${xmlEntries.join("\n")}\n
+          </myanimelist>`
+}
+async function createMangaListXML(
+  mediaWithProgress: MediaWithProgress[]
+): Promise<string> {
+  const statusMap = {
+    PLANNING: MALMangaStatus.PLAN_TO_READ,
+    COMPLETED: MALMangaStatus.COMPLETED,
+    CURRENT: MALMangaStatus.READING,
+    PAUSED: MALMangaStatus.ON_HOLD,
+    DROPPED: MALMangaStatus.DROPPED,
+  }
+
+  const xmlEntries = mediaWithProgress.map((manga) => {
+    const malId = manga.malId
+    const progress = manga.progress
+    const chapters = manga.chapters
+    const title = getTitle(manga.title)
+    const status = statusMap[manga.status as keyof typeof statusMap]
+
+    return createMangaXML(malId, progress, status, chapters, title)
+  })
+
+  return `<myanimelist>
+            <myinfo>
+              <user_id/>
+              <user_name>${await currentUsersName()}</user_name>
+              <user_export_type>2</user_export_type>
+              <user_total_manga>5</user_total_manga>
+              <user_total_reading>1</user_total_reading>
+              <user_total_completed>1</user_total_completed>
+              <user_total_onhold>1</user_total_onhold>
+              <user_total_dropped>1</user_total_dropped>
+              <user_total_plantoread>1</user_total_plantoread>
             </myinfo>
             \n${xmlEntries.join("\n")}\n
           </myanimelist>`

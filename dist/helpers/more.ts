@@ -436,6 +436,7 @@ async function exportMangaList() {
             choices: [
               { name: "CSV", value: 1 },
               { name: "JSON", value: 2 },
+              { name: "XML (MyAnimeList)", value: 3 },
             ],
             pageSize: 10,
           },
@@ -460,6 +461,12 @@ async function exportMangaList() {
             break
           case 2:
             await saveJSONasJSON(mediaWithProgress, "manga")
+            break
+          case 3:
+            await MALexport.Manga()
+            break
+          default:
+            console.log(`\nInvalid export type. ${exportType}`)
             break
         }
       } else {
