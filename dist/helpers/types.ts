@@ -70,10 +70,49 @@ interface saveAnimeWithProgressResponse {
   }[]
 }
 
+enum MALAnimeStatus {
+  ON_HOLD = "On-Hold",
+  DROPPED = "Dropped",
+  COMPLETED = "Completed",
+  WATCHING = "Watching",
+  PLAN_TO_WATCH = "Plan to Watch",
+}
+
+enum MALMangaStatus {
+  ON_HOLD = "On-Hold",
+  DROPPED = "Dropped",
+  COMPLETED = "Completed",
+  READING = "Reading",
+  PLAN_TO_READ = "Plan to Read",
+}
+
+interface AnimeList {
+  data?: {
+    MediaListCollection: {
+      lists: [{ name: string; entries: { id: number; progress: number } }]
+    }
+  }
+  errors?: {
+    message: string
+  }[]
+}
+
+interface MediaWithProgress {
+  malId: number
+  progress: number
+  status: string
+  episodes: number
+  title: { english?: string; romaji?: string }
+}
+
 export {
   AniListMediaStatus,
+  AnimeList,
   DeleteMangaResponse,
+  MALAnimeStatus,
   MALAnimeXML,
+  MALMangaStatus,
   MalIdToAnilistIdResponse,
+  MediaWithProgress,
   saveAnimeWithProgressResponse,
 }

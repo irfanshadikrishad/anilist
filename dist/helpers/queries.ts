@@ -30,14 +30,14 @@ const userQuery = `query ($username: String) {
 
 const currentUserAnimeList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: ANIME) {
-    lists { name entries { id progress hiddenFromStatusLists status media { id title { romaji english } status episodes siteUrl } } }
+    lists { name entries { id progress hiddenFromStatusLists status media { id idMal title { romaji english } status episodes siteUrl } } }
   }
 }
 `
 
 const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
-    lists { name entries { id progress hiddenFromStatusLists private status media { id title { romaji english } status chapters } } }
+    lists { name entries { id progress hiddenFromStatusLists private status media { id idMal title { romaji english } status chapters } } }
   }
 }
 `

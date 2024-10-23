@@ -29,6 +29,7 @@ import {
   getTitle,
   importAnimeListFromExportedJSON,
   importMangaListFromExportedJSON,
+  MALexport,
   MALimport,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
@@ -372,6 +373,7 @@ async function exportAnimeList() {
         choices: [
           { name: "CSV", value: 1 },
           { name: "JSON", value: 2 },
+          { name: "XML (MyAnimeList)", value: 3 },
         ],
         pageSize: 10,
       },
@@ -402,6 +404,12 @@ async function exportAnimeList() {
           break
         case 2:
           await saveJSONasJSON(mediaWithProgress, "anime")
+          break
+        case 3:
+          await MALexport.Anime()
+          break
+        default:
+          console.log(`\nInvalid export type. ${exportType}`)
           break
       }
     } else {

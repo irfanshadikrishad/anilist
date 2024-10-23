@@ -219,7 +219,7 @@ anilist import -m
 - **Options**:
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
-- **Description**: Import anime or manga list
+- **Description**: Import anime or manga list. If you want to import anime/manga list from MyAnimeList, export the XML from [here](https://myanimelist.net/panel.php?go=export).
 
 #### Security
 
