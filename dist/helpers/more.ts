@@ -1,4 +1,13 @@
+import inquirer from "inquirer"
 import fetch from "node-fetch"
+import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
+import { fetcher } from "./fetcher.js"
+import {
+  addAnimeToListMutation,
+  addMangaToListMutation,
+  deleteActivityMutation,
+  saveTextActivityMutation,
+} from "./mutations.js"
 import {
   activityAllQuery,
   activityAnimeListQuery,
@@ -14,25 +23,17 @@ import {
   userActivityQuery,
   userQuery,
 } from "./queries.js"
-import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
 import {
   aniListEndpoint,
   formatDateObject,
   getTitle,
   importAnimeListFromExportedJSON,
   importMangaListFromExportedJSON,
+  MALimport,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
 } from "./workers.js"
-import { fetcher } from "./fetcher.js"
-import inquirer from "inquirer"
-import {
-  addAnimeToListMutation,
-  addMangaToListMutation,
-  deleteActivityMutation,
-  saveTextActivityMutation,
-} from "./mutations.js"
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -470,13 +471,19 @@ async function importAnimeList() {
         type: "list",
         name: "source",
         message: "Select a source:",
-        choices: [{ name: "Exported JSON file.", value: 1 }],
+        choices: [
+          { name: "Exported JSON file.", value: 1 },
+          { name: "MyAnimeList (XML)", value: 2 },
+        ],
         pageSize: 10,
       },
     ])
     switch (source) {
       case 1:
         await importAnimeListFromExportedJSON()
+        break
+      case 2:
+        await MALimport.Anime()
         break
       default:
         console.log(`\nInvalid Choice.`)
@@ -511,14 +518,14 @@ async function importMangaList() {
 }
 
 export {
-  getUserInfoByUsername,
+  deleteUserActivities,
+  exportAnimeList,
+  exportMangaList,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
-  deleteUserActivities,
-  writeTextActivity,
-  exportAnimeList,
-  exportMangaList,
+  getUserInfoByUsername,
   importAnimeList,
   importMangaList,
+  writeTextActivity,
 }

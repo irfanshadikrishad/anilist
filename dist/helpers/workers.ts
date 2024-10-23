@@ -1,16 +1,19 @@
+import { XMLParser } from "fast-xml-parser"
+import fs from "fs"
+import { readdir, readFile, writeFile } from "fs/promises"
 import inquirer from "inquirer"
-import open from "open"
-import { join } from "path"
-import { homedir } from "os"
-import process from "process"
 import { parse } from "json2csv"
-import { writeFile, readdir, readFile } from "fs/promises"
+import open from "open"
+import { homedir } from "os"
+import { join } from "path"
+import process from "process"
 import { currentUsersName } from "./auth.js"
+import { fetcher } from "./fetcher.js"
 import {
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
 } from "./mutations.js"
-import { fetcher } from "./fetcher.js"
+import { MALAnimeXML } from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = "https://anilist.co/api/v2/oauth/pin"
@@ -143,23 +146,32 @@ async function listFilesInDownloadFolder(): Promise<string[]> {
   const files = await readdir(downloadFolderPath)
   return files
 }
-async function selectFile(): Promise<string> {
+async function selectFile(fileType: string): Promise<string> {
   try {
     const files = await listFilesInDownloadFolder()
-    const onlyJSONfiles = files.filter((file) => file.endsWith(".json"))
-    if (onlyJSONfiles.length > 0) {
+
+    // Filter to include only files, not directories, with the specified extension
+    const onlyFiles = files.filter((file) => {
+      const filePath = `./downloads/${file}` // Adjust this to the correct path
+      const isFile = fs.lstatSync(filePath).isFile() // Check if it's a file
+      return isFile && file.endsWith(fileType)
+    })
+
+    if (onlyFiles.length > 0) {
       const answers = await inquirer.prompt([
         {
           type: "list",
           name: "fileName",
           message: "Select a file to import:",
-          choices: onlyJSONfiles,
+          choices: onlyFiles,
         },
       ])
 
       return answers.fileName
     } else {
-      throw new Error(`\nNo importable JSON file(s) found in download folder.`)
+      throw new Error(
+        `\nNo importable ${fileType} file(s) found in download folder.`
+      )
     }
   } catch (error) {
     console.error("\nError selecting file:", error)
@@ -168,7 +180,7 @@ async function selectFile(): Promise<string> {
 }
 async function importAnimeListFromExportedJSON() {
   try {
-    const filename = await selectFile()
+    const filename = await selectFile(".json")
     const filePath = join(getDownloadFolderPath(), filename)
     const fileContent = await readFile(filePath, "utf8")
     const importedData = JSON.parse(fileContent)
@@ -224,7 +236,7 @@ async function importAnimeListFromExportedJSON() {
 
 async function importMangaListFromExportedJSON() {
   try {
-    const filename = await selectFile()
+    const filename = await selectFile(".json")
     const filePath = join(getDownloadFolderPath(), filename)
     const fileContent = await readFile(filePath, "utf8")
     const importedData = JSON.parse(fileContent)
@@ -283,15 +295,42 @@ async function importMangaListFromExportedJSON() {
   }
 }
 
+class MALimport {
+  static async Anime() {
+    try {
+      const filename = await selectFile(".xml")
+      const filePath = join(getDownloadFolderPath(), filename)
+      const fileContent = await readFile(filePath, "utf8")
+      const parser = new XMLParser()
+      if (fileContent) {
+        const XMLObject = parser.parse(fileContent)
+        if (XMLObject.myanimelist.anime.length > 0) {
+          const animes: MALAnimeXML[] = XMLObject.myanimelist.anime
+          for (let anime of animes) {
+            console.log(anime.series_animedb_id)
+            console.log(anime.my_watched_episodes)
+            console.log(anime.my_status)
+          }
+        } else {
+          console.log(`\nNo anime list seems to be found.`)
+        }
+      }
+    } catch (error) {
+      console.error(`\nError from MALimport. ${(error as Error).message}`)
+    }
+  }
+}
+
 export {
   aniListEndpoint,
-  redirectUri,
-  getTitle,
-  getNextSeasonAndYear,
   formatDateObject,
-  removeHtmlAndMarkdown,
-  saveJSONasJSON,
-  saveJSONasCSV,
+  getNextSeasonAndYear,
+  getTitle,
   importAnimeListFromExportedJSON,
   importMangaListFromExportedJSON,
+  MALimport,
+  redirectUri,
+  removeHtmlAndMarkdown,
+  saveJSONasCSV,
+  saveJSONasJSON,
 }
