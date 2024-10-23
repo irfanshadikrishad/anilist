@@ -1,18 +1,19 @@
-import fetch from "node-fetch"
 import inquirer from "inquirer"
-import { aniListEndpoint, getNextSeasonAndYear, getTitle } from "./workers.js"
+import fetch from "node-fetch"
+import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
+import { fetcher } from "./fetcher.js"
+import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js"
 import {
+  currentUserAnimeList,
+  currentUserMangaList,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   popularQuery,
   trendingQuery,
   upcomingAnimesQuery,
 } from "./queries.js"
-import { currentUserAnimeList, currentUserMangaList } from "./queries.js"
-import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js"
-import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js"
-import { fetcher } from "./fetcher.js"
 import { DeleteMangaResponse } from "./types.js"
+import { aniListEndpoint, getNextSeasonAndYear, getTitle } from "./workers.js"
 
 async function getTrending(count: number) {
   try {
@@ -638,11 +639,11 @@ async function getUpcomingAnimes(count: number) {
 }
 
 export {
-  getTrending,
+  deleteAnimeCollection,
+  deleteMangaCollection,
   getPopular,
+  getTrending,
   getUpcomingAnimes,
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
-  deleteAnimeCollection,
-  deleteMangaCollection,
 }

@@ -138,24 +138,31 @@ const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type
   }
 }`
 
+const malIdToAnilistAnimeId = `query ($malId: Int) {
+  Media(idMal: $malId, type: ANIME) {
+    id title { romaji english } } 
+}
+`
+
 export {
-  currentUserQuery,
-  trendingQuery,
-  popularQuery,
-  userQuery,
-  currentUserAnimeList,
-  currentUserMangaList,
-  deleteMediaEntryMutation,
-  deleteMangaEntryMutation,
-  upcomingAnimesQuery,
-  animeDetailsQuery,
-  userActivityQuery,
-  animeSearchQuery,
-  mangaSearchQuery,
   activityAllQuery,
-  activityMediaList,
   activityAnimeListQuery,
   activityMangaListQuery,
+  activityMediaList,
   activityMessageQuery,
   activityTextQuery,
+  animeDetailsQuery,
+  animeSearchQuery,
+  currentUserAnimeList,
+  currentUserMangaList,
+  currentUserQuery,
+  deleteMangaEntryMutation,
+  deleteMediaEntryMutation,
+  malIdToAnilistAnimeId,
+  mangaSearchQuery,
+  popularQuery,
+  trendingQuery,
+  upcomingAnimesQuery,
+  userActivityQuery,
+  userQuery,
 }

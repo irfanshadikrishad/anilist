@@ -42,4 +42,38 @@ interface MALAnimeXML {
   update_on_import: number
 }
 
-export { AniListMediaStatus, DeleteMangaResponse, MALAnimeXML }
+interface MalIdToAnilistIdResponse {
+  data?: {
+    Media: {
+      id: number
+      title: {
+        english?: string
+        romaji?: string
+      }
+    }
+  }
+  errors?: {
+    message: string
+  }[]
+}
+
+interface saveAnimeWithProgressResponse {
+  data?: {
+    SaveMediaListEntry: {
+      id: number
+      progress: number
+      hiddenFromStatusLists: boolean
+    }
+  }
+  errors?: {
+    message: string
+  }[]
+}
+
+export {
+  AniListMediaStatus,
+  DeleteMangaResponse,
+  MALAnimeXML,
+  MalIdToAnilistIdResponse,
+  saveAnimeWithProgressResponse,
+}

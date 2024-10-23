@@ -1,6 +1,6 @@
 import fetch from "node-fetch"
-import { aniListEndpoint } from "./workers.js"
 import { isLoggedIn, retriveAccessToken } from "./auth.js"
+import { aniListEndpoint } from "./workers.js"
 
 /**
  * Sends a GraphQL request to the AniList API.

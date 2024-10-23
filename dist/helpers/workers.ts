@@ -13,7 +13,13 @@ import {
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
 } from "./mutations.js"
-import { MALAnimeXML } from "./types.js"
+import { malIdToAnilistAnimeId } from "./queries.js"
+import {
+  AniListMediaStatus,
+  MALAnimeXML,
+  MalIdToAnilistIdResponse,
+  saveAnimeWithProgressResponse,
+} from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = "https://anilist.co/api/v2/oauth/pin"
@@ -305,11 +311,49 @@ class MALimport {
       if (fileContent) {
         const XMLObject = parser.parse(fileContent)
         if (XMLObject.myanimelist.anime.length > 0) {
+          let count = 0
           const animes: MALAnimeXML[] = XMLObject.myanimelist.anime
           for (let anime of animes) {
-            console.log(anime.series_animedb_id)
-            console.log(anime.my_watched_episodes)
-            console.log(anime.my_status)
+            const malId = anime.series_animedb_id
+            const progress = anime.my_watched_episodes
+            const statusMap = {
+              "On-Hold": AniListMediaStatus.PAUSED,
+              Dropped: AniListMediaStatus.DROPPED,
+              Completed: AniListMediaStatus.COMPLETED,
+              Watching: AniListMediaStatus.CURRENT,
+              "Plan to Watch": AniListMediaStatus.PLANNING,
+            }
+            const status = statusMap[anime.my_status]
+
+            const anilist: MalIdToAnilistIdResponse = await fetcher(
+              malIdToAnilistAnimeId,
+              { malId }
+            )
+            if (anilist.data.Media.id) {
+              const id = anilist.data.Media.id
+              const saveAnime: saveAnimeWithProgressResponse = await fetcher(
+                saveAnimeWithProgressMutation,
+                {
+                  mediaId: id,
+                  progress: progress,
+                  status: status,
+                  hiddenFromStatusLists: false,
+                  private: false,
+                }
+              )
+              if (saveAnime) {
+                const entryId = saveAnime?.data?.SaveMediaListEntry?.id
+                count++
+                console.log(`[${count}] ${entryId} ✅`)
+
+                // rate-limit
+                await new Promise((resolve) => {
+                  setTimeout(resolve, 1100)
+                })
+              }
+            } else {
+              console.error(`could not get anilistId for ${malId}`)
+            }
           }
         } else {
           console.log(`\nNo anime list seems to be found.`)
