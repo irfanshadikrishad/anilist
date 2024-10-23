@@ -208,7 +208,7 @@ anilist export -a
 - **Options**:
   - `-a, --anime`: To export anime list.
   - `-m, --manga`: To export manga list.
-- **Description**: Export anime or manga list
+- **Description**: Export anime or manga list. For `XML (MyAnimeList)` file, to import it on MyAnimeList, go [here](https://myanimelist.net/import.php) and choose `MyAnimeList Import`.
 
 #### `import` _(alias: `imp`)_:
 
@@ -219,7 +219,7 @@ anilist import -m
 - **Options**:
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
-- **Description**: Import anime or manga list
+- **Description**: Import anime or manga list. If you want to import anime/manga list from MyAnimeList, export the XML from [here](https://myanimelist.net/panel.php?go=export).
 
 #### Security
 

@@ -40,7 +40,7 @@ export {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
-  saveTextActivityMutation,
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
+  saveTextActivityMutation,
 }

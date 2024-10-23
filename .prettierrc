@@ -6,6 +6,11 @@
   "trailingComma": "es5",
   "printWidth": 80,
   "bracketSpacing": true,
+  "bracketSameLine": true,
   "arrowParens": "always",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "embeddedLanguageFormatting": "auto",
+  "plugins": ["prettier-plugin-organize-imports"],
+  "organizeImportsSkipDestructiveCodeActions": true,
+  "quoteProps": "consistent"
 }

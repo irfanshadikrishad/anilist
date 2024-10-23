@@ -30,14 +30,14 @@ const userQuery = `query ($username: String) {
 
 const currentUserAnimeList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: ANIME) {
-    lists { name entries { id progress hiddenFromStatusLists status media { id title { romaji english } status episodes siteUrl } } }
+    lists { name entries { id progress hiddenFromStatusLists status media { id idMal title { romaji english } status episodes siteUrl } } }
   }
 }
 `
 
 const currentUserMangaList = `query ($id: Int) {
   MediaListCollection(userId: $id, type: MANGA) {
-    lists { name entries { id progress hiddenFromStatusLists private status media { id title { romaji english } status chapters } } }
+    lists { name entries { id progress hiddenFromStatusLists private status media { id idMal title { romaji english } status chapters } } }
   }
 }
 `
@@ -138,24 +138,38 @@ const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type
   }
 }`
 
+const malIdToAnilistAnimeId = `query ($malId: Int) {
+  Media(idMal: $malId, type: ANIME) {
+    id title { romaji english } } 
+}
+`
+
+const malIdToAnilistMangaId = `query ($malId: Int) {
+  Media(idMal: $malId, type: MANGA) {
+    id title { romaji english } } 
+}
+`
+
 export {
-  currentUserQuery,
-  trendingQuery,
-  popularQuery,
-  userQuery,
-  currentUserAnimeList,
-  currentUserMangaList,
-  deleteMediaEntryMutation,
-  deleteMangaEntryMutation,
-  upcomingAnimesQuery,
-  animeDetailsQuery,
-  userActivityQuery,
-  animeSearchQuery,
-  mangaSearchQuery,
   activityAllQuery,
-  activityMediaList,
   activityAnimeListQuery,
   activityMangaListQuery,
+  activityMediaList,
   activityMessageQuery,
   activityTextQuery,
+  animeDetailsQuery,
+  animeSearchQuery,
+  currentUserAnimeList,
+  currentUserMangaList,
+  currentUserQuery,
+  deleteMangaEntryMutation,
+  deleteMediaEntryMutation,
+  malIdToAnilistAnimeId,
+  malIdToAnilistMangaId,
+  mangaSearchQuery,
+  popularQuery,
+  trendingQuery,
+  upcomingAnimesQuery,
+  userActivityQuery,
+  userQuery,
 }

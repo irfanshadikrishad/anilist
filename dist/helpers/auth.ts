@@ -1,12 +1,12 @@
 import fs from "fs"
+import inquirer from "inquirer"
+import fetch from "node-fetch"
+import open from "open"
 import os from "os"
 import path from "path"
-import inquirer from "inquirer"
-import open from "open"
-import fetch from "node-fetch"
+import { fetcher } from "./fetcher.js"
 import { currentUserQuery, userActivityQuery } from "./queries.js"
 import { aniListEndpoint, getTitle, redirectUri } from "./workers.js"
-import { fetcher } from "./fetcher.js"
 
 const home_dir = os.homedir()
 const save_path = path.join(home_dir, ".anilist_token")
@@ -79,7 +79,7 @@ async function currentUserInfo() {
   if (await isLoggedIn()) {
     const headers = {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     }
     const request = await fetch(aniListEndpoint, {
       method: "POST",
@@ -177,7 +177,7 @@ async function currentUsersId() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     },
     body: JSON.stringify({ query: currentUserQuery }),
   })
@@ -198,7 +198,7 @@ async function currentUsersName() {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await retriveAccessToken()}`,
+      "Authorization": `Bearer ${await retriveAccessToken()}`,
     },
     body: JSON.stringify({ query: currentUserQuery }),
   })
@@ -211,13 +211,13 @@ async function currentUsersName() {
 }
 
 export {
-  getAccessTokenFromUser,
-  storeAccessToken,
-  retriveAccessToken,
   anilistUserLogin,
   currentUserInfo,
-  isLoggedIn,
-  logoutUser,
   currentUsersId,
   currentUsersName,
+  getAccessTokenFromUser,
+  isLoggedIn,
+  logoutUser,
+  retriveAccessToken,
+  storeAccessToken,
 }

@@ -1,4 +1,13 @@
+import inquirer from "inquirer"
 import fetch from "node-fetch"
+import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
+import { fetcher } from "./fetcher.js"
+import {
+  addAnimeToListMutation,
+  addMangaToListMutation,
+  deleteActivityMutation,
+  saveTextActivityMutation,
+} from "./mutations.js"
 import {
   activityAllQuery,
   activityAnimeListQuery,
@@ -14,25 +23,18 @@ import {
   userActivityQuery,
   userQuery,
 } from "./queries.js"
-import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
 import {
   aniListEndpoint,
   formatDateObject,
   getTitle,
   importAnimeListFromExportedJSON,
   importMangaListFromExportedJSON,
+  MALexport,
+  MALimport,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
 } from "./workers.js"
-import { fetcher } from "./fetcher.js"
-import inquirer from "inquirer"
-import {
-  addAnimeToListMutation,
-  addMangaToListMutation,
-  deleteActivityMutation,
-  saveTextActivityMutation,
-} from "./mutations.js"
 
 async function getUserInfoByUsername(username: string) {
   try {
@@ -371,6 +373,7 @@ async function exportAnimeList() {
         choices: [
           { name: "CSV", value: 1 },
           { name: "JSON", value: 2 },
+          { name: "XML (MyAnimeList)", value: 3 },
         ],
         pageSize: 10,
       },
@@ -402,6 +405,12 @@ async function exportAnimeList() {
         case 2:
           await saveJSONasJSON(mediaWithProgress, "anime")
           break
+        case 3:
+          await MALexport.Anime()
+          break
+        default:
+          console.log(`\nInvalid export type. ${exportType}`)
+          break
       }
     } else {
       console.error(`\nNo anime(s) found in your lists.`)
@@ -427,6 +436,7 @@ async function exportMangaList() {
             choices: [
               { name: "CSV", value: 1 },
               { name: "JSON", value: 2 },
+              { name: "XML (MyAnimeList)", value: 3 },
             ],
             pageSize: 10,
           },
@@ -452,6 +462,12 @@ async function exportMangaList() {
           case 2:
             await saveJSONasJSON(mediaWithProgress, "manga")
             break
+          case 3:
+            await MALexport.Manga()
+            break
+          default:
+            console.log(`\nInvalid export type. ${exportType}`)
+            break
         }
       } else {
         console.log(`\nList seems to be empty.`)
@@ -470,13 +486,19 @@ async function importAnimeList() {
         type: "list",
         name: "source",
         message: "Select a source:",
-        choices: [{ name: "Exported JSON file.", value: 1 }],
+        choices: [
+          { name: "Exported JSON file.", value: 1 },
+          { name: "MyAnimeList (XML)", value: 2 },
+        ],
         pageSize: 10,
       },
     ])
     switch (source) {
       case 1:
         await importAnimeListFromExportedJSON()
+        break
+      case 2:
+        await MALimport.Anime()
         break
       default:
         console.log(`\nInvalid Choice.`)
@@ -493,13 +515,19 @@ async function importMangaList() {
         type: "list",
         name: "source",
         message: "Select a source:",
-        choices: [{ name: "Exported JSON file.", value: 1 }],
+        choices: [
+          { name: "Exported JSON file.", value: 1 },
+          { name: "MyAnimeList (XML)", value: 2 },
+        ],
         pageSize: 10,
       },
     ])
     switch (source) {
       case 1:
         await importMangaListFromExportedJSON()
+        break
+      case 2:
+        await MALimport.Manga()
         break
       default:
         console.log(`\nInvalid Choice.`)
@@ -511,14 +539,14 @@ async function importMangaList() {
 }
 
 export {
-  getUserInfoByUsername,
+  deleteUserActivities,
+  exportAnimeList,
+  exportMangaList,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
-  deleteUserActivities,
-  writeTextActivity,
-  exportAnimeList,
-  exportMangaList,
+  getUserInfoByUsername,
   importAnimeList,
   importMangaList,
+  writeTextActivity,
 }

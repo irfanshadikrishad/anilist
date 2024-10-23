@@ -1,18 +1,19 @@
-import fetch from "node-fetch"
 import inquirer from "inquirer"
-import { aniListEndpoint, getNextSeasonAndYear, getTitle } from "./workers.js"
+import fetch from "node-fetch"
+import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
+import { fetcher } from "./fetcher.js"
+import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js"
 import {
+  currentUserAnimeList,
+  currentUserMangaList,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   popularQuery,
   trendingQuery,
   upcomingAnimesQuery,
 } from "./queries.js"
-import { currentUserAnimeList, currentUserMangaList } from "./queries.js"
-import { isLoggedIn, currentUsersId, retriveAccessToken } from "./auth.js"
-import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js"
-import { fetcher } from "./fetcher.js"
 import { DeleteMangaResponse } from "./types.js"
+import { aniListEndpoint, getNextSeasonAndYear, getTitle } from "./workers.js"
 
 async function getTrending(count: number) {
   try {
@@ -166,7 +167,7 @@ async function loggedInUsersAnimeLists() {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            Authorization: `Bearer ${await retriveAccessToken()}`,
+            "Authorization": `Bearer ${await retriveAccessToken()}`,
           },
           body: JSON.stringify({
             query: currentUserAnimeList,
@@ -274,7 +275,7 @@ async function loggedInUsersMangaLists() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${await retriveAccessToken()}`,
+            "Authorization": `Bearer ${await retriveAccessToken()}`,
           },
           body: JSON.stringify({
             query: currentUserMangaList,
@@ -347,7 +348,7 @@ async function loggedInUsersMangaLists() {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${await retriveAccessToken()}`,
+                    "Authorization": `Bearer ${await retriveAccessToken()}`,
                   },
                   body: JSON.stringify({ query, variables }),
                 })
@@ -399,7 +400,7 @@ async function deleteAnimeCollection() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${await retriveAccessToken()}`,
+          "Authorization": `Bearer ${await retriveAccessToken()}`,
         },
         body: JSON.stringify({
           query: currentUserAnimeList,
@@ -459,7 +460,7 @@ async function deleteAnimeByAnimeId(id: number, title?: any) {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
+        "Authorization": `Bearer ${await retriveAccessToken()}`,
       },
       body: JSON.stringify({
         query: deleteMediaEntryMutation,
@@ -489,7 +490,7 @@ async function deleteMangaCollection() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          Authorization: `Bearer ${await retriveAccessToken()}`,
+          "Authorization": `Bearer ${await retriveAccessToken()}`,
         },
         body: JSON.stringify({
           query: currentUserMangaList,
@@ -547,7 +548,7 @@ async function deleteMangaByMangaId(id: number, title?: any) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${await retriveAccessToken()}`,
+        "Authorization": `Bearer ${await retriveAccessToken()}`,
       },
       body: JSON.stringify({
         query: deleteMangaEntryMutation,
@@ -638,11 +639,11 @@ async function getUpcomingAnimes(count: number) {
 }
 
 export {
-  getTrending,
+  deleteAnimeCollection,
+  deleteMangaCollection,
   getPopular,
+  getTrending,
   getUpcomingAnimes,
   loggedInUsersAnimeLists,
   loggedInUsersMangaLists,
-  deleteAnimeCollection,
-  deleteMangaCollection,
 }
