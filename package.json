@@ -17,7 +17,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
-    "lint:fix": "eslint ./dist --fix"
+    "lint:fix": "eslint ./dist --fix",
+    "all": "npm run lint && npm run lint:fix && npm run format"
   },
   "keywords": [
     "anilist",

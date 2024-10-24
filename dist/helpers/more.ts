@@ -1,20 +1,13 @@
 import inquirer from "inquirer"
 import fetch from "node-fetch"
-import { currentUsersId, isLoggedIn, retriveAccessToken } from "./auth.js"
+import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
 import {
   addAnimeToListMutation,
   addMangaToListMutation,
-  deleteActivityMutation,
   saveTextActivityMutation,
 } from "./mutations.js"
 import {
-  activityAllQuery,
-  activityAnimeListQuery,
-  activityMangaListQuery,
-  activityMediaList,
-  activityMessageQuery,
-  activityTextQuery,
   animeDetailsQuery,
   animeSearchQuery,
   currentUserAnimeList,
@@ -41,8 +34,8 @@ async function getUserInfoByUsername(username: string) {
     const headers = {
       "content-type": "application/json",
     }
-    if (await isLoggedIn()) {
-      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`
+    if (await Auth.isLoggedIn()) {
+      headers["Authorization"] = `Bearer ${await Auth.RetriveAccessToken()}`
     }
     const request: any = await fetch(aniListEndpoint, {
       method: "POST",
@@ -177,7 +170,7 @@ async function getAnimeSearchResults(search: string, count: number) {
         },
       ])
       // Lets save to the list now
-      if (await isLoggedIn()) {
+      if (await Auth.isLoggedIn()) {
         const query = addAnimeToListMutation
         const variables = { mediaId: selectedList, status: selectedListType }
 
@@ -236,7 +229,7 @@ async function getMangaSearchResults(search: string, count: number) {
     ])
 
     // If logged in save to the list
-    if (await isLoggedIn()) {
+    if (await Auth.isLoggedIn()) {
       const mutation = addMangaToListMutation
       const variables = { mediaId: selectedMangaId, status: selectedListType }
       const response: any = await fetcher(mutation, variables)
@@ -252,89 +245,10 @@ async function getMangaSearchResults(search: string, count: number) {
     console.error(`\nSomething went wrong.`)
   }
 }
-async function deleteUserActivities() {
-  if (await isLoggedIn()) {
-    const { activityType } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "activityType",
-        message: "What type of activity you want to delete?",
-        choices: [
-          { name: "All Activity", value: 0 },
-          { name: "Text Activity", value: 1 },
-          { name: "Media List Activity", value: 2 },
-          { name: "Anime List Activity", value: 3 },
-          { name: "Manga List Activity", value: 4 },
-          { name: "Message Activity", value: 5 },
-        ],
-      },
-    ])
-    const userId = await currentUsersId()
-    const variables = { page: 1, perPage: 100, userId }
-    const queryMap = {
-      0: activityAllQuery,
-      1: activityTextQuery,
-      2: activityMediaList,
-      3: activityAnimeListQuery,
-      4: activityMangaListQuery,
-      5: activityMessageQuery,
-    }
-    const query = queryMap[activityType]
-
-    let hasMoreActivities = true
-
-    while (hasMoreActivities) {
-      const response: any = await fetcher(query, {
-        page: 1,
-        perPage: 50,
-        userId: await currentUsersId(),
-      })
-
-      if (response?.data?.Page?.activities) {
-        let count = 0
-        const activities = response?.data?.Page?.activities
-
-        if (!activities || activities.length === 0) {
-          console.log(`\nNo more activities available.`)
-          hasMoreActivities = false
-        } else {
-          for (const act of activities) {
-            // Ensure ID is present to avoid unintended errors
-            if (act?.id) {
-              const deleteResponse: any = await fetcher(
-                deleteActivityMutation,
-                {
-                  id: act?.id,
-                }
-              )
-              const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted
-              count++
-
-              console.log(
-                `[${count}/${activities.length}] ${act?.id} ${
-                  isDeleted ? "✅" : "❌"
-                }`
-              )
-
-              // Avoiding rate-limit
-              await new Promise((resolve) => setTimeout(resolve, 2000))
-            }
-          }
-        }
-      } else {
-        // In case of an unexpected null response, exit the loop
-        console.log(`\nProbably deleted all the activities of this type.`)
-        hasMoreActivities = false
-      }
-    }
-  } else {
-    console.error(`\nPlease log in to delete your activities.`)
-  }
-}
 
 async function writeTextActivity(status: string) {
   try {
-    if (!(await isLoggedIn())) {
+    if (!(await Auth.isLoggedIn())) {
       console.error(`\nPlease login to use this feature.`)
       return
     }
@@ -364,7 +278,7 @@ async function writeTextActivity(status: string) {
 }
 
 async function exportAnimeList() {
-  if (await isLoggedIn()) {
+  if (await Auth.isLoggedIn()) {
     const { exportType } = await inquirer.prompt([
       {
         type: "list",
@@ -379,7 +293,7 @@ async function exportAnimeList() {
       },
     ])
     const animeList: any = await fetcher(currentUserAnimeList, {
-      id: await currentUsersId(),
+      id: await Auth.MyUserId(),
     })
     if (animeList) {
       const lists = animeList?.data?.MediaListCollection?.lists ?? []
@@ -421,9 +335,9 @@ async function exportAnimeList() {
 }
 
 async function exportMangaList() {
-  if (await isLoggedIn()) {
+  if (await Auth.isLoggedIn()) {
     const mangaLists: any = await fetcher(currentUserMangaList, {
-      id: await currentUsersId(),
+      id: await Auth.MyUserId(),
     })
     if (mangaLists) {
       const lists = mangaLists?.data?.MediaListCollection?.lists || []
@@ -539,7 +453,6 @@ async function importMangaList() {
 }
 
 export {
-  deleteUserActivities,
   exportAnimeList,
   exportMangaList,
   getAnimeDetailsByID,

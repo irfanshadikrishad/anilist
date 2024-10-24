@@ -1,5 +1,5 @@
 import fetch from "node-fetch"
-import { isLoggedIn, retriveAccessToken } from "./auth.js"
+import { Auth } from "./auth.js"
 import { aniListEndpoint } from "./workers.js"
 
 /**
@@ -20,8 +20,8 @@ async function fetcher(
     const headers = {
       "content-type": "application/json",
     }
-    if (await isLoggedIn()) {
-      headers["Authorization"] = `Bearer ${await retriveAccessToken()}`
+    if (await Auth.isLoggedIn()) {
+      headers["Authorization"] = `Bearer ${await Auth.RetriveAccessToken()}`
     }
     const request = await fetch(aniListEndpoint, {
       method: "POST",

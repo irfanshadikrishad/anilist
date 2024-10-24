@@ -7,7 +7,7 @@ import open from "open"
 import { homedir } from "os"
 import { join } from "path"
 import process from "process"
-import { currentUsersId, currentUsersName, isLoggedIn } from "./auth.js"
+import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
 import {
   saveAnimeWithProgressMutation,
@@ -127,7 +127,7 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
     const jsonData = JSON.stringify(js0n, null, 2)
     const path = join(
       getDownloadFolderPath(),
-      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`
+      `${await Auth.MyUserName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`
     )
     await writeFile(path, jsonData, "utf8")
     console.log(`\nSaved as JSON successfully.`)
@@ -147,7 +147,7 @@ async function saveJSONasCSV(js0n: object, dataType: string): Promise<void> {
     const csvData = parse(js0n)
     const path = join(
       getDownloadFolderPath(),
-      `${await currentUsersName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`
+      `${await Auth.MyUserName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`
     )
     await writeFile(path, csvData, "utf8")
     console.log(`\nSaved as CSV successfully.`)
@@ -438,9 +438,9 @@ class MALimport {
 class MALexport {
   static async Anime() {
     try {
-      if (await isLoggedIn()) {
+      if (await Auth.isLoggedIn()) {
         const animeList: AnimeList = await fetcher(currentUserAnimeList, {
-          id: await currentUsersId(),
+          id: await Auth.MyUserId(),
         })
         if (animeList?.data?.MediaListCollection?.lists.length > 0) {
           const lists = animeList?.data?.MediaListCollection?.lists
@@ -459,7 +459,7 @@ class MALexport {
           const xmlContent = createAnimeListXML(mediaWithProgress)
           const path = join(
             getDownloadFolderPath(),
-            `${await currentUsersName()}@irfanshadikrishad-anilist-myanimelist(anime)-${getFormattedDate()}.xml`
+            `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(anime)-${getFormattedDate()}.xml`
           )
           await writeFile(path, await xmlContent, "utf8")
           console.log(`Generated XML for MyAnimeList.`)
@@ -467,7 +467,7 @@ class MALexport {
           open(getDownloadFolderPath())
         } else {
           console.log(
-            `\nHey, ${await currentUsersName()}. Your anime list seems to be empty.`
+            `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`
           )
         }
       }
@@ -477,12 +477,12 @@ class MALexport {
   }
   static async Manga() {
     try {
-      if (!(await isLoggedIn())) {
+      if (!(await Auth.isLoggedIn())) {
         console.log(`\nPlease login to use this feature.`)
         return
       }
       const mangaList: AnimeList = await fetcher(currentUserMangaList, {
-        id: await currentUsersId(),
+        id: await Auth.MyUserId(),
       })
       if (mangaList && mangaList?.data?.MediaListCollection?.lists.length > 0) {
         const lists = mangaList?.data?.MediaListCollection?.lists
@@ -501,7 +501,7 @@ class MALexport {
         const XMLContent = createMangaListXML(mediaWithProgress)
         const path = join(
           getDownloadFolderPath(),
-          `${await currentUsersName()}@irfanshadikrishad-anilist-myanimelist(manga)-${getFormattedDate()}.xml`
+          `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(manga)-${getFormattedDate()}.xml`
         )
         await writeFile(path, await XMLContent, "utf8")
         console.log(`Generated XML for MyAnimeList.`)
@@ -509,7 +509,7 @@ class MALexport {
         open(getDownloadFolderPath())
       } else {
         console.log(
-          `\nHey, ${await currentUsersName()}. Your anime list seems to be empty.`
+          `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`
         )
       }
     } catch (error) {
@@ -601,7 +601,7 @@ async function createAnimeListXML(
   return `<myanimelist>
             <myinfo>
               <user_id/>
-              <user_name>${await currentUsersName()}</user_name>
+              <user_name>${await Auth.MyUserName()}</user_name>
               <user_export_type>1</user_export_type>
               <user_total_anime>0</user_total_anime>
               <user_total_watching>0</user_total_watching>
@@ -637,7 +637,7 @@ async function createMangaListXML(
   return `<myanimelist>
             <myinfo>
               <user_id/>
-              <user_name>${await currentUsersName()}</user_name>
+              <user_name>${await Auth.MyUserName()}</user_name>
               <user_export_type>2</user_export_type>
               <user_total_manga>5</user_total_manga>
               <user_total_reading>1</user_total_reading>
