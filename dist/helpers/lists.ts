@@ -28,7 +28,6 @@ import {
 import {
   AniListMediaStatus,
   AnimeList,
-  MALAnimeXML,
   MalIdToAnilistIdResponse,
   saveAnimeWithProgressResponse,
 } from "./types.js"
@@ -280,107 +279,99 @@ class AniList {
   }
   static async MyAnime() {
     try {
-      if (await Auth.isLoggedIn()) {
-        if (await Auth.MyUserId()) {
-          const request = await fetch(aniListEndpoint, {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-            },
-            body: JSON.stringify({
-              query: currentUserAnimeList,
-              variables: { id: await Auth.MyUserId() },
-            }),
-          })
-          const response: any = await request.json()
+      if (!(await Auth.isLoggedIn())) {
+        return console.error(`\nPlease log in first to access your lists.`)
+      }
 
-          if (request.status === 200) {
-            const lists = response?.data?.MediaListCollection?.lists
-            if (lists.length > 0) {
-              const { selectedList } = await inquirer.prompt([
-                {
-                  type: "list",
-                  name: "selectedList",
-                  message: "Select an anime list:",
-                  choices: lists.map((list: any) => list.name),
-                },
-              ])
-              const selectedEntries = lists.find(
-                (list: any) => list.name === selectedList
-              )
-              if (selectedEntries) {
-                console.log(`\nEntries for '${selectedEntries.name}':`)
+      const userId = await Auth.MyUserId()
+      if (!userId) {
+        return console.log(`\nFailed getting current user Id.`)
+      }
 
-                if (selectedEntries?.entries?.length > 0) {
-                  const { selectedAnime } = await inquirer.prompt([
-                    {
-                      type: "list",
-                      name: "selectedAnime",
-                      message: "Select anime to add to the list:",
-                      choices: selectedEntries?.entries.map(
-                        (upx: any, idx: number) => ({
-                          name: `[${idx + 1}] ${getTitle(upx?.media?.title)}`,
-                          value: upx?.media?.id,
-                        })
-                      ),
-                      pageSize: 10,
-                    },
-                  ])
-                  // Where to save
-                  const { selectedListType } = await inquirer.prompt([
-                    {
-                      type: "list",
-                      name: "selectedListType",
-                      message:
-                        "Select the list where you want to save this anime:",
-                      choices: [
-                        { name: "Planning", value: "PLANNING" },
-                        { name: "Watching", value: "CURRENT" },
-                        { name: "Completed", value: "COMPLETED" },
-                        { name: "Paused", value: "PAUSED" },
-                        { name: "Dropped", value: "DROPPED" },
-                      ],
-                    },
-                  ])
-                  // Lets save to the list now
-                  if (await Auth.isLoggedIn()) {
-                    const query = addAnimeToListMutation
-                    const variables = {
-                      mediaId: selectedAnime,
-                      status: selectedListType,
-                    }
+      const request = await fetch(aniListEndpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
+        },
+        body: JSON.stringify({
+          query: currentUserAnimeList,
+          variables: { id: userId },
+        }),
+      })
 
-                    const response: any = await fetcher(query, variables)
+      const { data, errors }: AnimeList = await request.json()
 
-                    if (response) {
-                      const saved = response?.data?.SaveMediaListEntry
-                      console.log(
-                        `\nEntry ${saved?.id}. Saved as ${saved?.status}.`
-                      )
-                    }
-                  } else {
-                    console.error(`\nPlease log in first to use this feature.`)
-                  }
-                } else {
-                  console.log(`\nNot available at this moment.`)
-                }
-              } else {
-                console.log("\nNo entries found.")
-              }
-            } else {
-              console.log(`\nYou seems to have no anime(s) in your lists.`)
-            }
-          } else {
-            console.log(
-              `\nSomething went wrong. ${response?.errors[0]?.message}`
-            )
-          }
-        } else {
-          console.log(`\nFailed getting current user Id.`)
-        }
+      if (request.status !== 200 || errors) {
+        return console.log(`\nSomething went wrong. ${errors?.[0]?.message}`)
+      }
+
+      const lists: any = data?.MediaListCollection?.lists
+      if (!lists || lists.length === 0) {
+        return console.log(`\nYou seem to have no anime(s) in your lists.`)
+      }
+
+      const { selectedList } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedList",
+          message: "Select an anime list:",
+          choices: lists.map((list: any) => list.name),
+        },
+      ])
+
+      const selectedEntries = lists.find(
+        (list: any) => list.name === selectedList
+      )
+
+      if (!selectedEntries || !selectedEntries.entries.length) {
+        return console.log(
+          `\nNo entries found or not available at this moment.`
+        )
+      }
+
+      console.log(`\nEntries for '${selectedEntries.name}':`)
+
+      const { selectedAnime } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedAnime",
+          message: "Select anime to add to the list:",
+          choices: selectedEntries.entries.map((entry: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
+            value: entry.media.id,
+          })),
+          pageSize: 10,
+        },
+      ])
+
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ])
+
+      const query = addAnimeToListMutation
+      const variables = { mediaId: selectedAnime, status: selectedListType }
+
+      const saveResponse: any = await fetcher(query, variables)
+
+      if (saveResponse) {
+        const savedEntry = saveResponse.data?.SaveMediaListEntry
+        console.log(
+          `\nEntry ${savedEntry?.id}. Saved as ${savedEntry?.status}.`
+        )
       } else {
-        console.error(`\nPlease log in first to access your lists.`)
+        console.error(`\nPlease log in first to use this feature.`)
       }
     } catch (error) {
       console.log(`\nSomething went wrong. ${(error as Error).message}`)
@@ -388,126 +379,108 @@ class AniList {
   }
   static async MyManga() {
     try {
-      if (await Auth.isLoggedIn()) {
-        if (await Auth.MyUserId()) {
-          const request = await fetch(aniListEndpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-            },
-            body: JSON.stringify({
-              query: currentUserMangaList,
-              variables: { id: await Auth.MyUserId() },
-            }),
-          })
+      if (!(await Auth.isLoggedIn())) {
+        return console.error(`\nPlease log in first to access your lists.`)
+      }
 
-          const response: any = await request.json()
+      const userId = await Auth.MyUserId()
+      if (!userId) {
+        return console.error(`\nFailed to get the current user ID.`)
+      }
 
-          if (request.status === 200 && response?.data?.MediaListCollection) {
-            const lists = response.data.MediaListCollection.lists
+      const token = await Auth.RetriveAccessToken()
+      const request = await fetch(aniListEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          query: currentUserMangaList,
+          variables: { id: userId },
+        }),
+      })
 
-            if (lists && lists.length > 0) {
-              const { selectedList } = await inquirer.prompt([
-                {
-                  type: "list",
-                  name: "selectedList",
-                  message: "Select a manga list:",
-                  choices: lists.map((list: any) => list.name),
-                },
-              ])
+      const { data, errors }: AnimeList = await request.json()
 
-              const selectedEntries = lists.find(
-                (list: any) => list.name === selectedList
-              )
+      if (request.status !== 200 || errors) {
+        return console.error(
+          `\nFailed to fetch manga lists. ${errors?.[0]?.message || "Unknown error"}`
+        )
+      }
 
-              if (selectedEntries && selectedEntries.entries.length > 0) {
-                console.log(`\nEntries for '${selectedEntries.name}':`)
+      const lists = data?.MediaListCollection?.lists
+      if (!lists || lists.length === 0) {
+        return console.log("\nYou don't seem to have any manga in your lists.")
+      }
 
-                const { selectedManga } = await inquirer.prompt([
-                  {
-                    type: "list",
-                    name: "selectedManga",
-                    message: "Select a manga to add to the list:",
-                    choices: selectedEntries.entries.map(
-                      (entry: any, idx: number) => ({
-                        name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
-                        value: entry?.media?.id,
-                      })
-                    ),
-                    pageSize: 10,
-                  },
-                ])
+      const { selectedList } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedList",
+          message: "Select a manga list:",
+          choices: lists.map((list: any) => list.name),
+        },
+      ])
 
-                // Prompt user to select list type to save to
-                const { selectedListType } = await inquirer.prompt([
-                  {
-                    type: "list",
-                    name: "selectedListType",
-                    message:
-                      "Select the list where you want to save this manga:",
-                    choices: [
-                      { name: "Planning", value: "PLANNING" },
-                      { name: "Reading", value: "CURRENT" },
-                      { name: "Completed", value: "COMPLETED" },
-                      { name: "Paused", value: "PAUSED" },
-                      { name: "Dropped", value: "DROPPED" },
-                    ],
-                  },
-                ])
+      const selectedEntries = lists.find(
+        (list: any) => list.name === selectedList
+      )
+      if (!selectedEntries || selectedEntries.entries.length === 0) {
+        return console.log("\nNo manga entries found in the selected list.")
+      }
 
-                // Save the selected manga to the selected list type
-                if (await Auth.isLoggedIn()) {
-                  const query = addMangaToListMutation
-                  const variables = {
-                    mediaId: selectedManga,
-                    status: selectedListType,
-                  }
+      console.log(`\nEntries for '${selectedEntries.name}':`)
 
-                  const saveRequest = await fetch(aniListEndpoint, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-                    },
-                    body: JSON.stringify({ query, variables }),
-                  })
+      const { selectedManga } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedManga",
+          message: "Select a manga to add to the list:",
+          choices: selectedEntries.entries.map((entry: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
+            value: entry?.media?.id,
+          })),
+          pageSize: 10,
+        },
+      ])
 
-                  const saveResponse: any = await saveRequest.json()
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this manga:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Reading", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ])
 
-                  if (saveResponse?.data?.SaveMediaListEntry) {
-                    const saved = saveResponse.data.SaveMediaListEntry
-                    console.log(
-                      `\nEntry ${saved.id}. Saved as ${saved.status}.`
-                    )
-                  } else {
-                    console.error(
-                      `\nFailed to save the manga. ${
-                        saveResponse?.errors?.[0]?.message || "Unknown error"
-                      }`
-                    )
-                  }
-                } else {
-                  console.error(`\nPlease log in first to use this feature.`)
-                }
-              } else {
-                console.log("\nNo manga entries found in the selected list.")
-              }
-            } else {
-              console.log("\nYou don't seem to have any manga in your lists.")
-            }
-          } else {
-            console.error(
-              `\nFailed to fetch manga lists. ${
-                response?.errors?.[0]?.message || "Unknown error"
-              }`
-            )
-          }
-        } else {
-          console.error(`\nFailed to get the current user ID.`)
-        }
+      const saveRequest = await fetch(aniListEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          query: addMangaToListMutation,
+          variables: { mediaId: selectedManga, status: selectedListType },
+        }),
+      })
+
+      const saveResponse: any = await saveRequest.json()
+      const saved = saveResponse?.data?.SaveMediaListEntry
+
+      if (saved) {
+        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
       } else {
-        console.error(`\nPlease log in first to access your lists.`)
+        console.error(
+          `\nFailed to save the manga. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+        )
       }
     } catch (error) {
       console.error(`\nSomething went wrong. ${error.message}`)
@@ -518,71 +491,72 @@ class AniList {
       const request = await fetch(aniListEndpoint, {
         method: "POST",
         headers: {
-          "content-type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           query: trendingQuery,
           variables: { page: 1, perPage: count },
         }),
       })
-      const response: any = await request.json()
 
-      if (request.status === 200) {
-        const media = response?.data?.Page?.media
+      const { data, errors }: any = await request.json()
 
-        if (media?.length > 0) {
-          const { selectedAnime } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "selectedAnime",
-              message: "Select anime to add to the list:",
-              choices: media.map((upx: any, idx: number) => ({
-                name: `[${idx + 1}] ${getTitle(upx?.title)}`,
-                value: upx?.id,
-              })),
-              pageSize: 10,
-            },
-          ])
-          // Where to save
-          const { selectedListType } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "selectedListType",
-              message: "Select the list where you want to save this anime:",
-              choices: [
-                { name: "Planning", value: "PLANNING" },
-                { name: "Watching", value: "CURRENT" },
-                { name: "Completed", value: "COMPLETED" },
-                { name: "Paused", value: "PAUSED" },
-                { name: "Dropped", value: "DROPPED" },
-              ],
-            },
-          ])
-          // Lets save to the list now
-          if (await Auth.isLoggedIn()) {
-            const query = addAnimeToListMutation
-            const variables = {
-              mediaId: selectedAnime,
-              status: selectedListType,
-            }
+      if (request.status !== 200 || errors) {
+        return console.log(
+          `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+        )
+      }
 
-            const response: any = await fetcher(query, variables)
+      const media = data?.Page?.media
+      if (!media || media.length === 0) {
+        return console.log(`\nNo trending available at the moment.`)
+      }
 
-            if (response) {
-              const saved = response?.data?.SaveMediaListEntry
-              console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`)
-            }
-          } else {
-            console.error(`\nPlease log in first to use this feature.`)
-          }
-        } else {
-          console.log(`\nNo trending available at the moment.`)
-        }
+      const { selectedAnime } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedAnime",
+          message: "Select anime to add to the list:",
+          choices: media.map((anime: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+            value: anime?.id,
+          })),
+          pageSize: 10,
+        },
+      ])
+
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ])
+
+      if (!(await Auth.isLoggedIn())) {
+        return console.error(`\nPlease log in first to use this feature.`)
+      }
+
+      const variables = { mediaId: selectedAnime, status: selectedListType }
+      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+
+      const saved = saveResponse?.data?.SaveMediaListEntry
+      if (saved) {
+        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
       } else {
-        console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+        console.error(
+          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+        )
       }
     } catch (error) {
-      console.log(`\nSomething went wrong. ${(error as Error).message}`)
+      console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
   static async getPopularAnime(count: number) {
@@ -590,70 +564,72 @@ class AniList {
       const request = await fetch(aniListEndpoint, {
         method: "POST",
         headers: {
-          "content-type": "application/json",
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           query: popularQuery,
           variables: { page: 1, perPage: count },
         }),
       })
-      const response: any = await request.json()
-      if (request.status === 200) {
-        const media = response?.data?.Page?.media
 
-        if (media?.length > 0) {
-          const { selectedAnime } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "selectedAnime",
-              message: "Select anime to add to the list:",
-              choices: media.map((upx: any, idx: number) => ({
-                name: `[${idx + 1}] ${getTitle(upx?.title)}`,
-                value: upx?.id,
-              })),
-              pageSize: 10,
-            },
-          ])
-          // Where to save
-          const { selectedListType } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "selectedListType",
-              message: "Select the list where you want to save this anime:",
-              choices: [
-                { name: "Planning", value: "PLANNING" },
-                { name: "Watching", value: "CURRENT" },
-                { name: "Completed", value: "COMPLETED" },
-                { name: "Paused", value: "PAUSED" },
-                { name: "Dropped", value: "DROPPED" },
-              ],
-            },
-          ])
-          // Lets save to the list now
-          if (await Auth.isLoggedIn()) {
-            const query = addAnimeToListMutation
-            const variables = {
-              mediaId: selectedAnime,
-              status: selectedListType,
-            }
+      const { data, errors }: any = await request.json()
 
-            const response: any = await fetcher(query, variables)
+      if (request.status !== 200 || errors) {
+        return console.log(
+          `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+        )
+      }
 
-            if (response) {
-              const saved = response?.data?.SaveMediaListEntry
-              console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`)
-            }
-          } else {
-            console.error(`\nPlease log in first to use this feature.`)
-          }
-        } else {
-          console.log(`\nNo popular available at this moment.`)
-        }
+      const media = data?.Page?.media
+      if (!media || media.length === 0) {
+        return console.log(`\nNo popular anime available at the moment.`)
+      }
+
+      const { selectedAnime } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedAnime",
+          message: "Select anime to add to the list:",
+          choices: media.map((anime: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+            value: anime?.id,
+          })),
+          pageSize: 10,
+        },
+      ])
+
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ])
+
+      if (!(await Auth.isLoggedIn())) {
+        return console.error(`\nPlease log in first to use this feature.`)
+      }
+
+      const variables = { mediaId: selectedAnime, status: selectedListType }
+      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+
+      const saved = saveResponse?.data?.SaveMediaListEntry
+      if (saved) {
+        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
       } else {
-        console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+        console.error(
+          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+        )
       }
     } catch (error) {
-      console.log(`\nSomething went wrong. ${(error as Error).message}`)
+      console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
   static async getUpcomingAnime(count: number) {
@@ -666,123 +642,130 @@ class AniList {
         perPage: count,
       })
 
-      if (request) {
-        const upcoming = request?.data?.Page?.media ?? []
-        const { selectedAnime } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedAnime",
-            message: "Select anime to add to the list:",
-            choices: upcoming.map((upx: any, idx: number) => ({
-              name: `[${idx + 1}] ${getTitle(upx?.title)}`,
-              value: upx?.id,
-            })),
-            pageSize: 10,
-          },
-        ])
-        // Where to save
-        const { selectedListType } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedListType",
-            message: "Select the list where you want to save this anime:",
-            choices: [
-              { name: "Planning", value: "PLANNING" },
-              { name: "Watching", value: "CURRENT" },
-              { name: "Completed", value: "COMPLETED" },
-              { name: "Paused", value: "PAUSED" },
-              { name: "Dropped", value: "DROPPED" },
-            ],
-          },
-        ])
-        // Lets save to the list now
-        if (await Auth.isLoggedIn()) {
-          const query = addAnimeToListMutation
-          const variables = { mediaId: selectedAnime, status: selectedListType }
+      if (!request || !request.data) {
+        return console.error(
+          `\nSomething went wrong. ${request?.errors?.[0]?.message || "Unknown error"}`
+        )
+      }
 
-          const response: any = await fetcher(query, variables)
+      const upcoming = request.data.Page.media ?? []
+      if (upcoming.length === 0) {
+        return console.log(`\nNo upcoming anime available.`)
+      }
 
-          if (response) {
-            const saved = response?.data?.SaveMediaListEntry
-            console.log(`\nEntry ${saved?.id}. Saved as ${saved?.status}.`)
-          }
-        } else {
-          console.error(`\nPlease log in first to use this feature.`)
-        }
+      const { selectedAnime } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedAnime",
+          message: "Select anime to add to the list:",
+          choices: upcoming.map((anime: any, idx: number) => ({
+            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+            value: anime?.id,
+          })),
+          pageSize: 10,
+        },
+      ])
+
+      const { selectedListType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedListType",
+          message: "Select the list where you want to save this anime:",
+          choices: [
+            { name: "Planning", value: "PLANNING" },
+            { name: "Watching", value: "CURRENT" },
+            { name: "Completed", value: "COMPLETED" },
+            { name: "Paused", value: "PAUSED" },
+            { name: "Dropped", value: "DROPPED" },
+          ],
+        },
+      ])
+
+      if (!(await Auth.isLoggedIn())) {
+        return console.error(`\nPlease log in first to use this feature.`)
+      }
+
+      const variables = { mediaId: selectedAnime, status: selectedListType }
+      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+
+      const saved = saveResponse?.data?.SaveMediaListEntry
+      if (saved) {
+        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
       } else {
-        console.error(`\nSomething went wrong. ${request?.errors[0]?.message}`)
+        console.error(
+          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+        )
       }
     } catch (error) {
-      console.error(
-        `\nError getting upcoming animes. ${(error as Error).message}`
-      )
+      console.error(`\nError getting upcoming animes. ${error.message}`)
     }
   }
   static async getUserByUsername(username: string) {
     try {
       const headers = {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       }
+
       if (await Auth.isLoggedIn()) {
         headers["Authorization"] = `Bearer ${await Auth.RetriveAccessToken()}`
       }
-      const request: any = await fetch(aniListEndpoint, {
+
+      const request = await fetch(aniListEndpoint, {
         method: "POST",
-        headers: headers,
+        headers,
         body: JSON.stringify({ query: userQuery, variables: { username } }),
       })
-      const response: {
-        data?: { User: { id: number } }
-        errors?: { message: string }
-      } = await request.json()
-      if (request.status === 200) {
-        const user: any = response?.data?.User
-        const responseUserActivity: any = await fetcher(userActivityQuery, {
-          id: user?.id,
-          page: 1,
-          perPage: 10,
-        })
-        const activities = responseUserActivity?.data?.Page?.activities || []
+      const response: any = await request.json()
 
-        console.log(`\nID:\t\t${user?.id}`)
-        console.log(`Name:\t\t${user?.name}`)
-        console.log(`siteUrl:\t${user?.siteUrl}`)
-        console.log(`Donator Tier:\t${user?.donatorTier}`)
-        console.log(`Donator Badge:\t${user?.donatorBadge}`)
-        if (user?.createdAt) {
-          console.log(
-            `Account Created: ${new Date(user.createdAt * 1000).toUTCString()}`
-          )
-        }
-        console.log(
-          `Account Updated:${new Date(user?.updatedAt * 1000).toUTCString()}`
+      if (request.status !== 200 || !response?.data?.User) {
+        return console.error(
+          `\n${request.status} ${response?.errors?.[0]?.message || "Unknown error"}`
         )
-        console.log(`I blocked?\t${user?.isBlocked}`)
-        console.log(`My follower:\t${user?.isFollower}`)
-        console.log(`I'm following:\t${user?.isFollowing}`)
-        console.log(`Color:\t${user?.options?.profileColor}`)
-        console.log(`Timezone:\t${user?.options?.timezone}`)
-        console.log(
-          `\nStatistics (Anime)\nCount: ${user?.statistics?.anime?.count} episodesWatched: ${user?.statistics?.anime?.episodesWatched} minutesWatched: ${user?.statistics?.anime?.minutesWatched}`
-        )
-        console.log(
-          `Statistics (Manga)\nCount: ${user?.statistics?.manga?.count} Chapter Read: ${user?.statistics?.manga?.chaptersRead} Volumes Read: ${user?.statistics?.manga?.volumesRead}`
-        )
+      }
+
+      const user = response.data.User
+      const userActivityResponse: any = await fetcher(userActivityQuery, {
+        id: user.id,
+        page: 1,
+        perPage: 10,
+      })
+      const activities = userActivityResponse?.data?.Page?.activities ?? []
+
+      console.log(`\nID:\t\t${user.id}`)
+      console.log(`Name:\t\t${user.name}`)
+      console.log(`Site URL:\t${user.siteUrl}`)
+      console.log(`Donator Tier:\t${user.donatorTier}`)
+      console.log(`Donator Badge:\t${user.donatorBadge}`)
+      console.log(
+        `Account Created:\t${user.createdAt ? new Date(user.createdAt * 1000).toUTCString() : "N/A"}`
+      )
+      console.log(
+        `Account Updated:\t${user.updatedAt ? new Date(user.updatedAt * 1000).toUTCString() : "N/A"}`
+      )
+      console.log(`Blocked:\t${user.isBlocked}`)
+      console.log(`Follower:\t${user.isFollower}`)
+      console.log(`Following:\t${user.isFollowing}`)
+      console.log(`Profile Color:\t${user.options?.profileColor}`)
+      console.log(`Timezone:\t${user.options?.timezone}`)
+      console.log(
+        `\nStatistics (Anime)\nCount: ${user.statistics?.anime?.count || 0} Episodes Watched: ${user.statistics?.anime?.episodesWatched || 0} Minutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
+      )
+      console.log(
+        `Statistics (Manga)\nCount: ${user.statistics?.manga?.count || 0} Chapters Read: ${user.statistics?.manga?.chaptersRead || 0} Volumes Read: ${user.statistics?.manga?.volumesRead || 0}`
+      )
+
+      if (activities.length > 0) {
         console.log(`\nRecent Activities:`)
-        if (activities.length > 0) {
-          activities.map(({ status, progress, media }) => {
-            console.log(
-              `${status} ${progress ? `${progress} of ` : ""}${getTitle(
-                media?.title
-              )}`
-            )
-          })
-        }
+        activities.forEach(({ status, progress, media }) => {
+          console.log(
+            `${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
+          )
+        })
       } else {
-        console.error(`\n${request.status} ${response?.errors[0]?.message}`)
+        console.log("\nNo recent activities.")
       }
     } catch (error) {
-      console.error(`\nSomething went wrong. ${(error as Error).message}`)
+      console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
   static async getAnimeDetailsByID(anilistID: number) {
@@ -808,18 +791,18 @@ class AniList {
       } = details.data.Media
 
       console.log(`\nID: ${id}`)
-      console.log(`Title: ${title?.userPreffered || getTitle(title)}`)
+      console.log(`Title: ${title?.userPreferred || getTitle(title)}`)
       console.log(`Description: ${removeHtmlAndMarkdown(description)}`)
-      console.log(`Episode Duration: ${duration}min`)
-      console.log(`Origin: ${countryOfOrigin}`)
-      console.log(`Status: ${String(status)}`)
-      console.log(`Format: ${format}`)
-      console.log(`Genres: ${genres.join(", ")}`)
-      console.log(`Season: ${season}`)
-      console.log(`Url: `, siteUrl)
-      console.log(`isAdult: ${isAdult}`)
-      console.log(`Released: ${formatDateObject(startDate)}`)
-      console.log(`Finished: ${formatDateObject(endDate)}`)
+      console.log(`Episode Duration: ${duration || "Unknown"} min`)
+      console.log(`Origin: ${countryOfOrigin || "N/A"}`)
+      console.log(`Status: ${status || "N/A"}`)
+      console.log(`Format: ${format || "N/A"}`)
+      console.log(`Genres: ${genres.length ? genres.join(", ") : "N/A"}`)
+      console.log(`Season: ${season || "N/A"}`)
+      console.log(`Url: ${siteUrl || "N/A"}`)
+      console.log(`isAdult: ${isAdult ? "Yes" : "No"}`)
+      console.log(`Released: ${formatDateObject(startDate) || "Unknown"}`)
+      console.log(`Finished: ${formatDateObject(endDate) || "Ongoing"}`)
     }
   }
   static async searchAnime(search: string, count: number) {
@@ -830,11 +813,12 @@ class AniList {
 
     if (searchResults) {
       const results = searchResults?.data?.Page?.media
+
       if (results.length > 0) {
-        const { selectedList } = await inquirer.prompt([
+        const { selectedAnime } = await inquirer.prompt([
           {
             type: "list",
-            name: "selectedList",
+            name: "selectedAnime",
             message: "Select anime to add to your list:",
             choices: results.map((res: any, idx: number) => ({
               name: `[${idx + 1}] ${getTitle(res?.title)}`,
@@ -843,7 +827,7 @@ class AniList {
             pageSize: 10,
           },
         ])
-        // Where to save
+
         const { selectedListType } = await inquirer.prompt([
           {
             type: "list",
@@ -858,12 +842,16 @@ class AniList {
             ],
           },
         ])
-        // Lets save to the list now
-        if (await Auth.isLoggedIn()) {
-          const query = addAnimeToListMutation
-          const variables = { mediaId: selectedList, status: selectedListType }
 
-          const response: any = await fetcher(query, variables)
+        // Save selected anime to chosen list type
+        if (await Auth.isLoggedIn()) {
+          const saveQuery = addAnimeToListMutation
+          const saveVariables = {
+            mediaId: selectedAnime,
+            status: selectedListType,
+          }
+
+          const response: any = await fetcher(saveQuery, saveVariables)
 
           if (response) {
             const saved = response?.data?.SaveMediaListEntry
@@ -873,7 +861,7 @@ class AniList {
           console.error(`\nPlease log in first to use this feature.`)
         }
       } else {
-        console.log(`\nNo search results!`)
+        console.log(`\nNo search results found.`)
       }
     } else {
       console.error(`\nSomething went wrong.`)
@@ -942,63 +930,74 @@ class MyAnimeList {
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const parser = new XMLParser()
+
       if (fileContent) {
         const XMLObject = parser.parse(fileContent)
-        if (XMLObject.myanimelist.anime.length > 0) {
+        const animeList = XMLObject?.myanimelist?.anime
+
+        if (animeList?.length > 0) {
           let count = 0
-          const animes: MALAnimeXML[] = XMLObject.myanimelist.anime
-          for (let anime of animes) {
+          const statusMap = {
+            "On-Hold": AniListMediaStatus.PAUSED,
+            "Dropped": AniListMediaStatus.DROPPED,
+            "Completed": AniListMediaStatus.COMPLETED,
+            "Watching": AniListMediaStatus.CURRENT,
+            "Plan to Watch": AniListMediaStatus.PLANNING,
+          }
+
+          for (const anime of animeList) {
             const malId = anime.series_animedb_id
             const progress = anime.my_watched_episodes
-            const statusMap = {
-              "On-Hold": AniListMediaStatus.PAUSED,
-              "Dropped": AniListMediaStatus.DROPPED,
-              "Completed": AniListMediaStatus.COMPLETED,
-              "Watching": AniListMediaStatus.CURRENT,
-              "Plan to Watch": AniListMediaStatus.PLANNING,
-            }
             const status = statusMap[anime.my_status]
 
-            const anilist: MalIdToAnilistIdResponse = await fetcher(
-              malIdToAnilistAnimeId,
-              { malId }
-            )
             try {
-              if (anilist && anilist.data.Media.id) {
-                const id = anilist.data.Media.id
-                const saveAnime: saveAnimeWithProgressResponse = await fetcher(
-                  saveAnimeWithProgressMutation,
-                  {
-                    mediaId: id,
-                    progress: progress,
-                    status: status,
+              // Fetch AniList ID using MAL ID
+              const anilistResponse: MalIdToAnilistIdResponse = await fetcher(
+                malIdToAnilistAnimeId,
+                { malId }
+              )
+              const anilistId = anilistResponse?.data?.Media?.id
+
+              if (anilistId) {
+                // Save anime entry with progress
+                const saveResponse: saveAnimeWithProgressResponse =
+                  await fetcher(saveAnimeWithProgressMutation, {
+                    mediaId: anilistId,
+                    progress,
+                    status,
                     hiddenFromStatusLists: false,
                     private: false,
-                  }
-                )
-                if (saveAnime) {
-                  const entryId = saveAnime?.data?.SaveMediaListEntry?.id
+                  })
+                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+
+                if (entryId) {
                   count++
                   console.log(`[${count}] ${entryId} ✅`)
-
-                  // rate-limit
-                  await new Promise((resolve) => {
-                    setTimeout(resolve, 1100)
-                  })
                 }
+
+                // Rate limit each API call to avoid server overload
+                await new Promise((resolve) => setTimeout(resolve, 1100))
               } else {
-                console.error(`could not get anilistId for ${malId}`)
+                console.error(
+                  `Could not retrieve AniList ID for MAL ID ${malId}`
+                )
               }
             } catch (error) {
-              console.error(`\nMALimport-200 ${(error as Error).message}`)
+              console.error(
+                `Error processing MAL ID ${malId}: ${(error as Error).message}`
+              )
             }
           }
+
+          console.log(`\nTotal Entries Processed: ${count}`)
         } else {
-          console.log(`\nNo anime list seems to be found.`)
+          console.log(`\nNo anime list found in the file.`)
         }
       }
     } catch (error) {
-      console.error(`\nError from MALimport. ${(error as Error).message}`)
+      console.error(
+        `\nError in MAL import process: ${(error as Error).message}`
+      )
     }
   }
   static async importManga() {
@@ -1007,56 +1006,71 @@ class MyAnimeList {
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const parser = new XMLParser()
+
       if (fileContent) {
         const XMLObject = parser.parse(fileContent)
-        if (XMLObject.myanimelist.manga.length > 0) {
+        const mangas = XMLObject?.myanimelist?.manga
+
+        if (mangas?.length > 0) {
           let count = 0
-          const mangas = XMLObject.myanimelist.manga
-          for (let manga of mangas) {
+          const statusMap = {
+            "On-Hold": AniListMediaStatus.PAUSED,
+            "Dropped": AniListMediaStatus.DROPPED,
+            "Completed": AniListMediaStatus.COMPLETED,
+            "Reading": AniListMediaStatus.CURRENT,
+            "Plan to Read": AniListMediaStatus.PLANNING,
+          }
+
+          for (const manga of mangas) {
             const malId = manga.manga_mangadb_id
             const progress = manga.my_read_chapters
-            const statusMap = {
-              "On-Hold": AniListMediaStatus.PAUSED,
-              "Dropped": AniListMediaStatus.DROPPED,
-              "Completed": AniListMediaStatus.COMPLETED,
-              "Reading": AniListMediaStatus.CURRENT,
-              "Plan to Read": AniListMediaStatus.PLANNING,
-            }
             const status = statusMap[manga.my_status]
 
-            const anilist: MalIdToAnilistIdResponse = await fetcher(
-              malIdToAnilistMangaId,
-              {
-                malId: malId,
-              }
-            )
-            if (anilist?.data?.Media?.id) {
-              const anilistId = anilist?.data?.Media?.id
+            try {
+              // Fetch AniList ID using MAL ID
+              const anilistResponse: MalIdToAnilistIdResponse = await fetcher(
+                malIdToAnilistMangaId,
+                { malId }
+              )
+              const anilistId = anilistResponse?.data?.Media?.id
+
               if (anilistId) {
-                const saveManga: saveAnimeWithProgressResponse = await fetcher(
-                  saveMangaWithProgressMutation,
-                  {
+                // Save manga entry with progress
+                const saveResponse: saveAnimeWithProgressResponse =
+                  await fetcher(saveMangaWithProgressMutation, {
                     mediaId: anilistId,
-                    progress: progress,
-                    status: status,
+                    progress,
+                    status,
                     hiddenFromStatusLists: false,
                     private: false,
-                  }
-                )
-                if (saveManga) {
-                  const entryId = saveManga.data.SaveMediaListEntry.id
+                  })
+                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+
+                if (entryId) {
                   count++
                   console.log(`[${count}] ${entryId} ✅`)
+                } else {
+                  console.error(`Failed to save entry for ${malId}`)
                 }
+              } else {
+                console.error(
+                  `Could not retrieve AniList ID for MAL ID ${malId}`
+                )
               }
+            } catch (error) {
+              console.error(
+                `Error processing MAL ID ${malId}: ${(error as Error).message}`
+              )
             }
           }
+
+          console.log(`\nTotal Entries Processed: ${count}`)
         } else {
           console.log(`\nNo manga list seems to be found.`)
         }
       }
     } catch (error) {
-      console.error(`\nError from MALimport. ${(error as Error).message}`)
+      console.error(`\nError from MAL import: ${(error as Error).message}`)
     }
   }
   static async exportAnime() {
