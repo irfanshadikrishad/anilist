@@ -1,5 +1,13 @@
 #### Changelog
 
+#### v1.0.9
+
+- Optimization: Better quality of code
+
+#### v1.0.8
+
+- AniList—MyAnimeList integration for Import/Export of Anime/Manga list
+
 #### v1.0.7
 
 - Optimization

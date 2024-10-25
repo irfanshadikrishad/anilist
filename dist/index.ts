@@ -1,33 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import process from "process"
-import {
-  anilistUserLogin,
-  currentUserInfo,
-  isLoggedIn,
-  logoutUser,
-} from "./helpers/auth.js"
-import {
-  deleteAnimeCollection,
-  deleteMangaCollection,
-  getPopular,
-  getTrending,
-  getUpcomingAnimes,
-  loggedInUsersAnimeLists,
-  loggedInUsersMangaLists,
-} from "./helpers/lists.js"
-import {
-  deleteUserActivities,
-  exportAnimeList,
-  exportMangaList,
-  getAnimeDetailsByID,
-  getAnimeSearchResults,
-  getMangaSearchResults,
-  getUserInfoByUsername,
-  importAnimeList,
-  importMangaList,
-  writeTextActivity,
-} from "./helpers/more.js"
+import { Auth } from "./helpers/auth.js"
+import { AniList } from "./helpers/lists.js"
 
 const cli = new Command()
 
@@ -36,7 +11,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.0.8")
+  .version("1.0.9")
 
 cli
   .command("login")
@@ -45,7 +20,7 @@ cli
   .requiredOption("-s, --secret <string>", null)
   .action(async ({ id, secret }) => {
     if (id && secret) {
-      await anilistUserLogin(id, secret)
+      await Auth.Login(id, secret)
     } else {
       console.log("\nMust provide both ClientId and ClientSecret!")
     }
@@ -54,7 +29,7 @@ cli
   .command("me")
   .description("Get details of the logged in user")
   .action(async () => {
-    await currentUserInfo()
+    await Auth.Myself()
   })
 cli
   .command("trending")
@@ -62,7 +37,7 @@ cli
   .description("Get the trending list from AniList")
   .option("-c, --count <number>", "Number of list items to get", "10")
   .action(async ({ count }) => {
-    await getTrending(Number(count))
+    await AniList.getTrendingAnime(Number(count))
   })
 cli
   .command("popular")
@@ -70,19 +45,19 @@ cli
   .description("Get the popular list from AniList")
   .option("-c, --count <number>", "Number of list items to get", "10")
   .action(async ({ count }) => {
-    await getPopular(Number(count))
+    await AniList.getPopularAnime(Number(count))
   })
 cli
   .command("user <username>")
   .description("Get user information")
   .action(async (username) => {
-    await getUserInfoByUsername(username)
+    await AniList.getUserByUsername(username)
   })
 cli
   .command("logout")
   .description("Log out the current user.")
   .action(async () => {
-    await logoutUser()
+    await Auth.Logout()
   })
 cli
   .command("lists")
@@ -94,9 +69,9 @@ cli
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`\nMust select an option, either --anime or --manga`)
     } else if (anime) {
-      await loggedInUsersAnimeLists()
+      await AniList.MyAnime()
     } else if (manga) {
-      await loggedInUsersMangaLists()
+      await AniList.MyManga()
     }
   })
 cli
@@ -121,11 +96,11 @@ cli
       process.exit(1)
     }
     if (anime) {
-      await deleteAnimeCollection()
+      await Auth.DeleteMyAnimeList()
     } else if (manga) {
-      await deleteMangaCollection()
+      await Auth.DeleteMyMangaList()
     } else if (activity) {
-      await deleteUserActivities()
+      await Auth.DeleteMyActivities()
     }
   })
 cli
@@ -134,14 +109,14 @@ cli
   .description("Anime that will be released in upcoming season")
   .option("-c, --count <number>", "Number of items to get", "10")
   .action(async ({ count }) => {
-    await getUpcomingAnimes(Number(count))
+    await AniList.getUpcomingAnime(Number(count))
   })
 cli
   .command("anime <id>")
   .description("Get anime details by their ID")
   .action(async (id) => {
     if (id && !Number.isNaN(Number(id))) {
-      await getAnimeDetailsByID(Number(id))
+      await AniList.getAnimeDetailsByID(Number(id))
     } else {
       console.error(
         `\nInvalid or missing ID (${id}). Please provide a valid numeric ID.`
@@ -161,9 +136,9 @@ cli
       console.error(`\nMust select an option, either --anime or --manga`)
     } else {
       if (anime) {
-        await getAnimeSearchResults(query, Number(count))
+        await AniList.searchAnime(query, Number(count))
       } else if (manga) {
-        await getMangaSearchResults(query, Number(count))
+        await AniList.searchManga(query, Number(count))
       } else {
         console.error(`\nMust select an option, either --anime or --manga`)
       }
@@ -175,7 +150,7 @@ cli
   .alias("write")
   .description("Write a status...")
   .action(async (status) => {
-    await writeTextActivity(status)
+    await Auth.Write(status)
   })
 cli
   .command("export")
@@ -188,9 +163,9 @@ cli
       console.error(`\nMust select an option, either --anime or --manga`)
     } else {
       if (anime) {
-        await exportAnimeList()
+        await AniList.exportAnime()
       } else if (manga) {
-        await exportMangaList()
+        await AniList.exportManga()
       }
     }
   })
@@ -204,11 +179,11 @@ cli
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`\nMust select an option, either --anime or --manga`)
     } else {
-      if (await isLoggedIn()) {
+      if (await Auth.isLoggedIn()) {
         if (anime) {
-          await importAnimeList()
+          await Auth.callAnimeImporter()
         } else if (manga) {
-          await importMangaList()
+          await Auth.callMangaImporter()
         }
       } else {
         console.error(`\nPlease login to use this feature.`)

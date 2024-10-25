@@ -89,7 +89,7 @@ enum MALMangaStatus {
 interface AnimeList {
   data?: {
     MediaListCollection: {
-      lists: [{ name: string; entries: { id: number; progress: number } }]
+      lists: { name: string; entries: { id: number; progress: number }[] }[]
     }
   }
   errors?: {

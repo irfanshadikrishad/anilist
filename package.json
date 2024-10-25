@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -17,7 +17,8 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
-    "lint:fix": "eslint ./dist --fix"
+    "lint:fix": "eslint ./dist --fix",
+    "all": "npm run lint && npm run lint:fix && npm run format"
   },
   "keywords": [
     "anilist",
