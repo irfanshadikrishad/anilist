@@ -2,15 +2,7 @@
 import { Command } from "commander"
 import process from "process"
 import { Auth } from "./helpers/auth.js"
-import { AniList, List } from "./helpers/lists.js"
-import {
-  getAnimeDetailsByID,
-  getAnimeSearchResults,
-  getMangaSearchResults,
-  getUserInfoByUsername,
-  importAnimeList,
-  importMangaList,
-} from "./helpers/more.js"
+import { AniList } from "./helpers/lists.js"
 
 const cli = new Command()
 
@@ -45,7 +37,7 @@ cli
   .description("Get the trending list from AniList")
   .option("-c, --count <number>", "Number of list items to get", "10")
   .action(async ({ count }) => {
-    await List.Trending(Number(count))
+    await AniList.getTrendingAnime(Number(count))
   })
 cli
   .command("popular")
@@ -53,13 +45,13 @@ cli
   .description("Get the popular list from AniList")
   .option("-c, --count <number>", "Number of list items to get", "10")
   .action(async ({ count }) => {
-    await List.Popular(Number(count))
+    await AniList.getPopularAnime(Number(count))
   })
 cli
   .command("user <username>")
   .description("Get user information")
   .action(async (username) => {
-    await getUserInfoByUsername(username)
+    await AniList.getUserByUsername(username)
   })
 cli
   .command("logout")
@@ -77,9 +69,9 @@ cli
     if ((!anime && !manga) || (anime && manga)) {
       console.error(`\nMust select an option, either --anime or --manga`)
     } else if (anime) {
-      await List.MyAnime()
+      await AniList.MyAnime()
     } else if (manga) {
-      await List.MyManga()
+      await AniList.MyManga()
     }
   })
 cli
@@ -117,14 +109,14 @@ cli
   .description("Anime that will be released in upcoming season")
   .option("-c, --count <number>", "Number of items to get", "10")
   .action(async ({ count }) => {
-    await List.Upcoming(Number(count))
+    await AniList.getUpcomingAnime(Number(count))
   })
 cli
   .command("anime <id>")
   .description("Get anime details by their ID")
   .action(async (id) => {
     if (id && !Number.isNaN(Number(id))) {
-      await getAnimeDetailsByID(Number(id))
+      await AniList.getAnimeDetailsByID(Number(id))
     } else {
       console.error(
         `\nInvalid or missing ID (${id}). Please provide a valid numeric ID.`
@@ -144,9 +136,9 @@ cli
       console.error(`\nMust select an option, either --anime or --manga`)
     } else {
       if (anime) {
-        await getAnimeSearchResults(query, Number(count))
+        await AniList.searchAnime(query, Number(count))
       } else if (manga) {
-        await getMangaSearchResults(query, Number(count))
+        await AniList.searchManga(query, Number(count))
       } else {
         console.error(`\nMust select an option, either --anime or --manga`)
       }
@@ -189,9 +181,9 @@ cli
     } else {
       if (await Auth.isLoggedIn()) {
         if (anime) {
-          await importAnimeList()
+          await Auth.callAnimeImporter()
         } else if (manga) {
-          await importMangaList()
+          await Auth.callMangaImporter()
         }
       } else {
         console.error(`\nPlease login to use this feature.`)

@@ -5,6 +5,7 @@ import open from "open"
 import os from "os"
 import path from "path"
 import { fetcher } from "./fetcher.js"
+import { AniList, MyAnimeList } from "./lists.js"
 import {
   deleteActivityMutation,
   saveTextActivityMutation,
@@ -327,7 +328,7 @@ Statistics (Manga):
                   )
 
                   // Avoiding rate-limit
-                  await new Promise((resolve) => setTimeout(resolve, 2000))
+                  await new Promise((resolve) => setTimeout(resolve, 1100))
                 }
               }
             }
@@ -383,7 +384,7 @@ Statistics (Manga):
               for (const [_, entry] of selectedEntries.entries.entries()) {
                 if (entry?.id) {
                   await Auth.DeleteAnimeById(entry?.id, entry?.media?.title)
-                  await new Promise((resolve) => setTimeout(resolve, 2000))
+                  await new Promise((resolve) => setTimeout(resolve, 1100))
                 } else {
                   console.log(`No id in entry.`)
                   console.log(entry)
@@ -471,7 +472,7 @@ Statistics (Manga):
                 for (const [_, entry] of selectedEntries.entries.entries()) {
                   if (entry?.id) {
                     await Auth.DeleteMangaById(entry?.id, entry?.media?.title)
-                    await new Promise((resolve) => setTimeout(resolve, 2000))
+                    await new Promise((resolve) => setTimeout(resolve, 1100))
                   } else {
                     console.log(`No id in entry.`)
                     console.log(entry)
@@ -555,6 +556,64 @@ Statistics (Manga):
 
       if (savedActivity?.id) {
         console.log(`\n[${savedActivity.id}] status saved successfully!`)
+      }
+    } catch (error) {
+      console.error(`\n${(error as Error).message}`)
+    }
+  }
+  static async callAnimeImporter() {
+    try {
+      const { source } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "source",
+          message: "Select a source:",
+          choices: [
+            { name: "Exported JSON file.", value: 1 },
+            { name: "MyAnimeList (XML)", value: 2 },
+          ],
+          pageSize: 10,
+        },
+      ])
+      switch (source) {
+        case 1:
+          await AniList.importAnime()
+          break
+        case 2:
+          await MyAnimeList.importAnime()
+          break
+        default:
+          console.log(`\nInvalid Choice.`)
+          break
+      }
+    } catch (error) {
+      console.error(`\n${(error as Error).message}`)
+    }
+  }
+  static async callMangaImporter() {
+    try {
+      const { source } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "source",
+          message: "Select a source:",
+          choices: [
+            { name: "Exported JSON file.", value: 1 },
+            { name: "MyAnimeList (XML)", value: 2 },
+          ],
+          pageSize: 10,
+        },
+      ])
+      switch (source) {
+        case 1:
+          await AniList.importManga()
+          break
+        case 2:
+          await MyAnimeList.importManga()
+          break
+        default:
+          console.log(`\nInvalid Choice.`)
+          break
       }
     } catch (error) {
       console.error(`\n${(error as Error).message}`)
