@@ -2,16 +2,11 @@ import inquirer from "inquirer"
 import fetch from "node-fetch"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
-import {
-  addAnimeToListMutation,
-  addMangaToListMutation,
-  saveTextActivityMutation,
-} from "./mutations.js"
+import { AniList, MyAnimeList } from "./lists.js"
+import { addAnimeToListMutation, addMangaToListMutation } from "./mutations.js"
 import {
   animeDetailsQuery,
   animeSearchQuery,
-  currentUserAnimeList,
-  currentUserMangaList,
   mangaSearchQuery,
   userActivityQuery,
   userQuery,
@@ -20,13 +15,7 @@ import {
   aniListEndpoint,
   formatDateObject,
   getTitle,
-  importAnimeListFromExportedJSON,
-  importMangaListFromExportedJSON,
-  MALexport,
-  MALimport,
   removeHtmlAndMarkdown,
-  saveJSONasCSV,
-  saveJSONasJSON,
 } from "./workers.js"
 
 async function getUserInfoByUsername(username: string) {
@@ -246,153 +235,6 @@ async function getMangaSearchResults(search: string, count: number) {
   }
 }
 
-async function writeTextActivity(status: string) {
-  try {
-    if (!(await Auth.isLoggedIn())) {
-      console.error(`\nPlease login to use this feature.`)
-      return
-    }
-
-    const query = saveTextActivityMutation
-    const variables = {
-      status:
-        status +
-        `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
-    }
-
-    const data: any = await fetcher(query, variables)
-
-    if (!data) {
-      console.error(`\nSomething went wrong. ${data}.`)
-      return
-    }
-
-    const savedActivity = data.data?.SaveTextActivity
-
-    if (savedActivity?.id) {
-      console.log(`\n[${savedActivity.id}] status saved successfully!`)
-    }
-  } catch (error) {
-    console.error(`\n${(error as Error).message}`)
-  }
-}
-
-async function exportAnimeList() {
-  if (await Auth.isLoggedIn()) {
-    const { exportType } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "exportType",
-        message: "Choose export type:",
-        choices: [
-          { name: "CSV", value: 1 },
-          { name: "JSON", value: 2 },
-          { name: "XML (MyAnimeList)", value: 3 },
-        ],
-        pageSize: 10,
-      },
-    ])
-    const animeList: any = await fetcher(currentUserAnimeList, {
-      id: await Auth.MyUserId(),
-    })
-    if (animeList) {
-      const lists = animeList?.data?.MediaListCollection?.lists ?? []
-      const mediaWithProgress = lists.flatMap((list: any) =>
-        list.entries.map((entry: any) => ({
-          id: entry?.media?.id,
-          title:
-            exportType === 1
-              ? getTitle(entry?.media?.title)
-              : entry?.media?.title,
-          episodes: entry?.media?.episodes,
-          siteUrl: entry?.media?.siteUrl,
-          progress: entry.progress,
-          status: entry?.status,
-          hiddenFromStatusLists: entry.hiddenFromStatusLists,
-        }))
-      )
-
-      switch (exportType) {
-        case 1:
-          await saveJSONasCSV(mediaWithProgress, "anime")
-          break
-        case 2:
-          await saveJSONasJSON(mediaWithProgress, "anime")
-          break
-        case 3:
-          await MALexport.Anime()
-          break
-        default:
-          console.log(`\nInvalid export type. ${exportType}`)
-          break
-      }
-    } else {
-      console.error(`\nNo anime(s) found in your lists.`)
-    }
-  } else {
-    console.error(`\nMust login to use this feature.`)
-  }
-}
-
-async function exportMangaList() {
-  if (await Auth.isLoggedIn()) {
-    const mangaLists: any = await fetcher(currentUserMangaList, {
-      id: await Auth.MyUserId(),
-    })
-    if (mangaLists) {
-      const lists = mangaLists?.data?.MediaListCollection?.lists || []
-      if (lists.length > 0) {
-        const { exportType } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "exportType",
-            message: "Choose export type:",
-            choices: [
-              { name: "CSV", value: 1 },
-              { name: "JSON", value: 2 },
-              { name: "XML (MyAnimeList)", value: 3 },
-            ],
-            pageSize: 10,
-          },
-        ])
-        const mediaWithProgress = lists.flatMap((list: any) =>
-          list.entries.map((entry: any) => ({
-            id: entry?.media?.id,
-            title:
-              exportType === 1
-                ? getTitle(entry?.media?.title)
-                : entry?.media?.title,
-            private: entry.private,
-            chapters: entry.media.chapters,
-            progress: entry.progress,
-            status: entry?.status,
-            hiddenFromStatusLists: entry.hiddenFromStatusLists,
-          }))
-        )
-        switch (exportType) {
-          case 1:
-            await saveJSONasCSV(mediaWithProgress, "manga")
-            break
-          case 2:
-            await saveJSONasJSON(mediaWithProgress, "manga")
-            break
-          case 3:
-            await MALexport.Manga()
-            break
-          default:
-            console.log(`\nInvalid export type. ${exportType}`)
-            break
-        }
-      } else {
-        console.log(`\nList seems to be empty.`)
-      }
-    } else {
-      console.error(`\nCould not get manga list.`)
-    }
-  } else {
-    console.error(`\nPlease login to use this feature.`)
-  }
-}
 async function importAnimeList() {
   try {
     const { source } = await inquirer.prompt([
@@ -409,10 +251,10 @@ async function importAnimeList() {
     ])
     switch (source) {
       case 1:
-        await importAnimeListFromExportedJSON()
+        await AniList.importAnime()
         break
       case 2:
-        await MALimport.Anime()
+        await MyAnimeList.importAnime()
         break
       default:
         console.log(`\nInvalid Choice.`)
@@ -438,10 +280,10 @@ async function importMangaList() {
     ])
     switch (source) {
       case 1:
-        await importMangaListFromExportedJSON()
+        await AniList.importManga()
         break
       case 2:
-        await MALimport.Manga()
+        await MyAnimeList.importManga()
         break
       default:
         console.log(`\nInvalid Choice.`)
@@ -453,13 +295,10 @@ async function importMangaList() {
 }
 
 export {
-  exportAnimeList,
-  exportMangaList,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
   getUserInfoByUsername,
   importAnimeList,
   importMangaList,
-  writeTextActivity,
 }

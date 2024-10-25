@@ -5,7 +5,10 @@ import open from "open"
 import os from "os"
 import path from "path"
 import { fetcher } from "./fetcher.js"
-import { deleteActivityMutation } from "./mutations.js"
+import {
+  deleteActivityMutation,
+  saveTextActivityMutation,
+} from "./mutations.js"
 import {
   activityAllQuery,
   activityAnimeListQuery,
@@ -525,6 +528,36 @@ Statistics (Manga):
           error instanceof Error ? error.message : error
         }`
       )
+    }
+  }
+  static async Write(status: string) {
+    try {
+      if (!(await Auth.isLoggedIn())) {
+        console.error(`\nPlease login to use this feature.`)
+        return
+      }
+
+      const query = saveTextActivityMutation
+      const variables = {
+        status:
+          status +
+          `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
+      }
+
+      const data: any = await fetcher(query, variables)
+
+      if (!data) {
+        console.error(`\nSomething went wrong. ${data}.`)
+        return
+      }
+
+      const savedActivity = data.data?.SaveTextActivity
+
+      if (savedActivity?.id) {
+        console.log(`\n[${savedActivity.id}] status saved successfully!`)
+      }
+    } catch (error) {
+      console.error(`\n${(error as Error).message}`)
     }
   }
 }

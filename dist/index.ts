@@ -2,17 +2,14 @@
 import { Command } from "commander"
 import process from "process"
 import { Auth } from "./helpers/auth.js"
-import { List } from "./helpers/lists.js"
+import { AniList, List } from "./helpers/lists.js"
 import {
-  exportAnimeList,
-  exportMangaList,
   getAnimeDetailsByID,
   getAnimeSearchResults,
   getMangaSearchResults,
   getUserInfoByUsername,
   importAnimeList,
   importMangaList,
-  writeTextActivity,
 } from "./helpers/more.js"
 
 const cli = new Command()
@@ -161,7 +158,7 @@ cli
   .alias("write")
   .description("Write a status...")
   .action(async (status) => {
-    await writeTextActivity(status)
+    await Auth.Write(status)
   })
 cli
   .command("export")
@@ -174,9 +171,9 @@ cli
       console.error(`\nMust select an option, either --anime or --manga`)
     } else {
       if (anime) {
-        await exportAnimeList()
+        await AniList.exportAnime()
       } else if (manga) {
-        await exportMangaList()
+        await AniList.exportManga()
       }
     }
   })

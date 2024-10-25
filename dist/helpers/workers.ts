@@ -1,6 +1,5 @@
-import { XMLParser } from "fast-xml-parser"
 import fs from "fs"
-import { readdir, readFile, writeFile } from "fs/promises"
+import { readdir, writeFile } from "fs/promises"
 import inquirer from "inquirer"
 import { parse } from "json2csv"
 import open from "open"
@@ -8,27 +7,7 @@ import { homedir } from "os"
 import { join } from "path"
 import process from "process"
 import { Auth } from "./auth.js"
-import { fetcher } from "./fetcher.js"
-import {
-  saveAnimeWithProgressMutation,
-  saveMangaWithProgressMutation,
-} from "./mutations.js"
-import {
-  currentUserAnimeList,
-  currentUserMangaList,
-  malIdToAnilistAnimeId,
-  malIdToAnilistMangaId,
-} from "./queries.js"
-import {
-  AniListMediaStatus,
-  AnimeList,
-  MALAnimeStatus,
-  MALAnimeXML,
-  MalIdToAnilistIdResponse,
-  MALMangaStatus,
-  MediaWithProgress,
-  saveAnimeWithProgressResponse,
-} from "./types.js"
+import { MALAnimeStatus, MALMangaStatus, MediaWithProgress } from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = "https://anilist.co/api/v2/oauth/pin"
@@ -193,330 +172,6 @@ async function selectFile(fileType: string): Promise<string> {
     throw error
   }
 }
-async function importAnimeListFromExportedJSON() {
-  try {
-    const filename = await selectFile(".json")
-    const filePath = join(getDownloadFolderPath(), filename)
-    const fileContent = await readFile(filePath, "utf8")
-    const importedData = JSON.parse(fileContent)
-
-    let count = 0
-    const batchSize = 1 // Number of requests in each batch
-    const delay = 2000 // delay to avoid rate-limiting
-
-    for (let i = 0; i < importedData.length; i += batchSize) {
-      const batch = importedData.slice(i, i + batchSize)
-
-      await Promise.all(
-        batch.map(
-          async (anime: { id: number; progress: number; status: string }) => {
-            const query = saveAnimeWithProgressMutation
-            const variables = {
-              mediaId: anime?.id,
-              progress: anime?.progress,
-              status: anime?.status,
-              hiddenFromStatusLists: false,
-            }
-
-            try {
-              const save: {
-                data?: { SaveMediaListEntry: { id: number } }
-                errors?: { message: string }
-              } = await fetcher(query, variables)
-              if (save) {
-                const id = save?.data?.SaveMediaListEntry?.id
-                count++
-                console.log(`[${count}] ${anime?.id}-${id} ✅`)
-              } else {
-                console.error(`\nError saving ${anime?.id}`)
-              }
-            } catch (error) {
-              console.error(
-                `\nError saving ${anime?.id}: ${(error as Error).message}`
-              )
-            }
-          }
-        )
-      )
-
-      // Avoid rate-limiting: Wait before sending the next batch
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-
-    console.log(`\nTotal ${count} anime(s) imported successfully.`)
-  } catch (error) {
-    console.error(`\n${(error as Error).message}`)
-  }
-}
-
-async function importMangaListFromExportedJSON() {
-  try {
-    const filename = await selectFile(".json")
-    const filePath = join(getDownloadFolderPath(), filename)
-    const fileContent = await readFile(filePath, "utf8")
-    const importedData = JSON.parse(fileContent)
-
-    let count = 0
-    const batchSize = 1 // Adjust batch size as per rate-limit constraints
-    const delay = 2000 // 2 seconds delay to avoid rate-limit
-
-    // Process in batches
-    for (let i = 0; i < importedData.length; i += batchSize) {
-      const batch = importedData.slice(i, i + batchSize)
-
-      await Promise.all(
-        batch.map(
-          async (manga: {
-            id: number
-            progress: number
-            status: string
-            private: boolean
-          }) => {
-            const query = saveMangaWithProgressMutation
-            const variables = {
-              mediaId: manga?.id,
-              progress: manga?.progress,
-              status: manga?.status,
-              hiddenFromStatusLists: false,
-              private: manga?.private,
-            }
-
-            try {
-              const save: {
-                data?: { SaveMediaListEntry: { id: number } }
-                errors?: { message: string }
-              } = await fetcher(query, variables)
-              if (save) {
-                const id = save?.data?.SaveMediaListEntry?.id
-                count++
-                console.log(`[${count}] ${manga?.id}-${id} ✅`)
-              }
-            } catch (err) {
-              console.error(
-                `\nError saving ${manga?.id}: ${(err as Error).message}`
-              )
-            }
-          }
-        )
-      )
-
-      // Avoid rate-limit by adding delay after processing each batch
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-
-    console.log(`\nTotal ${count} manga(s) imported successfully.`)
-  } catch (error) {
-    console.error(`\nError: ${(error as Error).message}`)
-  }
-}
-
-class MALimport {
-  static async Anime() {
-    try {
-      const filename = await selectFile(".xml")
-      const filePath = join(getDownloadFolderPath(), filename)
-      const fileContent = await readFile(filePath, "utf8")
-      const parser = new XMLParser()
-      if (fileContent) {
-        const XMLObject = parser.parse(fileContent)
-        if (XMLObject.myanimelist.anime.length > 0) {
-          let count = 0
-          const animes: MALAnimeXML[] = XMLObject.myanimelist.anime
-          for (let anime of animes) {
-            const malId = anime.series_animedb_id
-            const progress = anime.my_watched_episodes
-            const statusMap = {
-              "On-Hold": AniListMediaStatus.PAUSED,
-              "Dropped": AniListMediaStatus.DROPPED,
-              "Completed": AniListMediaStatus.COMPLETED,
-              "Watching": AniListMediaStatus.CURRENT,
-              "Plan to Watch": AniListMediaStatus.PLANNING,
-            }
-            const status = statusMap[anime.my_status]
-
-            const anilist: MalIdToAnilistIdResponse = await fetcher(
-              malIdToAnilistAnimeId,
-              { malId }
-            )
-            try {
-              if (anilist && anilist.data.Media.id) {
-                const id = anilist.data.Media.id
-                const saveAnime: saveAnimeWithProgressResponse = await fetcher(
-                  saveAnimeWithProgressMutation,
-                  {
-                    mediaId: id,
-                    progress: progress,
-                    status: status,
-                    hiddenFromStatusLists: false,
-                    private: false,
-                  }
-                )
-                if (saveAnime) {
-                  const entryId = saveAnime?.data?.SaveMediaListEntry?.id
-                  count++
-                  console.log(`[${count}] ${entryId} ✅`)
-
-                  // rate-limit
-                  await new Promise((resolve) => {
-                    setTimeout(resolve, 1100)
-                  })
-                }
-              } else {
-                console.error(`could not get anilistId for ${malId}`)
-              }
-            } catch (error) {
-              console.error(`\nMALimport-200 ${(error as Error).message}`)
-            }
-          }
-        } else {
-          console.log(`\nNo anime list seems to be found.`)
-        }
-      }
-    } catch (error) {
-      console.error(`\nError from MALimport. ${(error as Error).message}`)
-    }
-  }
-  static async Manga() {
-    try {
-      const filename = await selectFile(".xml")
-      const filePath = join(getDownloadFolderPath(), filename)
-      const fileContent = await readFile(filePath, "utf8")
-      const parser = new XMLParser()
-      if (fileContent) {
-        const XMLObject = parser.parse(fileContent)
-        if (XMLObject.myanimelist.manga.length > 0) {
-          let count = 0
-          const mangas = XMLObject.myanimelist.manga
-          for (let manga of mangas) {
-            const malId = manga.manga_mangadb_id
-            const progress = manga.my_read_chapters
-            const statusMap = {
-              "On-Hold": AniListMediaStatus.PAUSED,
-              "Dropped": AniListMediaStatus.DROPPED,
-              "Completed": AniListMediaStatus.COMPLETED,
-              "Reading": AniListMediaStatus.CURRENT,
-              "Plan to Read": AniListMediaStatus.PLANNING,
-            }
-            const status = statusMap[manga.my_status]
-
-            const anilist: MalIdToAnilistIdResponse = await fetcher(
-              malIdToAnilistMangaId,
-              {
-                malId: malId,
-              }
-            )
-            if (anilist?.data?.Media?.id) {
-              const anilistId = anilist?.data?.Media?.id
-              if (anilistId) {
-                const saveManga: saveAnimeWithProgressResponse = await fetcher(
-                  saveMangaWithProgressMutation,
-                  {
-                    mediaId: anilistId,
-                    progress: progress,
-                    status: status,
-                    hiddenFromStatusLists: false,
-                    private: false,
-                  }
-                )
-                if (saveManga) {
-                  const entryId = saveManga.data.SaveMediaListEntry.id
-                  count++
-                  console.log(`[${count}] ${entryId} ✅`)
-                }
-              }
-            }
-          }
-        } else {
-          console.log(`\nNo manga list seems to be found.`)
-        }
-      }
-    } catch (error) {
-      console.error(`\nError from MALimport. ${(error as Error).message}`)
-    }
-  }
-}
-class MALexport {
-  static async Anime() {
-    try {
-      if (await Auth.isLoggedIn()) {
-        const animeList: AnimeList = await fetcher(currentUserAnimeList, {
-          id: await Auth.MyUserId(),
-        })
-        if (animeList?.data?.MediaListCollection?.lists.length > 0) {
-          const lists = animeList?.data?.MediaListCollection?.lists
-          const mediaWithProgress = lists.flatMap((list: any) =>
-            list.entries.map((entry: any) => ({
-              id: entry?.media?.id,
-              malId: entry?.media?.idMal,
-              title: entry?.media?.title,
-              episodes: entry?.media?.episodes,
-              siteUrl: entry?.media?.siteUrl,
-              progress: entry.progress,
-              status: entry?.status,
-              hiddenFromStatusLists: false,
-            }))
-          )
-          const xmlContent = createAnimeListXML(mediaWithProgress)
-          const path = join(
-            getDownloadFolderPath(),
-            `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(anime)-${getFormattedDate()}.xml`
-          )
-          await writeFile(path, await xmlContent, "utf8")
-          console.log(`Generated XML for MyAnimeList.`)
-
-          open(getDownloadFolderPath())
-        } else {
-          console.log(
-            `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`
-          )
-        }
-      }
-    } catch (error) {
-      console.error(`\nError from MALexport. ${(error as Error).message}`)
-    }
-  }
-  static async Manga() {
-    try {
-      if (!(await Auth.isLoggedIn())) {
-        console.log(`\nPlease login to use this feature.`)
-        return
-      }
-      const mangaList: AnimeList = await fetcher(currentUserMangaList, {
-        id: await Auth.MyUserId(),
-      })
-      if (mangaList && mangaList?.data?.MediaListCollection?.lists.length > 0) {
-        const lists = mangaList?.data?.MediaListCollection?.lists
-        const mediaWithProgress = lists.flatMap((list: any) =>
-          list.entries.map((entry: any) => ({
-            id: entry?.media?.id,
-            malId: entry?.media?.idMal,
-            title: entry?.media?.title,
-            private: entry.private,
-            chapters: entry.media.chapters,
-            progress: entry.progress,
-            status: entry?.status,
-            hiddenFromStatusLists: entry.hiddenFromStatusLists,
-          }))
-        )
-        const XMLContent = createMangaListXML(mediaWithProgress)
-        const path = join(
-          getDownloadFolderPath(),
-          `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(manga)-${getFormattedDate()}.xml`
-        )
-        await writeFile(path, await XMLContent, "utf8")
-        console.log(`Generated XML for MyAnimeList.`)
-
-        open(getDownloadFolderPath())
-      } else {
-        console.log(
-          `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`
-        )
-      }
-    } catch (error) {
-      console.error(`\nError from MALexport. ${(error as Error).message}`)
-    }
-  }
-}
 
 function createAnimeXML(
   malId: number,
@@ -652,15 +307,18 @@ async function createMangaListXML(
 
 export {
   aniListEndpoint,
+  createAnimeListXML,
+  createAnimeXML,
+  createMangaListXML,
+  createMangaXML,
   formatDateObject,
+  getDownloadFolderPath,
+  getFormattedDate,
   getNextSeasonAndYear,
   getTitle,
-  importAnimeListFromExportedJSON,
-  importMangaListFromExportedJSON,
-  MALexport,
-  MALimport,
   redirectUri,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
+  selectFile,
 }
