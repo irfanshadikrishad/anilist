@@ -150,6 +150,24 @@ const malIdToAnilistMangaId = `query ($malId: Int) {
 }
 `
 
+const followingActivitiesQuery = `
+query ($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(isFollowing: true, sort: ID_DESC) {
+      ... on TextActivity {
+        id type isLiked createdAt user { id name }
+      }
+      ... on ListActivity {
+        id type isLiked status progress media { title { userPreferred } } createdAt user { id name }
+      }
+      ... on MessageActivity {
+        id type isLiked message createdAt recipient { id name }
+      }
+    }
+  }
+}
+`
+
 export {
   activityAllQuery,
   activityAnimeListQuery,
@@ -164,6 +182,7 @@ export {
   currentUserQuery,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
+  followingActivitiesQuery,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
   mangaSearchQuery,

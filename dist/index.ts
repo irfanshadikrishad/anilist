@@ -11,7 +11,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.0.9")
+  .version("1.0.0-forbidden.0")
 
 cli
   .command("login")
@@ -189,6 +189,13 @@ cli
         console.error(`\nPlease login to use this feature.`)
       }
     }
+  })
+cli
+  .command("autolike")
+  .alias("al")
+  .description("Autolike following or global activities.")
+  .action(async () => {
+    await Auth.AutoLike()
   })
 
 cli.parse(process.argv)

@@ -36,10 +36,17 @@ mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromSt
 }
 `
 
+const likeActivityMutation = `
+mutation($activityId: Int!) {
+  ToggleLike(id: $activityId, type: ACTIVITY) { id }
+}
+`
+
 export {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
+  likeActivityMutation,
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
   saveTextActivityMutation,

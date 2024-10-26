@@ -8,6 +8,7 @@ import { fetcher } from "./fetcher.js"
 import { AniList, MyAnimeList } from "./lists.js"
 import {
   deleteActivityMutation,
+  likeActivityMutation,
   saveTextActivityMutation,
 } from "./mutations.js"
 import {
@@ -22,6 +23,7 @@ import {
   currentUserQuery,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
+  followingActivitiesQuery,
   userActivityQuery,
 } from "./queries.js"
 import { DeleteMangaResponse } from "./types.js"
@@ -197,12 +199,11 @@ Statistics (Manga):
   }
   static async Logout() {
     try {
+      const username = await Auth.MyUserName()
       if (fs.existsSync(save_path)) {
         try {
           fs.unlinkSync(save_path)
-          console.log(
-            `\nLogout successful. See you soon, ${await Auth.MyUserName()}.`
-          )
+          console.log(`\nLogout successful. See you soon, ${username}.`)
         } catch (error) {
           console.error("\nError logging out:", error)
         }
@@ -617,6 +618,81 @@ Statistics (Manga):
       }
     } catch (error) {
       console.error(`\n${(error as Error).message}`)
+    }
+  }
+  private static async likeFollowing() {
+    try {
+      let page = 1
+      let hasMoreActivities = true
+
+      while (hasMoreActivities) {
+        const activities: any = await fetcher(followingActivitiesQuery, {
+          page,
+          perPage: 50,
+        })
+
+        if (activities && activities?.data?.Page?.activities.length > 0) {
+          const activiti = activities?.data?.Page?.activities
+
+          for (let activ of activiti) {
+            if (!activ.isLiked && activ.id) {
+              const like: any = await fetcher(likeActivityMutation, {
+                activityId: activ.id,
+              })
+              const ToggleLike = like?.data?.ToggleLike
+              console.info(`[${activ.id}] liked ${activ.user.name}`)
+            } else {
+              console.log(`[${activ?.id}] ${activ.user.name} already-liked`)
+            }
+            // avoiding rate-limit
+            await new Promise((resolve) => {
+              setTimeout(resolve, 2000)
+            })
+          }
+
+          page++
+        } else {
+          // No more activities to like
+          console.log(`\nProbably the end of activities.`)
+          console.info(activities)
+          hasMoreActivities = false
+        }
+      }
+    } catch (error) {
+      console.error(`\nError from likeFollowing. ${(error as Error).message}`)
+    }
+  }
+
+  static async AutoLike() {
+    try {
+      if (!(await Auth.isLoggedIn())) {
+        console.error(`\nPlease login to use this feature.`)
+        return
+      }
+      const { activityType } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "activityType",
+          message: "Select activity type:",
+          choices: [
+            { name: "Following", value: 1 },
+            { name: "Global", value: 2 },
+          ],
+          pageSize: 10,
+        },
+      ])
+      switch (activityType) {
+        case 1:
+          await this.likeFollowing()
+          break
+        case 2:
+          console.warn(`\nNot yet implemented!`)
+          break
+        default:
+          console.error(`\nInvalid choice. (${activityType})`)
+      }
+    } catch (error) {
+      console.error(`\nError from autolike. ${(error as Error).message}`)
     }
   }
 }
