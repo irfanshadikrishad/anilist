@@ -24,7 +24,10 @@ import {
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   followingActivitiesQuery,
+  globalActivitiesQuery,
+  specificUserActivitiesQuery,
   userActivityQuery,
+  userQuery,
 } from "./queries.js"
 import { DeleteMangaResponse } from "./types.js"
 import { aniListEndpoint, getTitle, redirectUri } from "./workers.js"
@@ -620,13 +623,19 @@ Statistics (Manga):
       console.error(`\n${(error as Error).message}`)
     }
   }
-  private static async likeFollowing() {
+  private static async Like(type: number) {
     try {
       let page = 1
       let hasMoreActivities = true
+      let activity =
+        type === 0
+          ? followingActivitiesQuery
+          : type === 1
+            ? globalActivitiesQuery
+            : followingActivitiesQuery
 
       while (hasMoreActivities) {
-        const activities: any = await fetcher(followingActivitiesQuery, {
+        const activities: any = await fetcher(activity, {
           page,
           perPage: 50,
         })
@@ -636,11 +645,15 @@ Statistics (Manga):
 
           for (let activ of activiti) {
             if (!activ.isLiked && activ.id) {
-              const like: any = await fetcher(likeActivityMutation, {
-                activityId: activ.id,
-              })
-              const ToggleLike = like?.data?.ToggleLike
-              console.info(`[${activ.id}] liked ${activ.user.name}`)
+              try {
+                const like: any = await fetcher(likeActivityMutation, {
+                  activityId: activ.id,
+                })
+                // const ToggleLike = like?.data?.ToggleLike
+                console.info(`[${activ.id}] liked ${activ.user.name}`)
+              } catch (error) {
+                console.error(`Activity possibly deleted.`)
+              }
             } else {
               console.log(`[${activ?.id}] ${activ.user.name} already-liked`)
             }
@@ -663,6 +676,70 @@ Statistics (Manga):
     }
   }
 
+  private static async LikeSpecificUser() {
+    try {
+      const { username } = await inquirer.prompt([
+        {
+          type: "input",
+          name: "username",
+          message: "Username of the user:",
+        },
+      ])
+
+      const userDetails = await fetcher(userQuery, { username: username })
+
+      if (userDetails) {
+        let page = 1
+        const perPage = 50
+        const userId = userDetails?.data?.User?.id
+
+        if (userId) {
+          while (true) {
+            const activities = await fetcher(specificUserActivitiesQuery, {
+              page,
+              perPage,
+              userId,
+            })
+            const activiti = activities?.data?.Page?.activities
+
+            // Break the loop if no more activities are found
+            if (!activiti || activiti.length === 0) {
+              console.log("No more activities found.")
+              break
+            }
+
+            for (let activ of activiti) {
+              if (!activ.isLiked && activ.id) {
+                try {
+                  const like = await fetcher(likeActivityMutation, {
+                    activityId: activ.id,
+                  })
+                  console.info(`[${activ.id}] liked ${activ.user?.name}`)
+                } catch (error) {
+                  console.error(`Activity possibly deleted.`)
+                }
+              } else {
+                console.log(`[${activ?.id}] ${activ.user?.name} already liked`)
+              }
+
+              // Avoiding rate limit
+              await new Promise((resolve) => {
+                setTimeout(resolve, 2000)
+              })
+            }
+
+            // Go to the next page
+            page += 1
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        `\nError from LikeSpecificUser. ${(error as Error).message}`
+      )
+    }
+  }
+
   static async AutoLike() {
     try {
       if (!(await Auth.isLoggedIn())) {
@@ -677,16 +754,20 @@ Statistics (Manga):
           choices: [
             { name: "Following", value: 1 },
             { name: "Global", value: 2 },
+            { name: "Specific User", value: 3 },
           ],
           pageSize: 10,
         },
       ])
       switch (activityType) {
         case 1:
-          await this.likeFollowing()
+          await this.Like(0)
           break
         case 2:
-          console.warn(`\nNot yet implemented!`)
+          await this.Like(1)
+          break
+        case 3:
+          await this.LikeSpecificUser()
           break
         default:
           console.error(`\nInvalid choice. (${activityType})`)

@@ -11,7 +11,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.0.0-forbidden.0")
+  .version("1.1.0-forbidden.0")
 
 cli
   .command("login")

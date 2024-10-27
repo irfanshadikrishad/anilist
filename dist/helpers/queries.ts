@@ -139,30 +139,44 @@ const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type
 }`
 
 const malIdToAnilistAnimeId = `query ($malId: Int) {
-  Media(idMal: $malId, type: ANIME) {
-    id title { romaji english } } 
-}
+  Media(idMal: $malId, type: ANIME) { id title { romaji english } } }
 `
 
 const malIdToAnilistMangaId = `query ($malId: Int) {
-  Media(idMal: $malId, type: MANGA) {
-    id title { romaji english } } 
-}
+  Media(idMal: $malId, type: MANGA) { id title { romaji english } } }
 `
 
 const followingActivitiesQuery = `
 query ($page: Int, $perPage: Int) {
   Page(page: $page, perPage: $perPage) {
     activities(isFollowing: true, sort: ID_DESC) {
-      ... on TextActivity {
-        id type isLiked createdAt user { id name }
-      }
-      ... on ListActivity {
-        id type isLiked status progress media { title { userPreferred } } createdAt user { id name }
-      }
-      ... on MessageActivity {
-        id type isLiked message createdAt recipient { id name }
-      }
+      ... on TextActivity { id type isLiked createdAt user { id name } }
+      ... on ListActivity { id type isLiked status progress media { title { userPreferred } } createdAt user { id name } }
+      ... on MessageActivity { id type isLiked message createdAt recipient { id name } }
+    }
+  }
+}
+`
+
+const globalActivitiesQuery = `
+query ($page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(sort: ID_DESC) {
+      ... on TextActivity { id type isLiked createdAt user { id name } }
+      ... on ListActivity { id type isLiked status progress media { title { userPreferred } } createdAt user { id name } }
+      ... on MessageActivity { id type isLiked message createdAt recipient { id name } }
+    }
+  }
+}
+`
+
+const specificUserActivitiesQuery = `
+query ($page: Int, $perPage: Int, $userId: Int) {
+  Page(page: $page, perPage: $perPage) {
+    activities(userId: $userId, sort: ID_DESC) {
+      ... on TextActivity { id type isLiked createdAt user { id name } }
+      ... on ListActivity { id type isLiked status progress media { title { userPreferred } } createdAt user { id name } }
+      ... on MessageActivity { id type isLiked message createdAt recipient { id name } }
     }
   }
 }
@@ -183,10 +197,12 @@ export {
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   followingActivitiesQuery,
+  globalActivitiesQuery,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
   mangaSearchQuery,
   popularQuery,
+  specificUserActivitiesQuery,
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
