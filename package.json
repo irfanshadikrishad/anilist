@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -54,18 +54,18 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/json2csv": "^5.0.7",
-    "@types/node": "^22.7.9",
+    "@types/node": "^22.8.6",
     "eslint": "^9.13.0",
     "globals": "^15.11.0",
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.11.0"
+    "typescript-eslint": "^8.12.2"
   },
   "dependencies": {
     "commander": "^12.1.0",
     "fast-xml-parser": "^4.5.0",
-    "inquirer": "^12.0.0",
+    "inquirer": "^12.0.1",
     "json2csv": "^6.0.0-alpha.2",
     "node-fetch": "^3.3.2",
     "open": "^10.1.0"
