@@ -231,7 +231,7 @@ Want to contribute to the project? Check out complete guideline [here](CONTRIBUT
 
 #### Donation
 
-Support the project if you find it useful to you. <br>
-<img src='/assets/binance.jpg' alt='irfanshadikrishad_binance_pay'>
+<img src='/assets/binance.jpg' alt='irfanshadikrishad_binance_pay' width='200px'><br>
+Support the project if you find it useful to you.
 
 #### **_Thanks for visiting 💙_**
