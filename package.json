@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.1.0-forbidden.0",
+  "version": "1.1.1-forbidden.0",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -65,7 +65,6 @@
   "dependencies": {
     "commander": "^12.1.0",
     "fast-xml-parser": "^4.5.0",
-    "inquirer": "^12.0.1",
     "inquirer": "^12.0.1",
     "json2csv": "^6.0.0-alpha.2",
     "node-fetch": "^3.3.2",
