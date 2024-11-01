@@ -197,12 +197,11 @@ Statistics (Manga):
   }
   static async Logout() {
     try {
+      const username = await Auth.MyUserName()
       if (fs.existsSync(save_path)) {
         try {
           fs.unlinkSync(save_path)
-          console.log(
-            `\nLogout successful. See you soon, ${await Auth.MyUserName()}.`
-          )
+          console.log(`\nLogout successful. See you soon, ${username}.`)
         } catch (error) {
           console.error("\nError logging out:", error)
         }
