@@ -1,5 +1,9 @@
 #### Changelog
 
+#### v1.1.0
+
+- 'See more' option in lists
+
 #### v1.0.9
 
 - Optimization: Better quality of code
