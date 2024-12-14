@@ -13,7 +13,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf ./bin && tsc -w",
+    "build": "rm -rf ./bin && tsc",
+    "buildw": "rm -rf ./bin && tsc -w",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
