@@ -28,6 +28,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history to ensure proper tag handling
+
+      - name: Ensure correct branch
+        run: |
+          BRANCH=$(git symbolic-ref --short HEAD || echo ${{ github.event.release.target_commitish }})
+          git checkout "$BRANCH"
+          echo "Checked out branch: $BRANCH"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,11 +57,11 @@ jobs:
           fi
 
       - name: Bump version
-        run: npm version patch --force # Use --force to ensure version bump works even after cleanup
+        run: npm version patch --force # Change 'patch' to 'minor' or 'major' as needed
 
       - name: Push updated version and tags
         run: |
-          git push --follow-tags
+          git push origin HEAD --follow-tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
