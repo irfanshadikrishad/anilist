@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Ensure full history is fetched to handle tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -22,14 +24,14 @@ jobs:
       - name: Run tests
         run: npm test
 
-  bump-version:
+  publish-npm:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch full history to ensure proper tag handling
+          fetch-depth: 0 # Ensure full history is fetched to handle tags
 
       - name: Ensure correct branch
         run: |
@@ -41,47 +43,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "Irfan Shadik Rishad"
-          git config --global user.email "irfanshadikrishad@gmail.com"
-
-      - name: Cleanup existing tag
-        run: |
-          VERSION="v$(node -p "require('./package.json').version")"
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "Deleting existing tag $VERSION locally and remotely..."
-            git tag -d "$VERSION" || true
-            git push --delete origin "$VERSION" || true
-          fi
-
-      - name: Bump version
-        run: npm version patch --force # Change 'patch' to 'minor' or 'major' as needed
-
-      - name: Push updated version and tags
-        run: |
-          git push origin HEAD --follow-tags
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-npm:
-    needs: bump-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
           registry-url: https://registry.npmjs.org/
 
-      - name: Install dependencies
-        run: npm ci
-      - name: Build package
-        run: npm run build
+      - name: Match version with release tag
+        run: |
+          RELEASE_VERSION=${{ github.event.release.tag_name }}
+          echo "Updating package.json version to $RELEASE_VERSION"
+          npm version $RELEASE_VERSION --no-git-tag-version
+
+      - name: Verify package version
+        run: npm version
 
       - name: Publish package
         run: npm publish
