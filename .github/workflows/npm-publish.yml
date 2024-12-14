@@ -34,13 +34,16 @@ jobs:
         with:
           node-version: 20
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "Irfan Shadik Rishad"
+          git config --global user.email "irfanshadikrishad@gmail.com"
+
       - name: Bump version
-        run: npm version patch # 'patch' | 'minor' | 'major'
+        run: npm version patch # Change 'patch' to 'minor' or 'major' as needed
 
       - name: Push updated version and tags
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
           git push --follow-tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
