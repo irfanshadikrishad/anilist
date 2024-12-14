@@ -39,6 +39,15 @@ jobs:
           git config --global user.name "Irfan Shadik Rishad"
           git config --global user.email "irfanshadikrishad@gmail.com"
 
+      - name: Check for existing tag
+        run: |
+          TAG="v$(node -p "require('./package.json').version")"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Deleting existing tag $TAG"
+            git tag -d "$TAG"
+            git push --delete origin "$TAG" || true
+          fi
+
       - name: Bump version
         run: npm version patch # Change 'patch' to 'minor' or 'major' as needed
 
