@@ -1,8 +1,21 @@
 #!/usr/bin/env node
 import { Command } from "commander"
+import { readFileSync } from "fs"
+import { dirname } from "path"
 import process from "process"
+import { fileURLToPath } from "url"
 import { Auth } from "./helpers/auth.js"
 import { AniList } from "./helpers/lists.js"
+
+// Get the current directory of this file
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Read package.json and extract version dynamically
+const packageJson = JSON.parse(
+  readFileSync(`${__dirname}/package.json`, "utf8")
+)
+const version = packageJson.version
 
 const cli = new Command()
 
@@ -11,8 +24,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.1.1")
-
+  .version(version)
 cli
   .command("login")
   .description("Login with AniList")
