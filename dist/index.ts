@@ -1,20 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import { readFileSync } from "fs"
-import { dirname } from "path"
+import { createRequire } from "module"
 import process from "process"
-import { fileURLToPath } from "url"
 import { Auth } from "./helpers/auth.js"
 import { AniList } from "./helpers/lists.js"
 
-// Get the current directory of this file
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-// Read package.json and extract version dynamically
-const packageJson = JSON.parse(
-  readFileSync(`${__dirname}/package.json`, "utf8")
-)
+const require = createRequire(import.meta.url)
+const packageJson = require("../package.json")
 const version = packageJson.version
 
 const cli = new Command()
