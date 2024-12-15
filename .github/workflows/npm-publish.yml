@@ -15,11 +15,6 @@ jobs:
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
-      - name: Configure Git
-        run: |
-          git config --global user.name "Irfan Shadik Rishad"
-          git config --global user.email "irfanshadikrishad@gmail.com"
-      - run: npm version patch
       - run: npm ci
       - run: npm run build
       - run: npm publish --provenance --access public
