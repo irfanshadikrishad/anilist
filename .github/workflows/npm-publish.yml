@@ -10,13 +10,21 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
-      - run: npm run build
-      - run: npm publish --provenance --access public
+      - name: Configure Git
+        run: |
+          git config --global user.name "Irfan Shadik Rishad"
+          git config --global user.email "irfanshadikrishad@gmail.com"
+      - name: Bump Version
+        run: npm version patch --no-git-tag-version
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build Project
+        run: npm run build
+      - name: Publish Package
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
