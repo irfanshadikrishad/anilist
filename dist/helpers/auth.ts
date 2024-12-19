@@ -623,6 +623,63 @@ Statistics (Manga):
       console.error(`\n${(error as Error).message}`)
     }
   }
+  private static async LikeFollowing() {
+    try {
+      let page = 1
+      let hasMoreActivities = true
+      let retryCount = 0
+      const maxRetries = 5
+
+      while (hasMoreActivities) {
+        const activities: any = await fetcher(followingActivitiesQuery, {
+          page,
+          perPage: 50,
+        })
+
+        if (activities && activities?.data?.Page?.activities.length > 0) {
+          retryCount = 0 // Reset retry count on successful fetch
+          const activiti = activities?.data?.Page?.activities
+
+          for (let activ of activiti) {
+            if (!activ.isLiked && activ.id) {
+              try {
+                const like: any = await fetcher(likeActivityMutation, {
+                  activityId: activ.id,
+                })
+                console.info(`[${activ.id}] liked ${activ.user.name}`)
+              } catch (error) {
+                console.error(`Activity possibly deleted.`)
+              }
+            } else {
+              console.log(`[${activ?.id}] ${activ.user.name} already-liked`)
+            }
+            // avoiding rate-limit
+            await new Promise((resolve) => {
+              setTimeout(resolve, 2000)
+            })
+          }
+
+          page++
+        } else {
+          if (retryCount < maxRetries) {
+            retryCount++
+            console.warn(
+              `Empty activities returned. Retrying... (${retryCount}/${maxRetries})`
+            )
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+          } else {
+            console.log(
+              `\nProbably the end of activities after ${maxRetries} retries.`
+            )
+            console.info(activities)
+            hasMoreActivities = false
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`\nError from likeFollowing. ${(error as Error).message}`)
+    }
+  }
   private static async Like(type: number) {
     try {
       let page = 1
@@ -761,7 +818,7 @@ Statistics (Manga):
       ])
       switch (activityType) {
         case 1:
-          await this.Like(0)
+          await this.LikeFollowing()
           break
         case 2:
           await this.Like(1)

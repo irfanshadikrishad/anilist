@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander"
+import { createRequire } from "module"
 import process from "process"
 import { Auth } from "./helpers/auth.js"
 import { AniList } from "./helpers/lists.js"
+
+const require = createRequire(import.meta.url)
+const packageJson = require("../package.json")
+const version = packageJson.version
 
 const cli = new Command()
 
@@ -11,7 +16,7 @@ cli
   .description(
     "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts."
   )
-  .version("1.1.1-forbidden.0")
+  .version(version)
 
 cli
   .command("login")
