@@ -1,4 +1,4 @@
-name: Publish Package to npmjs
+name: npmjs
 on:
   release:
     types: [published]
@@ -6,12 +6,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -20,33 +18,13 @@ jobs:
         run: |
           git config --global user.name "Irfan Shadik Rishad"
           git config --global user.email "irfanshadikrishad@gmail.com"
-      - name: Check Current Version and Tag
-        id: version_check
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION"
-          TAG="v$VERSION"
-          # Check if the tag already exists in the repository
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping version bump."
-            echo "::set-output name=skip_bump::true"
-          else
-            echo "Tag $TAG does not exist, proceeding with version bump."
-            echo "::set-output name=skip_bump::false"
-          fi
-          echo "::set-output name=version::$VERSION"
       - name: Bump Version
-        if: steps.version_check.outputs.skip_bump != 'true'
         run: |
-          NEW_VERSION=$(npm version patch -no-git-tag-version)
-          echo "::set-output name=new_version::$NEW_VERSION"
-      - name: Commit and Push Changes
-        if: steps.version_check.outputs.skip_bump != 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm version patch --no-git-tag-version
+      - name: Commit the version
         run: |
           git add package.json package-lock.json
-          git commit -m "npmjs: bump version to ${{ steps.version_check.outputs.new_version }}"
+          git commit -m "npmjs: sync-version"
           git push origin ${{ github.ref_name }}
       - name: Install Dependencies
         run: npm ci
@@ -56,13 +34,3 @@ jobs:
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Create GitHub Release
-        if: steps.version_check.outputs.skip_bump != 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "v${{ steps.version_check.outputs.new_version }}"
-          release_name: "Release v${{ steps.version_check.outputs.new_version }}"
-          draft: false
-          prerelease: false
