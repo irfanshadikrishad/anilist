@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Fetch all history and tags
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -24,10 +24,14 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="v$VERSION"
+          echo "Current Version: $VERSION"
+          echo "Checking for tag: $TAG"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG exists. Removing..."
+            echo "Tag $TAG exists. Removing locally and remotely..."
             git tag -d "$TAG"
             git push --delete origin "$TAG" || true
+          else
+            echo "Tag $TAG does not exist. Proceeding..."
           fi
       - name: Bump Version
         run: npm version patch
@@ -36,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add package.json package-lock.json
-          git commit -m "Bump version to $(node -p "require('./package.json').version")"
+          git commit -m "npmjs: bump version to $(node -p "require('./package.json').version")"
           git push origin ${{ github.ref_name }}
           git push origin --tags
       - name: Install Dependencies
