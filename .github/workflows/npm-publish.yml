@@ -10,6 +10,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -18,13 +20,14 @@ jobs:
         run: |
           git config --global user.name "Irfan Shadik Rishad"
           git config --global user.email "irfanshadikrishad@gmail.com"
-      - name: Remove Existing Tag
+      - name: Remove Existing Tag (if any)
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="v$VERSION"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG exists. Removing..."
             git tag -d "$TAG"
-            git push --delete origin "$TAG"
+            git push --delete origin "$TAG" || true
           fi
       - name: Bump Version
         run: npm version patch
@@ -35,6 +38,7 @@ jobs:
           git add package.json package-lock.json
           git commit -m "Bump version to $(node -p "require('./package.json').version")"
           git push origin ${{ github.ref_name }}
+          git push origin --tags
       - name: Install Dependencies
         run: npm ci
       - name: Build Project
