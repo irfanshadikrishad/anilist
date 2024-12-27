@@ -27,7 +27,7 @@ jobs:
         run: |
           git add package.json package-lock.json
           git commit -m "npmjs: sync-version"
-          git push origin ${{ github.ref_name }}
+          git push origin master
       - name: Install Dependencies
         run: npm ci
       - name: Build Project
