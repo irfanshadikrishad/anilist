@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history and tags
+          fetch-depth: 0 # Fetch all commit history and tags
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -20,27 +20,30 @@ jobs:
         run: |
           git config --global user.name "Irfan Shadik Rishad"
           git config --global user.email "irfanshadikrishad@gmail.com"
-      - name: Remove Existing Tag (if any)
+      - name: Check Current Version and Tag
+        id: version_check # Define a step ID
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION"
           TAG="v$VERSION"
-          echo "Current Version: $VERSION"
-          echo "Checking for tag: $TAG"
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG exists. Removing locally and remotely..."
-            git tag -d "$TAG"
-            git push --delete origin "$TAG" || true
+            echo "Tag $TAG already exists."
+            echo "::set-output name=skip_bump::true"
           else
-            echo "Tag $TAG does not exist. Proceeding..."
+            echo "Tag $TAG does not exist."
+            echo "::set-output name=skip_bump::false"
           fi
-      - name: Bump Version
+          echo "::set-output name=version::$VERSION"
+      - name: Bump Version and Tag
+        if: steps.version_check.outputs.skip_bump != 'true'
         run: npm version patch
-      - name: Commit and Push Updated Version
+      - name: Commit and Push Changes
+        if: steps.version_check.outputs.skip_bump != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git add package.json package-lock.json
-          git commit -m "npmjs: bump version to $(node -p "require('./package.json').version")"
+          git commit -m "npmjs: bump version to ${{ steps.version_check.outputs.version }}"
           git push origin ${{ github.ref_name }}
           git push origin --tags
       - name: Install Dependencies
@@ -51,3 +54,13 @@ jobs:
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.skip_bump != 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.version_check.outputs.version }}"
+          release_name: "Release v${{ steps.version_check.outputs.version }}"
+          draft: false
+          prerelease: false
