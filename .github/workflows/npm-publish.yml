@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all commit history and tags
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
@@ -38,7 +38,7 @@ jobs:
       - name: Bump Version
         if: steps.version_check.outputs.skip_bump != 'true'
         run: |
-          NEW_VERSION=$(npm version patch)
+          NEW_VERSION=$(npm version patch -no-git-tag-version)
           echo "::set-output name=new_version::$NEW_VERSION"
       - name: Commit and Push Changes
         if: steps.version_check.outputs.skip_bump != 'true'
