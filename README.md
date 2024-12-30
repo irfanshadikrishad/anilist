@@ -35,7 +35,8 @@ To login:
 anilist login -i <client-id> -s <client-secret>
 ```
 
-here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
+> [!NOTE]
+> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
 
 #### CLI Commands Overview
 
@@ -220,9 +221,6 @@ anilist import -m
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
 - **Description**: Import anime or manga list. If you want to import anime/manga list from MyAnimeList, export the XML from [here](https://myanimelist.net/panel.php?go=export).
-
-> [!IMPORTANT]
-> The file(s) you want to import should be in appropriate/default download folder. And if exported, it should be exported there.
 
 #### Security
 
