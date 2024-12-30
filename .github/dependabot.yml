@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     commit-message:
-      prefix: "bump"
+      prefix: "chore"
     schedule:
       interval: "weekly"
     groups:

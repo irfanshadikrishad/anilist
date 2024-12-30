@@ -486,7 +486,7 @@ class AniList {
       console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
-  static async getTrendingAnime(count: number) {
+  static async getTrendingAnime(count: number): Promise<any> {
     try {
       let page = 1
       let allTrending: any[] = []
