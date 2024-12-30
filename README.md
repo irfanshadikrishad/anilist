@@ -2,6 +2,10 @@
 
 Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.
 
+![NPM Version](https://img.shields.io/npm/v/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23adc178)
+![NPM Downloads](https://img.shields.io/npm/dw/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23eaac8b)
+![NPM License](https://img.shields.io/npm/l/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23f2d0a4)
+
 #### How to install?
 
 Make sure [Node.js](https://nodejs.org/en) and [npm](https://www.npmjs.com) are already installed in your system.
