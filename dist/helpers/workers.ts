@@ -2,6 +2,7 @@ import fs from "fs"
 import { readdir, writeFile } from "fs/promises"
 import inquirer from "inquirer"
 import { parse } from "json2csv"
+import { createRequire } from "module"
 import open from "open"
 import { homedir } from "os"
 import { join } from "path"
@@ -305,6 +306,14 @@ async function createMangaListXML(
           </myanimelist>`
 }
 
+function getCurrentPackageVersion(): string | null {
+  const require = createRequire(import.meta.url)
+  const packageJson = require("../../package.json")
+  const version = packageJson.version
+
+  return version || null
+}
+
 export {
   aniListEndpoint,
   createAnimeListXML,
@@ -312,6 +321,7 @@ export {
   createMangaListXML,
   createMangaXML,
   formatDateObject,
+  getCurrentPackageVersion,
   getDownloadFolderPath,
   getFormattedDate,
   getNextSeasonAndYear,
