@@ -1,4 +1,4 @@
-import type { Config } from "jest"
+import { Config } from "jest/build"
 
 const config: Config = {
   preset: "ts-jest",
