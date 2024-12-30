@@ -2,6 +2,10 @@
 
 Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.
 
+![NPM Version](https://img.shields.io/npm/v/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23adc178)
+![NPM Downloads](https://img.shields.io/npm/dw/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23eaac8b)
+![NPM License](https://img.shields.io/npm/l/%40irfanshadikrishad%2Fanilist?style=for-the-badge&color=%23f2d0a4)
+
 #### How to install?
 
 Make sure [Node.js](https://nodejs.org/en) and [npm](https://www.npmjs.com) are already installed in your system.
@@ -221,6 +225,9 @@ anilist import -m
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
 - **Description**: Import anime or manga list. If you want to import anime/manga list from MyAnimeList, export the XML from [here](https://myanimelist.net/panel.php?go=export).
+
+> [!IMPORTANT]
+> If you are importing from a file, place the file in the system specific download folder, And the exported file will also be exported there as well.
 
 #### Security
 

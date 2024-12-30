@@ -80,7 +80,7 @@ class AniList {
                 if (save) {
                   const id = save?.data?.SaveMediaListEntry?.id
                   count++
-                  console.log(`[${count}] ${anime?.id}-${id} ✅`)
+                  console.log(`[${count}]\t${id}\t${anime?.id} ✅`)
                 } else {
                   console.error(`\nError saving ${anime?.id}`)
                 }
@@ -142,7 +142,7 @@ class AniList {
                 if (save) {
                   const id = save?.data?.SaveMediaListEntry?.id
                   count++
-                  console.log(`[${count}] ${manga?.id}-${id} ✅`)
+                  console.log(`[${count}]\t${id}\t${manga?.id} ✅`)
                 }
               } catch (err) {
                 console.error(
