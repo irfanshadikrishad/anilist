@@ -35,7 +35,8 @@ To login:
 anilist login -i <client-id> -s <client-secret>
 ```
 
-here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
+> [!NOTE]
+> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
 
 #### CLI Commands Overview
 
