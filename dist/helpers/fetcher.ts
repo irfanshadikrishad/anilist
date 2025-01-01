@@ -1,5 +1,6 @@
 import fetch from "node-fetch"
 import { Auth } from "./auth.js"
+import { aniListEndpoint } from "./workers.js"
 
 /**
  * Sends a GraphQL request to the AniList API.
@@ -46,9 +47,6 @@ async function fetcher(query: string, variables: object) {
     console.error(`\nSomething went wrong. ${error.message}.`)
     return null
   }
-
-  const data = await response.json()
-  return data
 }
 
 export { fetcher }
