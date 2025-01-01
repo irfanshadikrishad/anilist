@@ -2,6 +2,7 @@ import fs from "fs"
 import { readdir, writeFile } from "fs/promises"
 import inquirer from "inquirer"
 import { parse } from "json2csv"
+import { createRequire } from "module"
 import open from "open"
 import { homedir } from "os"
 import { join } from "path"
@@ -143,10 +144,11 @@ async function listFilesInDownloadFolder(): Promise<string[]> {
 async function selectFile(fileType: string): Promise<string> {
   try {
     const files = await listFilesInDownloadFolder()
+    console.log(getDownloadFolderPath())
 
     // Filter to include only files, not directories, with the specified extension
     const onlyFiles = files.filter((file) => {
-      const filePath = `./downloads/${file}` // Adjust this to the correct path
+      const filePath = `${getDownloadFolderPath()}/${file}` // Adjust this to the correct path
       const isFile = fs.lstatSync(filePath).isFile() // Check if it's a file
       return isFile && file.endsWith(fileType)
     })
@@ -305,6 +307,14 @@ async function createMangaListXML(
           </myanimelist>`
 }
 
+function getCurrentPackageVersion(): string | null {
+  const require = createRequire(import.meta.url)
+  const packageJson = require("../../package.json")
+  const version = packageJson.version
+
+  return version || null
+}
+
 export {
   aniListEndpoint,
   createAnimeListXML,
@@ -312,6 +322,7 @@ export {
   createMangaListXML,
   createMangaXML,
   formatDateObject,
+  getCurrentPackageVersion,
   getDownloadFolderPath,
   getFormattedDate,
   getNextSeasonAndYear,

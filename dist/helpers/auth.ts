@@ -353,20 +353,9 @@ Statistics (Manga):
     if (await Auth.isLoggedIn()) {
       const userID = await Auth.MyUserId()
       if (userID) {
-        const request = await fetch(aniListEndpoint, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-          },
-          body: JSON.stringify({
-            query: currentUserAnimeList,
-            variables: { id: userID },
-          }),
-        })
-        const response: any = await request.json()
+        const response = await fetcher(currentUserAnimeList, { id: userID })
 
-        if (request.status === 200) {
+        if (response !== null) {
           const lists = response?.data?.MediaListCollection?.lists
 
           if (lists.length > 0) {
@@ -442,20 +431,9 @@ Statistics (Manga):
       if (await Auth.isLoggedIn()) {
         const userID = await Auth.MyUserId()
         if (userID) {
-          const request = await fetch(aniListEndpoint, {
-            method: "POST",
-            headers: {
-              "content-type": "application/json",
-              "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-            },
-            body: JSON.stringify({
-              query: currentUserMangaList,
-              variables: { id: userID },
-            }),
-          })
-          const response: any = await request.json()
+          const response = await fetcher(currentUserMangaList, { id: userID })
 
-          if (request.status === 200) {
+          if (response?.data) {
             const lists = response?.data?.MediaListCollection?.lists
             if (lists.length > 0) {
               const { selectedList } = await inquirer.prompt([

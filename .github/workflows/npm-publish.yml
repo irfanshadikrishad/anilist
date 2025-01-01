@@ -1,0 +1,40 @@
+name: npmjs
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          registry-url: "https://registry.npmjs.org"
+      - name: Configure Git
+        run: |
+          git config --global user.name "Irfan Shadik Rishad"
+          git config --global user.email "irfanshadikrishad@gmail.com"
+      - name: Bump Version
+        run: |
+          npm version patch --no-git-tag-version
+      - name: Commit the version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add package.json package-lock.json
+          git commit -m "npmjs: sync-version"
+          git push origin master
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build Project
+        run: npm run build
+      - name: Publish Package
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

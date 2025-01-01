@@ -80,7 +80,7 @@ class AniList {
                 if (save) {
                   const id = save?.data?.SaveMediaListEntry?.id
                   count++
-                  console.log(`[${count}] ${anime?.id}-${id} ✅`)
+                  console.log(`[${count}]\t${id}\t${anime?.id} ✅`)
                 } else {
                   console.error(`\nError saving ${anime?.id}`)
                 }
@@ -142,7 +142,7 @@ class AniList {
                 if (save) {
                   const id = save?.data?.SaveMediaListEntry?.id
                   count++
-                  console.log(`[${count}] ${manga?.id}-${id} ✅`)
+                  console.log(`[${count}]\t${id}\t${manga?.id} ✅`)
                 }
               } catch (err) {
                 console.error(
@@ -486,74 +486,96 @@ class AniList {
       console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
-  static async getTrendingAnime(count: number) {
+  static async getTrendingAnime(count: number): Promise<any> {
     try {
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: trendingQuery,
-          variables: { page: 1, perPage: count },
-        }),
-      })
+      let page = 1
+      let allTrending: any[] = []
 
-      const { data, errors }: any = await request.json()
+      while (true) {
+        const request = await fetch(aniListEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: trendingQuery,
+            variables: { page, perPage: count },
+          }),
+        })
 
-      if (request.status !== 200 || errors) {
-        return console.log(
-          `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
-        )
-      }
+        const { data, errors }: any = await request.json()
 
-      const media = data?.Page?.media
-      if (!media || media.length === 0) {
-        return console.log(`\nNo trending available at the moment.`)
-      }
+        if (request.status !== 200 || errors) {
+          console.error(
+            `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+          )
+          return
+        }
 
-      const { selectedAnime } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedAnime",
-          message: "Select anime to add to the list:",
-          choices: media.map((anime: any, idx: number) => ({
-            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-            value: anime?.id,
-          })),
-          pageSize: 10,
-        },
-      ])
+        const media = data?.Page?.media
+        if (!media || media.length === 0) {
+          console.log(`\nNo more trending anime available.`)
+          break
+        }
 
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this anime:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Watching", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+        allTrending = [...allTrending, ...media]
 
-      if (!(await Auth.isLoggedIn())) {
-        return console.error(`\nPlease log in first to use this feature.`)
-      }
+        const choices = allTrending.map((anime: any, idx: number) => ({
+          name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+          value: anime?.id,
+        }))
+        choices.push({ name: "See more", value: "see_more" })
 
-      const variables = { mediaId: selectedAnime, status: selectedListType }
-      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+        const { selectedAnime } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices,
+            pageSize: choices.length + 1,
+          },
+        ])
 
-      const saved = saveResponse?.data?.SaveMediaListEntry
-      if (saved) {
-        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
-      } else {
-        console.error(
-          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
-        )
+        if (selectedAnime === "see_more") {
+          page++
+          continue
+        } else {
+          const { selectedListType } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedListType",
+              message: "Select the list where you want to save this anime:",
+              choices: [
+                { name: "Planning", value: "PLANNING" },
+                { name: "Watching", value: "CURRENT" },
+                { name: "Completed", value: "COMPLETED" },
+                { name: "Paused", value: "PAUSED" },
+                { name: "Dropped", value: "DROPPED" },
+              ],
+            },
+          ])
+
+          if (!(await Auth.isLoggedIn())) {
+            console.error(`\nPlease log in first to use this feature.`)
+            return
+          }
+
+          const variables = { mediaId: selectedAnime, status: selectedListType }
+          const saveResponse: any = await fetcher(
+            addAnimeToListMutation,
+            variables
+          )
+
+          const saved = saveResponse?.data?.SaveMediaListEntry
+          if (saved) {
+            console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
+          } else {
+            console.error(
+              `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+            )
+          }
+          break
+        }
       }
     } catch (error) {
       console.error(`\nSomething went wrong. ${error.message}`)
@@ -561,72 +583,93 @@ class AniList {
   }
   static async getPopularAnime(count: number) {
     try {
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: popularQuery,
-          variables: { page: 1, perPage: count },
-        }),
-      })
+      let page = 1
+      let allMedia: any[] = []
 
-      const { data, errors }: any = await request.json()
+      while (true) {
+        const request = await fetch(aniListEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query: popularQuery,
+            variables: { page, perPage: count },
+          }),
+        })
 
-      if (request.status !== 200 || errors) {
-        return console.log(
-          `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
-        )
-      }
+        const { data, errors }: any = await request.json()
 
-      const media = data?.Page?.media
-      if (!media || media.length === 0) {
-        return console.log(`\nNo popular anime available at the moment.`)
-      }
+        if (request.status !== 200 || errors) {
+          console.error(
+            `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+          )
+          return
+        }
 
-      const { selectedAnime } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedAnime",
-          message: "Select anime to add to the list:",
-          choices: media.map((anime: any, idx: number) => ({
-            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-            value: anime?.id,
-          })),
-          pageSize: 10,
-        },
-      ])
+        const newMedia = data?.Page?.media
+        if (!newMedia || newMedia.length === 0) {
+          console.log(`\nNo more popular anime available.`)
+          break
+        }
 
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this anime:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Watching", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+        allMedia = [...allMedia, ...newMedia]
 
-      if (!(await Auth.isLoggedIn())) {
-        return console.error(`\nPlease log in first to use this feature.`)
-      }
+        const choices = allMedia.map((anime: any, idx: number) => ({
+          name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+          value: anime?.id,
+        }))
+        choices.push({ name: "See more", value: "see_more" })
 
-      const variables = { mediaId: selectedAnime, status: selectedListType }
-      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+        const { selectedAnime } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices,
+            pageSize: choices.length,
+          },
+        ])
 
-      const saved = saveResponse?.data?.SaveMediaListEntry
-      if (saved) {
-        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
-      } else {
-        console.error(
-          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
-        )
+        if (selectedAnime === "see_more") {
+          page++
+          continue
+        } else {
+          const { selectedListType } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedListType",
+              message: "Select the list where you want to save this anime:",
+              choices: [
+                { name: "Planning", value: "PLANNING" },
+                { name: "Watching", value: "CURRENT" },
+                { name: "Completed", value: "COMPLETED" },
+                { name: "Paused", value: "PAUSED" },
+                { name: "Dropped", value: "DROPPED" },
+              ],
+            },
+          ])
+
+          if (!(await Auth.isLoggedIn())) {
+            return console.error(`\nPlease log in first to use this feature.`)
+          }
+
+          const variables = { mediaId: selectedAnime, status: selectedListType }
+          const saveResponse: any = await fetcher(
+            addAnimeToListMutation,
+            variables
+          )
+
+          const saved = saveResponse?.data?.SaveMediaListEntry
+          if (saved) {
+            console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
+          } else {
+            console.error(
+              `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+            )
+          }
+          break
+        }
       }
     } catch (error) {
       console.error(`\nSomething went wrong. ${error.message}`)
@@ -635,66 +678,87 @@ class AniList {
   static async getUpcomingAnime(count: number) {
     try {
       const { nextSeason, nextYear } = getNextSeasonAndYear()
+      let page = 1
+      let allUpcoming: any[] = []
 
-      const request: any = await fetcher(upcomingAnimesQuery, {
-        nextSeason,
-        nextYear,
-        perPage: count,
-      })
+      while (true) {
+        const request: any = await fetcher(upcomingAnimesQuery, {
+          nextSeason,
+          nextYear,
+          page,
+          perPage: count,
+        })
 
-      if (!request || !request.data) {
-        return console.error(
-          `\nSomething went wrong. ${request?.errors?.[0]?.message || "Unknown error"}`
-        )
-      }
+        if (!request || !request.data) {
+          console.error(
+            `\nSomething went wrong. ${request?.errors?.[0]?.message || "Unknown error"}`
+          )
+          return
+        }
 
-      const upcoming = request.data.Page.media ?? []
-      if (upcoming.length === 0) {
-        return console.log(`\nNo upcoming anime available.`)
-      }
+        const newUpcoming = request.data.Page.media ?? []
+        if (newUpcoming.length === 0) {
+          console.log(`\nNo more upcoming anime available.`)
+          break
+        }
 
-      const { selectedAnime } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedAnime",
-          message: "Select anime to add to the list:",
-          choices: upcoming.map((anime: any, idx: number) => ({
-            name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-            value: anime?.id,
-          })),
-          pageSize: 10,
-        },
-      ])
+        allUpcoming = [...allUpcoming, ...newUpcoming]
 
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this anime:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Watching", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+        const choices = allUpcoming.map((anime: any, idx: number) => ({
+          name: `[${idx + 1}] ${getTitle(anime?.title)}`,
+          value: anime?.id,
+        }))
+        choices.push({ name: "See more", value: "see_more" })
 
-      if (!(await Auth.isLoggedIn())) {
-        return console.error(`\nPlease log in first to use this feature.`)
-      }
+        const { selectedAnime } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices,
+            pageSize: choices.length + 2,
+          },
+        ])
 
-      const variables = { mediaId: selectedAnime, status: selectedListType }
-      const saveResponse: any = await fetcher(addAnimeToListMutation, variables)
+        if (selectedAnime === "see_more") {
+          page++
+          continue
+        } else {
+          const { selectedListType } = await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedListType",
+              message: "Select the list where you want to save this anime:",
+              choices: [
+                { name: "Planning", value: "PLANNING" },
+                { name: "Watching", value: "CURRENT" },
+                { name: "Completed", value: "COMPLETED" },
+                { name: "Paused", value: "PAUSED" },
+                { name: "Dropped", value: "DROPPED" },
+              ],
+            },
+          ])
 
-      const saved = saveResponse?.data?.SaveMediaListEntry
-      if (saved) {
-        console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
-      } else {
-        console.error(
-          `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
-        )
+          if (!(await Auth.isLoggedIn())) {
+            return console.error(`\nPlease log in first to use this feature.`)
+          }
+
+          const variables = { mediaId: selectedAnime, status: selectedListType }
+          const saveResponse: any = await fetcher(
+            addAnimeToListMutation,
+            variables
+          )
+
+          const saved = saveResponse?.data?.SaveMediaListEntry
+          if (saved) {
+            console.log(`\nEntry ${saved.id}. Saved as ${saved.status}.`)
+          } else {
+            console.error(
+              `\nFailed to save the anime. ${saveResponse?.errors?.[0]?.message || "Unknown error"}`
+            )
+          }
+          break
+        }
       }
     } catch (error) {
       console.error(`\nError getting upcoming animes. ${error.message}`)
