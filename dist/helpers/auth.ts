@@ -24,7 +24,7 @@ import {
   deleteMediaEntryMutation,
   userActivityQuery,
 } from "./queries.js"
-import { DeleteMangaResponse } from "./types.js"
+import { DeleteMangaResponse, MediaList, Myself } from "./types.js"
 import {
   aniListEndpoint,
   getTitle,
@@ -41,7 +41,7 @@ class Auth {
    */
   static async GetAccessToken() {
     try {
-      const { token } = await inquirer.prompt([
+      const { token }: { token: string } = await inquirer.prompt([
         {
           type: "password",
           name: "token",
@@ -80,7 +80,7 @@ class Auth {
       console.log("Opening browser for AniList login...")
       open(authUrl)
 
-      const authCode = await Auth.GetAccessToken()
+      const authCode: string = await Auth.GetAccessToken()
 
       const tokenResponse = await fetch(
         "https://anilist.co/api/v2/oauth/token",
@@ -99,7 +99,7 @@ class Auth {
         }
       )
 
-      const token_Data: any = await tokenResponse.json()
+      const token_Data: { access_token?: string } = await tokenResponse.json()
 
       if (token_Data?.access_token) {
         await Auth.StoreAccessToken(token_Data?.access_token)
@@ -128,7 +128,7 @@ class Auth {
           headers: headers,
           body: JSON.stringify({ query: currentUserQuery }),
         })
-        const { data, errors }: any = await request.json()
+        const { data, errors }: Myself = await request.json()
 
         if (request.status === 200) {
           const user = data?.Viewer
@@ -204,7 +204,7 @@ Statistics (Manga):
   }
   static async Logout() {
     try {
-      const username = await Auth.MyUserName()
+      const username: string = await Auth.MyUserName()
       if (fs.existsSync(save_path)) {
         try {
           fs.unlinkSync(save_path)
@@ -221,11 +221,11 @@ Statistics (Manga):
   }
   static async MyUserId() {
     if (!(await Auth.isLoggedIn())) {
-      console.log(`\nUser not logged in.`)
+      console.warn(`\nUser not logged in.`)
       return null
     }
 
-    const token = await Auth.RetriveAccessToken()
+    const token: string = await Auth.RetriveAccessToken()
     const request = await fetch(aniListEndpoint, {
       method: "POST",
       headers: {
@@ -240,7 +240,7 @@ Statistics (Manga):
       return null
     }
 
-    const { data }: any = await request.json()
+    const { data }: { data?: { Viewer: { id: number } } } = await request.json()
     return data?.Viewer?.id ?? null
   }
   static async MyUserName() {
@@ -249,7 +249,7 @@ Statistics (Manga):
       return null
     }
 
-    const token = await Auth.RetriveAccessToken()
+    const token: string = await Auth.RetriveAccessToken()
     const request = await fetch(aniListEndpoint, {
       method: "POST",
       headers: {
@@ -264,27 +264,29 @@ Statistics (Manga):
       return null
     }
 
-    const { data }: any = await request.json()
+    const { data }: { data?: { Viewer: { name: string } } } =
+      await request.json()
     return data?.Viewer?.name ?? null
   }
   static async DeleteMyActivities() {
     try {
       if (await Auth.isLoggedIn()) {
-        const { activityType } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "activityType",
-            message: "What type of activity you want to delete?",
-            choices: [
-              { name: "All Activity", value: 0 },
-              { name: "Text Activity", value: 1 },
-              { name: "Media List Activity", value: 2 },
-              { name: "Anime List Activity", value: 3 },
-              { name: "Manga List Activity", value: 4 },
-              { name: "Message Activity", value: 5 },
-            ],
-          },
-        ])
+        const { activityType }: { activityType: number } =
+          await inquirer.prompt([
+            {
+              type: "list",
+              name: "activityType",
+              message: "What type of activity you want to delete?",
+              choices: [
+                { name: "All Activity", value: 0 },
+                { name: "Text Activity", value: 1 },
+                { name: "Media List Activity", value: 2 },
+                { name: "Anime List Activity", value: 3 },
+                { name: "Manga List Activity", value: 4 },
+                { name: "Message Activity", value: 5 },
+              ],
+            },
+          ])
 
         const queryMap = {
           0: activityAllQuery,
@@ -294,12 +296,15 @@ Statistics (Manga):
           4: activityMangaListQuery,
           5: activityMessageQuery,
         }
-        const query = queryMap[activityType]
+        const query: string = queryMap[activityType]
 
-        let hasMoreActivities = true
+        let hasMoreActivities: boolean = true
 
         while (hasMoreActivities) {
-          const response: any = await fetcher(query, {
+          const response: {
+            data?: { Page: { activities: { id: number }[] } }
+            errors: { message: string }[]
+          } = await fetcher(query, {
             page: 1,
             perPage: 50,
             userId: await Auth.MyUserId(),
@@ -316,12 +321,12 @@ Statistics (Manga):
               for (const act of activities) {
                 // Ensure ID is present to avoid unintended errors
                 if (act?.id) {
-                  const deleteResponse: any = await fetcher(
-                    deleteActivityMutation,
-                    {
-                      id: act?.id,
-                    }
-                  )
+                  const deleteResponse: {
+                    data?: { DeleteActivity: { deleted: boolean } }
+                    errors?: { message: string }[]
+                  } = await fetcher(deleteActivityMutation, {
+                    id: act?.id,
+                  })
                   const isDeleted =
                     deleteResponse?.data?.DeleteActivity?.deleted
                   count++
@@ -352,24 +357,28 @@ Statistics (Manga):
   }
   static async DeleteMyAnimeList() {
     if (await Auth.isLoggedIn()) {
-      const userID = await Auth.MyUserId()
+      const userID: number = await Auth.MyUserId()
       if (userID) {
-        const response = await fetcher(currentUserAnimeList, { id: userID })
+        const response: {
+          data: { MediaListCollection: { lists: MediaList[] } }
+          errors: { message: string }[]
+        } = await fetcher(currentUserAnimeList, { id: userID })
 
         if (response !== null) {
-          const lists = response?.data?.MediaListCollection?.lists
+          const lists: MediaList[] = response?.data?.MediaListCollection?.lists
 
           if (lists.length > 0) {
-            const { selectedList } = await inquirer.prompt([
-              {
-                type: "list",
-                name: "selectedList",
-                message: "Select an anime list:",
-                choices: lists.map((list: any) => list.name),
-                pageSize: 10,
-              },
-            ])
-            const selectedEntries = lists.find(
+            const { selectedList }: { selectedList: string } =
+              await inquirer.prompt([
+                {
+                  type: "list",
+                  name: "selectedList",
+                  message: "Select an anime list:",
+                  choices: lists.map((list: any) => list.name),
+                  pageSize: 10,
+                },
+              ])
+            const selectedEntries: MediaList = lists.find(
               (list: any) => list.name === selectedList
             )
             if (selectedEntries) {
@@ -413,7 +422,10 @@ Statistics (Manga):
           variables: { id },
         }),
       })
-      const response: any = await request.json()
+      const response: {
+        data?: { DeleteMediaListEntry: { deleted: boolean } }
+        errors?: any[]
+      } = await request.json()
       if (request.status === 200) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
         console.log(
@@ -430,25 +442,28 @@ Statistics (Manga):
   static async DeleteMyMangaList() {
     try {
       if (await Auth.isLoggedIn()) {
-        const userID = await Auth.MyUserId()
+        const userID: number = await Auth.MyUserId()
         if (userID) {
           const response = await fetcher(currentUserMangaList, { id: userID })
-
           if (response?.data) {
-            const lists = response?.data?.MediaListCollection?.lists
+            const lists: MediaList[] =
+              response?.data?.MediaListCollection?.lists
             if (lists.length > 0) {
-              const { selectedList } = await inquirer.prompt([
-                {
-                  type: "list",
-                  name: "selectedList",
-                  message: "Select a manga list:",
-                  choices: lists.map((list: any) => list.name),
-                  pageSize: 10,
-                },
-              ])
-              const selectedEntries = lists.find(
+              const { selectedList }: { selectedList: string } =
+                await inquirer.prompt([
+                  {
+                    type: "list",
+                    name: "selectedList",
+                    message: "Select a manga list:",
+                    choices: lists.map((list: any) => list.name),
+                    pageSize: 10,
+                  },
+                ])
+
+              const selectedEntries: MediaList = lists.find(
                 (list: any) => list.name === selectedList
               )
+
               if (selectedEntries) {
                 console.log(`\nDeleting entries of '${selectedEntries.name}':`)
 
@@ -498,10 +513,10 @@ Statistics (Manga):
 
       const { data, errors }: DeleteMangaResponse = await request.json()
 
-      const statusMessage = title ? getTitle(title) : ""
+      const statusMessage: string = title ? getTitle(title) : ""
 
       if (request.ok) {
-        const deleted = data?.DeleteMediaListEntry?.deleted
+        const deleted: boolean = data?.DeleteMediaListEntry?.deleted
         console.log(`del ${statusMessage} ${deleted ? "✅" : "❌"}`)
       } else {
         console.error(`Error deleting manga. ${errors?.[0]?.message}`)
@@ -521,8 +536,8 @@ Statistics (Manga):
         return
       }
 
-      const query = saveTextActivityMutation
-      const variables = {
+      const query: string = saveTextActivityMutation
+      const variables: { status: string } = {
         status:
           status +
           `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
@@ -535,7 +550,7 @@ Statistics (Manga):
         return
       }
 
-      const savedActivity = data.data?.SaveTextActivity
+      const savedActivity: { id: number } = data.data?.SaveTextActivity
 
       if (savedActivity?.id) {
         console.log(`\n[${savedActivity.id}] status saved successfully!`)
@@ -546,7 +561,7 @@ Statistics (Manga):
   }
   static async callAnimeImporter() {
     try {
-      const { source } = await inquirer.prompt([
+      const { source }: { source: number } = await inquirer.prompt([
         {
           type: "list",
           name: "source",
@@ -575,7 +590,7 @@ Statistics (Manga):
   }
   static async callMangaImporter() {
     try {
-      const { source } = await inquirer.prompt([
+      const { source }: { source: number } = await inquirer.prompt([
         {
           type: "list",
           name: "source",

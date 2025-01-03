@@ -131,6 +131,57 @@ interface List {
   name: string
   entries: MediaEntry[]
 }
+interface MediaList {
+  name: string
+  entries: {
+    id: number
+    progress: number
+    hiddenFromStatusLists: boolean
+    private: boolean
+    status: string
+    media: {
+      id: number
+      idMal: number
+      title: MediaTitle
+      status: string
+      chapters: number
+    }
+  }[]
+}
+interface Myself {
+  data?: {
+    Viewer: {
+      id: number
+      name: string
+      siteUrl: string
+      options: {
+        profileColor: string
+        timezone: string
+        activityMergeTime: string
+      }
+      donatorTier: string
+      donatorBadge: string
+      unreadNotificationCount: number
+      createdAt: number
+      updatedAt: number
+      statistics: {
+        anime: {
+          count: number
+          meanScore: string
+          minutesWatched: string
+          episodesWatched: number
+        }
+        manga: {
+          count: number
+          meanScore: string
+          chaptersRead: number
+          volumesRead: number
+        }
+      }
+    }
+  }
+  errors?: { message: string }[]
+}
 
 export {
   AniListMediaStatus,
@@ -142,6 +193,9 @@ export {
   MALMangaStatus,
   MalIdToAnilistIdResponse,
   MediaEntry,
+  MediaList,
+  MediaTitle,
   MediaWithProgress,
+  Myself,
   saveAnimeWithProgressResponse,
 }
