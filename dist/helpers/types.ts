@@ -106,14 +106,42 @@ interface MediaWithProgress {
   title: { english?: string; romaji?: string }
 }
 
+interface MediaTitle {
+  english?: string
+  romaji?: string
+  native?: string
+}
+
+interface Media {
+  id: number
+  idMal?: number
+  title: MediaTitle
+  chapters?: number
+}
+
+interface MediaEntry {
+  media: Media
+  private: boolean
+  progress: number
+  status: string
+  hiddenFromStatusLists: boolean
+}
+
+interface List {
+  name: string
+  entries: MediaEntry[]
+}
+
 export {
   AniListMediaStatus,
   AnimeList,
   DeleteMangaResponse,
+  List,
   MALAnimeStatus,
   MALAnimeXML,
   MALMangaStatus,
   MalIdToAnilistIdResponse,
+  MediaEntry,
   MediaWithProgress,
   saveAnimeWithProgressResponse,
 }
