@@ -26,7 +26,7 @@ cli
     }
   })
 cli
-  .command("me")
+  .command("whoami")
   .description("Get details of the logged in user")
   .action(async () => {
     await Auth.Myself()
@@ -80,7 +80,7 @@ cli
   .description("Delete entire collections of anime or manga")
   .option("-a, --anime", "For anime list of authenticated user", false)
   .option("-m, --manga", "For manga list of authenticated user", false)
-  .option("-ac, --activity", "For activity of authenticated user", false)
+  .option("-c, --activity", "For activity of authenticated user", false)
   .action(async ({ anime, manga, activity }) => {
     const selectedOptions = [anime, manga, activity].filter(Boolean).length
     if (selectedOptions === 0) {
