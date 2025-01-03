@@ -80,7 +80,7 @@ cli
   .description("Delete entire collections of anime or manga")
   .option("-a, --anime", "For anime list of authenticated user", false)
   .option("-m, --manga", "For manga list of authenticated user", false)
-  .option("-c, --activity", "For activity of authenticated user", false)
+  .option("-s, --activity", "For activity of authenticated user", false)
   .action(async ({ anime, manga, activity }) => {
     const selectedOptions = [anime, manga, activity].filter(Boolean).length
     if (selectedOptions === 0) {

@@ -44,6 +44,7 @@ import {
   saveJSONasCSV,
   saveJSONasJSON,
   selectFile,
+  timestampToTimeAgo,
 } from "./workers.js"
 
 class AniList {
@@ -820,9 +821,9 @@ class AniList {
 
       if (activities.length > 0) {
         console.log(`\nRecent Activities:`)
-        activities.forEach(({ status, progress, media }) => {
+        activities.forEach(({ status, progress, media, createdAt }) => {
           console.log(
-            `${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
+            `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
           )
         })
       } else {

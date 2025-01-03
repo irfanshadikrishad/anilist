@@ -25,7 +25,12 @@ import {
   userActivityQuery,
 } from "./queries.js"
 import { DeleteMangaResponse } from "./types.js"
-import { aniListEndpoint, getTitle, redirectUri } from "./workers.js"
+import {
+  aniListEndpoint,
+  getTitle,
+  redirectUri,
+  timestampToTimeAgo,
+} from "./workers.js"
 
 const home_dir = os.homedir()
 const save_path = path.join(home_dir, ".anilist_token")
@@ -151,18 +156,20 @@ Statistics (Anime):
   Count:                ${user?.statistics?.anime?.count}
   Mean Score:           ${user?.statistics?.anime?.meanScore}
   Minutes Watched:      ${user?.statistics?.anime?.minutesWatched}
+  Episodes Watched:     ${user?.statistics?.anime?.episodesWatched}
       
 Statistics (Manga):
   Count:                ${user?.statistics?.manga?.count}
+  Mean Score:           ${user?.statistics?.manga?.meanScore}
   Chapters Read:        ${user?.statistics?.manga?.chaptersRead}
   Volumes Read:         ${user?.statistics?.manga?.volumesRead}
 `)
 
           console.log(`\nRecent Activities:`)
           if (activities.length > 0) {
-            activities.map(({ status, progress, media }) => {
+            activities.map(({ status, progress, media, createdAt }) => {
               console.log(
-                `${status} ${progress ? `${progress} of ` : ""}${getTitle(
+                `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ""}${getTitle(
                   media?.title
                 )}`
               )
