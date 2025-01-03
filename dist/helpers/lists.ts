@@ -29,6 +29,7 @@ import {
   AniListMediaStatus,
   AnimeList,
   MalIdToAnilistIdResponse,
+  MediaEntry,
   saveAnimeWithProgressResponse,
 } from "./types.js"
 import {
@@ -1087,9 +1088,9 @@ class MyAnimeList {
           }
 
           for (const manga of mangas) {
-            const malId = manga.manga_mangadb_id
-            const progress = manga.my_read_chapters
-            const status = statusMap[manga.my_status]
+            const malId: number = manga.manga_mangadb_id
+            const progress: number = manga.my_read_chapters
+            const status: string = statusMap[manga.my_status]
 
             try {
               // Fetch AniList ID using MAL ID
@@ -1188,15 +1189,15 @@ class MyAnimeList {
       })
       if (mangaList && mangaList?.data?.MediaListCollection?.lists.length > 0) {
         const lists = mangaList?.data?.MediaListCollection?.lists
-        const mediaWithProgress = lists.flatMap((list: any) =>
-          list.entries.map((entry: any) => ({
-            id: entry?.media?.id,
-            malId: entry?.media?.idMal,
-            title: entry?.media?.title,
+        const mediaWithProgress = lists.flatMap((list: { entries: any }) =>
+          list.entries.map((entry: MediaEntry) => ({
+            id: entry.media.id,
+            malId: entry.media.idMal,
+            title: entry.media.title,
             private: entry.private,
             chapters: entry.media.chapters,
             progress: entry.progress,
-            status: entry?.status,
+            status: entry.status,
             hiddenFromStatusLists: entry.hiddenFromStatusLists,
           }))
         )

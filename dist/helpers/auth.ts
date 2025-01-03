@@ -285,8 +285,7 @@ Statistics (Manga):
             ],
           },
         ])
-        const userId = await Auth.MyUserId()
-        const variables = { page: 1, perPage: 100, userId }
+
         const queryMap = {
           0: activityAllQuery,
           1: activityTextQuery,
@@ -480,7 +479,7 @@ Statistics (Manga):
         console.error(`\nPlease log in first to delete your lists.`)
       }
     } catch (error) {
-      console.error(`\nError deleting manga.`)
+      console.error(`\nError deleting manga. ${(error as Error).message}`)
     }
   }
   static async DeleteMangaById(id: number, title?: any) {
