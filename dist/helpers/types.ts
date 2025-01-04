@@ -89,7 +89,7 @@ enum MALMangaStatus {
 interface AnimeList {
   data?: {
     MediaListCollection: {
-      lists: { name: string; entries: { id: number; progress: number }[] }[]
+      lists: MediaList[]
     }
   }
   errors?: {
@@ -110,6 +110,7 @@ interface MediaTitle {
   english?: string
   romaji?: string
   native?: string
+  userPreferred?: string
 }
 
 interface Media {
@@ -131,10 +132,92 @@ interface List {
   name: string
   entries: MediaEntry[]
 }
+interface MediaList {
+  id(id: number | string): string
+  title: { english?: string; romaji?: string }
+  name: string
+  entries: MediaListEntry[]
+}
+interface Myself {
+  data?: {
+    Viewer: {
+      id: number
+      name: string
+      siteUrl: string
+      options: {
+        profileColor: string
+        timezone: string
+        activityMergeTime: string
+      }
+      donatorTier: string
+      donatorBadge: string
+      unreadNotificationCount: number
+      createdAt: number
+      updatedAt: number
+      statistics: {
+        anime: {
+          count: number
+          meanScore: string
+          minutesWatched: string
+          episodesWatched: number
+        }
+        manga: {
+          count: number
+          meanScore: string
+          chaptersRead: number
+          volumesRead: number
+        }
+      }
+    }
+  }
+  errors?: { message: string }[]
+}
+interface DateMonthYear {
+  day?: string
+  month?: string
+  year?: string
+}
+interface AnimeDetails {
+  data?: {
+    Media: {
+      id: number
+      title: MediaTitle
+      description: string
+      duration: string
+      startDate: DateMonthYear
+      endDate: DateMonthYear
+      countryOfOrigin: string
+      isAdult: boolean
+      status: string
+      season: string
+      format: string
+      genres: [string]
+      siteUrl: string
+    }
+  }
+  errors?: { message: string }[]
+}
+interface MediaListEntry {
+  id?: number
+  media: {
+    id?: number
+    idMal?: number
+    title?: MediaTitle
+    episodes?: number
+    siteUrl?: string
+    chapters?: number
+  }
+  progress?: number
+  status?: string
+  hiddenFromStatusLists?: boolean
+  private?: boolean
+}
 
 export {
   AniListMediaStatus,
+  AnimeDetails,
   AnimeList,
+  DateMonthYear,
   DeleteMangaResponse,
   List,
   MALAnimeStatus,
@@ -142,6 +225,10 @@ export {
   MALMangaStatus,
   MalIdToAnilistIdResponse,
   MediaEntry,
+  MediaList,
+  MediaListEntry,
+  MediaTitle,
   MediaWithProgress,
+  Myself,
   saveAnimeWithProgressResponse,
 }

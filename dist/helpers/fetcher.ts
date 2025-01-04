@@ -13,7 +13,10 @@ import { aniListEndpoint } from "./workers.js"
  * @param {object} variables - An object containing the variables for the query.
  * @returns {Promise<object|null>} The response from the API as a JSON object if successful; otherwise, null.
  */
-async function fetcher(query: string, variables: object) {
+async function fetcher(
+  query: string,
+  variables: object
+): Promise<object | null> {
   try {
     const headers = {
       "content-type": "application/json",
@@ -29,7 +32,7 @@ async function fetcher(query: string, variables: object) {
       body: JSON.stringify({ query, variables }),
     })
 
-    const response: any = await request.json()
+    const response: { errors?: { message: string }[] } = await request.json()
 
     if (request.status === 200) {
       return response
