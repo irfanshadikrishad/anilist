@@ -1,7 +1,6 @@
 import { XMLParser } from "fast-xml-parser"
 import { readFile, writeFile } from "fs/promises"
 import inquirer from "inquirer"
-import fetch from "node-fetch"
 import { join } from "path"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
@@ -27,12 +26,16 @@ import {
 } from "./queries.js"
 import {
   AniListMediaStatus,
+  AnimeDetails,
   AnimeList,
   MalIdToAnilistIdResponse,
+  MediaEntry,
+  MediaList,
+  MediaListEntry,
+  MediaTitle,
   saveAnimeWithProgressResponse,
 } from "./types.js"
 import {
-  aniListEndpoint,
   createAnimeListXML,
   createMangaListXML,
   formatDateObject,
@@ -44,6 +47,7 @@ import {
   saveJSONasCSV,
   saveJSONasJSON,
   selectFile,
+  timestampToTimeAgo,
 } from "./workers.js"
 
 class AniList {
@@ -177,13 +181,16 @@ class AniList {
           pageSize: 10,
         },
       ])
-      const animeList: any = await fetcher(currentUserAnimeList, {
+      const animeList: {
+        data?: { MediaListCollection: { lists: MediaList[] } }
+        errors?: { message: string }[]
+      } = await fetcher(currentUserAnimeList, {
         id: await Auth.MyUserId(),
       })
       if (animeList) {
         const lists = animeList?.data?.MediaListCollection?.lists ?? []
-        const mediaWithProgress = lists.flatMap((list: any) =>
-          list.entries.map((entry: any) => ({
+        const mediaWithProgress = lists.flatMap((list: MediaList) =>
+          list.entries.map((entry: MediaListEntry) => ({
             id: entry?.media?.id,
             title:
               exportType === 1
@@ -220,13 +227,16 @@ class AniList {
   }
   static async exportManga() {
     if (await Auth.isLoggedIn()) {
-      const mangaLists: any = await fetcher(currentUserMangaList, {
+      const mangaLists: {
+        data?: { MediaListCollection: { lists: MediaList[] } }
+        errors?: { message: string }[]
+      } = await fetcher(currentUserMangaList, {
         id: await Auth.MyUserId(),
       })
       if (mangaLists) {
         const lists = mangaLists?.data?.MediaListCollection?.lists || []
         if (lists.length > 0) {
-          const { exportType } = await inquirer.prompt([
+          const { exportType }: { exportType: number } = await inquirer.prompt([
             {
               type: "list",
               name: "exportType",
@@ -239,8 +249,8 @@ class AniList {
               pageSize: 10,
             },
           ])
-          const mediaWithProgress = lists.flatMap((list: any) =>
-            list.entries.map((entry: any) => ({
+          const mediaWithProgress = lists.flatMap((list: MediaList) =>
+            list.entries.map((entry: MediaListEntry) => ({
               id: entry?.media?.id,
               title:
                 exportType === 1
@@ -288,25 +298,20 @@ class AniList {
         return console.log(`\nFailed getting current user Id.`)
       }
 
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-        },
-        body: JSON.stringify({
-          query: currentUserAnimeList,
-          variables: { id: userId },
-        }),
-      })
+      const data: {
+        data?: {
+          MediaListCollection: { lists: MediaList[] }
+        }
+        errors?: { message: string }[]
+      } = await fetcher(currentUserAnimeList, { id: userId })
 
-      const { data, errors }: AnimeList = await request.json()
-
-      if (request.status !== 200 || errors) {
-        return console.log(`\nSomething went wrong. ${errors?.[0]?.message}`)
+      if (data?.errors) {
+        return console.log(
+          `\nSomething went wrong. ${data?.errors?.[0]?.message}`
+        )
       }
 
-      const lists: any = data?.MediaListCollection?.lists
+      const lists = data?.data?.MediaListCollection?.lists
       if (!lists || lists.length === 0) {
         return console.log(`\nYou seem to have no anime(s) in your lists.`)
       }
@@ -316,12 +321,12 @@ class AniList {
           type: "list",
           name: "selectedList",
           message: "Select an anime list:",
-          choices: lists.map((list: any) => list.name),
+          choices: lists.map((list: MediaList) => list.name),
         },
       ])
 
       const selectedEntries = lists.find(
-        (list: any) => list.name === selectedList
+        (list: MediaList) => list.name === selectedList
       )
 
       if (!selectedEntries || !selectedEntries.entries.length) {
@@ -332,38 +337,45 @@ class AniList {
 
       console.log(`\nEntries for '${selectedEntries.name}':`)
 
-      const { selectedAnime } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedAnime",
-          message: "Select anime to add to the list:",
-          choices: selectedEntries.entries.map((entry: any, idx: number) => ({
-            name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
-            value: entry.media.id,
-          })),
-          pageSize: 10,
-        },
-      ])
+      const { selectedAnime }: { selectedAnime: number } =
+        await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedAnime",
+            message: "Select anime to add to the list:",
+            choices: selectedEntries.entries.map(
+              (entry: MediaListEntry, idx: number) => ({
+                name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
+                value: entry.media.id,
+              })
+            ),
+            pageSize: 10,
+          },
+        ])
 
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this anime:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Watching", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+      const { selectedListType }: { selectedListType: string } =
+        await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedListType",
+            message: "Select the list where you want to save this anime:",
+            choices: [
+              { name: "Planning", value: "PLANNING" },
+              { name: "Watching", value: "CURRENT" },
+              { name: "Completed", value: "COMPLETED" },
+              { name: "Paused", value: "PAUSED" },
+              { name: "Dropped", value: "DROPPED" },
+            ],
+          },
+        ])
 
-      const query = addAnimeToListMutation
-      const variables = { mediaId: selectedAnime, status: selectedListType }
-
-      const saveResponse: any = await fetcher(query, variables)
+      const saveResponse: {
+        data?: { SaveMediaListEntry: { id: number; status: string } }
+        errors?: { message: string }[]
+      } = await fetcher(addAnimeToListMutation, {
+        mediaId: selectedAnime,
+        status: selectedListType,
+      })
 
       if (saveResponse) {
         const savedEntry = saveResponse.data?.SaveMediaListEntry
@@ -383,33 +395,22 @@ class AniList {
         return console.error(`\nPlease log in first to access your lists.`)
       }
 
-      const userId = await Auth.MyUserId()
+      const userId: number = await Auth.MyUserId()
       if (!userId) {
         return console.error(`\nFailed to get the current user ID.`)
       }
+      const response: {
+        data?: { MediaListCollection: { lists: MediaList[] } }
+        errors?: { message: string }[]
+      } = await fetcher(currentUserMangaList, { id: userId })
 
-      const token = await Auth.RetriveAccessToken()
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          query: currentUserMangaList,
-          variables: { id: userId },
-        }),
-      })
-
-      const { data, errors }: AnimeList = await request.json()
-
-      if (request.status !== 200 || errors) {
+      if (!response?.data) {
         return console.error(
-          `\nFailed to fetch manga lists. ${errors?.[0]?.message || "Unknown error"}`
+          `\nFailed to fetch manga lists. ${response?.errors?.[0]?.message || "Unknown error"}`
         )
       }
 
-      const lists = data?.MediaListCollection?.lists
+      const lists = response?.data?.MediaListCollection?.lists
       if (!lists || lists.length === 0) {
         return console.log("\nYou don't seem to have any manga in your lists.")
       }
@@ -419,12 +420,12 @@ class AniList {
           type: "list",
           name: "selectedList",
           message: "Select a manga list:",
-          choices: lists.map((list: any) => list.name),
+          choices: lists.map((list: MediaList) => list.name),
         },
       ])
 
       const selectedEntries = lists.find(
-        (list: any) => list.name === selectedList
+        (list: MediaList) => list.name === selectedList
       )
       if (!selectedEntries || selectedEntries.entries.length === 0) {
         return console.log("\nNo manga entries found in the selected list.")
@@ -432,47 +433,46 @@ class AniList {
 
       console.log(`\nEntries for '${selectedEntries.name}':`)
 
-      const { selectedManga } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedManga",
-          message: "Select a manga to add to the list:",
-          choices: selectedEntries.entries.map((entry: any, idx: number) => ({
-            name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
-            value: entry?.media?.id,
-          })),
-          pageSize: 10,
-        },
-      ])
+      const { selectedManga }: { selectedManga: number } =
+        await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedManga",
+            message: "Select a manga to add to the list:",
+            choices: selectedEntries.entries.map(
+              (entry: MediaListEntry, idx: number) => ({
+                name: `[${idx + 1}] ${getTitle(entry.media.title)}`,
+                value: entry?.media?.id,
+              })
+            ),
+            pageSize: 10,
+          },
+        ])
 
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this manga:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Reading", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+      const { selectedListType }: { selectedListType: string } =
+        await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedListType",
+            message: "Select the list where you want to save this manga:",
+            choices: [
+              { name: "Planning", value: "PLANNING" },
+              { name: "Reading", value: "CURRENT" },
+              { name: "Completed", value: "COMPLETED" },
+              { name: "Paused", value: "PAUSED" },
+              { name: "Dropped", value: "DROPPED" },
+            ],
+          },
+        ])
 
-      const saveRequest = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          query: addMangaToListMutation,
-          variables: { mediaId: selectedManga, status: selectedListType },
-        }),
+      const saveResponse: {
+        data?: { SaveMediaListEntry: { id: number; status: string } }
+        errors?: { message: string }[]
+      } = await fetcher(addMangaToListMutation, {
+        mediaId: selectedManga,
+        status: selectedListType,
       })
 
-      const saveResponse: any = await saveRequest.json()
       const saved = saveResponse?.data?.SaveMediaListEntry
 
       if (saved) {
@@ -486,33 +486,25 @@ class AniList {
       console.error(`\nSomething went wrong. ${error.message}`)
     }
   }
-  static async getTrendingAnime(count: number): Promise<any> {
+  static async getTrendingAnime(count: number) {
     try {
       let page = 1
-      let allTrending: any[] = []
+      let allTrending: MediaList[] = []
 
       while (true) {
-        const request = await fetch(aniListEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: trendingQuery,
-            variables: { page, perPage: count },
-          }),
-        })
+        const response: {
+          data?: { Page: { media: MediaList[] } }
+          errors?: { message: string }[]
+        } = await fetcher(trendingQuery, { page, perPage: count })
 
-        const { data, errors }: any = await request.json()
-
-        if (request.status !== 200 || errors) {
+        if (response?.errors) {
           console.error(
-            `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+            `\nSomething went wrong. ${response?.errors?.[0]?.message || "Unknown error"}`
           )
           return
         }
 
-        const media = data?.Page?.media
+        const media = response?.data?.Page?.media
         if (!media || media.length === 0) {
           console.log(`\nNo more trending anime available.`)
           break
@@ -520,9 +512,9 @@ class AniList {
 
         allTrending = [...allTrending, ...media]
 
-        const choices = allTrending.map((anime: any, idx: number) => ({
+        const choices = allTrending.map((anime: MediaList, idx: number) => ({
           name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-          value: anime?.id,
+          value: String(anime?.id),
         }))
         choices.push({ name: "See more", value: "see_more" })
 
@@ -561,10 +553,10 @@ class AniList {
           }
 
           const variables = { mediaId: selectedAnime, status: selectedListType }
-          const saveResponse: any = await fetcher(
-            addAnimeToListMutation,
-            variables
-          )
+          const saveResponse: {
+            data?: { SaveMediaListEntry: { id: string; status: string } }
+            errors?: { message: string }[]
+          } = await fetcher(addAnimeToListMutation, variables)
 
           const saved = saveResponse?.data?.SaveMediaListEntry
           if (saved) {
@@ -584,30 +576,22 @@ class AniList {
   static async getPopularAnime(count: number) {
     try {
       let page = 1
-      let allMedia: any[] = []
+      let allMedia: MediaList[] = []
 
       while (true) {
-        const request = await fetch(aniListEndpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: popularQuery,
-            variables: { page, perPage: count },
-          }),
-        })
+        const response: {
+          data?: { Page: { media: MediaList[] } }
+          errors?: { message: string }[]
+        } = await fetcher(popularQuery, { page, perPage: count })
 
-        const { data, errors }: any = await request.json()
-
-        if (request.status !== 200 || errors) {
+        if (!response?.data) {
           console.error(
-            `\nSomething went wrong. ${errors?.[0]?.message || "Unknown error"}`
+            `\nSomething went wrong. ${response?.errors?.[0]?.message || "Unknown error"}`
           )
           return
         }
 
-        const newMedia = data?.Page?.media
+        const newMedia = response?.data?.Page?.media
         if (!newMedia || newMedia.length === 0) {
           console.log(`\nNo more popular anime available.`)
           break
@@ -615,9 +599,9 @@ class AniList {
 
         allMedia = [...allMedia, ...newMedia]
 
-        const choices = allMedia.map((anime: any, idx: number) => ({
+        const choices = allMedia.map((anime: MediaList, idx: number) => ({
           name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-          value: anime?.id,
+          value: String(anime?.id),
         }))
         choices.push({ name: "See more", value: "see_more" })
 
@@ -655,10 +639,10 @@ class AniList {
           }
 
           const variables = { mediaId: selectedAnime, status: selectedListType }
-          const saveResponse: any = await fetcher(
-            addAnimeToListMutation,
-            variables
-          )
+          const saveResponse: {
+            data?: { SaveMediaListEntry: { id: number; status: string } }
+            errors?: { message: string }
+          } = await fetcher(addAnimeToListMutation, variables)
 
           const saved = saveResponse?.data?.SaveMediaListEntry
           if (saved) {
@@ -679,10 +663,15 @@ class AniList {
     try {
       const { nextSeason, nextYear } = getNextSeasonAndYear()
       let page = 1
-      let allUpcoming: any[] = []
+      let allUpcoming: { id: number; title: MediaTitle; season: string }[] = []
 
       while (true) {
-        const request: any = await fetcher(upcomingAnimesQuery, {
+        const request: {
+          data?: {
+            Page: { media: { id: number; title: MediaTitle; season: string }[] }
+          }
+          errors?: { message: string }[]
+        } = await fetcher(upcomingAnimesQuery, {
           nextSeason,
           nextYear,
           page,
@@ -704,9 +693,9 @@ class AniList {
 
         allUpcoming = [...allUpcoming, ...newUpcoming]
 
-        const choices = allUpcoming.map((anime: any, idx: number) => ({
+        const choices = allUpcoming.map((anime, idx: number) => ({
           name: `[${idx + 1}] ${getTitle(anime?.title)}`,
-          value: anime?.id,
+          value: String(anime?.id),
         }))
         choices.push({ name: "See more", value: "see_more" })
 
@@ -744,10 +733,10 @@ class AniList {
           }
 
           const variables = { mediaId: selectedAnime, status: selectedListType }
-          const saveResponse: any = await fetcher(
-            addAnimeToListMutation,
-            variables
-          )
+          const saveResponse: {
+            data?: { SaveMediaListEntry: { id: number; status: string } }
+            errors?: { message: string }[]
+          } = await fetcher(addAnimeToListMutation, variables)
 
           const saved = saveResponse?.data?.SaveMediaListEntry
           if (saved) {
@@ -766,29 +755,57 @@ class AniList {
   }
   static async getUserByUsername(username: string) {
     try {
-      const headers = {
-        "Content-Type": "application/json",
-      }
+      const response: {
+        data?: {
+          User: {
+            id: number
+            name: string
+            siteUrl: string
+            donatorTier: string
+            donatorBadge: string
+            createdAt: number
+            updatedAt: number
+            isBlocked: boolean
+            isFollower: boolean
+            isFollowing: boolean
+            options: { profileColor: string; timezone: string }
+            statistics: {
+              anime: {
+                count: number
+                episodesWatched: number
+                minutesWatched: number
+              }
+              manga: {
+                count: number
+                chaptersRead: number
+                volumesRead: number
+              }
+            }
+          }
+        }
+        errors?: { message: string }[]
+      } = await fetcher(userQuery, { username })
 
-      if (await Auth.isLoggedIn()) {
-        headers["Authorization"] = `Bearer ${await Auth.RetriveAccessToken()}`
-      }
-
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ query: userQuery, variables: { username } }),
-      })
-      const response: any = await request.json()
-
-      if (request.status !== 200 || !response?.data?.User) {
+      if (!response?.data?.User) {
         return console.error(
-          `\n${request.status} ${response?.errors?.[0]?.message || "Unknown error"}`
+          `\n${response?.errors?.[0]?.message || "Unknown error"}`
         )
       }
 
       const user = response.data.User
-      const userActivityResponse: any = await fetcher(userActivityQuery, {
+      const userActivityResponse: {
+        data?: {
+          Page: {
+            activities: {
+              status: string
+              progress: number
+              createdAt: number
+              media: { title: MediaTitle }
+            }[]
+          }
+        }
+        errors?: { message: string }[]
+      } = await fetcher(userActivityQuery, {
         id: user.id,
         page: 1,
         perPage: 10,
@@ -820,9 +837,9 @@ class AniList {
 
       if (activities.length > 0) {
         console.log(`\nRecent Activities:`)
-        activities.forEach(({ status, progress, media }) => {
+        activities.forEach(({ status, progress, media, createdAt }) => {
           console.log(
-            `${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
+            `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
           )
         })
       } else {
@@ -833,9 +850,9 @@ class AniList {
     }
   }
   static async getAnimeDetailsByID(anilistID: number) {
-    const query = animeDetailsQuery
-    const variables = { id: anilistID }
-    const details: any = await fetcher(query, variables)
+    const details: AnimeDetails = await fetcher(animeDetailsQuery, {
+      id: anilistID,
+    })
 
     if (details?.data?.Media) {
       const {
@@ -870,52 +887,58 @@ class AniList {
     }
   }
   static async searchAnime(search: string, count: number) {
-    const query = animeSearchQuery
-    const variables = { search, page: 1, perPage: count }
-
-    const searchResults: any = await fetcher(query, variables)
+    const searchResults: {
+      data?: { Page: { media: { id: number; title: MediaTitle }[] } }
+      errors?: { message: string }[]
+    } = await fetcher(animeSearchQuery, {
+      search,
+      page: 1,
+      perPage: count,
+    })
 
     if (searchResults) {
       const results = searchResults?.data?.Page?.media
 
       if (results.length > 0) {
-        const { selectedAnime } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedAnime",
-            message: "Select anime to add to your list:",
-            choices: results.map((res: any, idx: number) => ({
-              name: `[${idx + 1}] ${getTitle(res?.title)}`,
-              value: res?.id,
-            })),
-            pageSize: 10,
-          },
-        ])
+        const { selectedAnime }: { selectedAnime: number } =
+          await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedAnime",
+              message: "Select anime to add to your list:",
+              choices: results.map((res, idx: number) => ({
+                name: `[${idx + 1}] ${getTitle(res?.title)}`,
+                value: res?.id,
+              })),
+              pageSize: 10,
+            },
+          ])
 
-        const { selectedListType } = await inquirer.prompt([
-          {
-            type: "list",
-            name: "selectedListType",
-            message: "Select the list where you want to save this anime:",
-            choices: [
-              { name: "Planning", value: "PLANNING" },
-              { name: "Watching", value: "CURRENT" },
-              { name: "Completed", value: "COMPLETED" },
-              { name: "Paused", value: "PAUSED" },
-              { name: "Dropped", value: "DROPPED" },
-            ],
-          },
-        ])
+        const { selectedListType }: { selectedListType: string } =
+          await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedListType",
+              message: "Select the list where you want to save this anime:",
+              choices: [
+                { name: "Planning", value: "PLANNING" },
+                { name: "Watching", value: "CURRENT" },
+                { name: "Completed", value: "COMPLETED" },
+                { name: "Paused", value: "PAUSED" },
+                { name: "Dropped", value: "DROPPED" },
+              ],
+            },
+          ])
 
         // Save selected anime to chosen list type
         if (await Auth.isLoggedIn()) {
-          const saveQuery = addAnimeToListMutation
-          const saveVariables = {
+          const response: {
+            data?: { SaveMediaListEntry: { id: number; status: string } }
+            errors?: { message: string }[]
+          } = await fetcher(addAnimeToListMutation, {
             mediaId: selectedAnime,
             status: selectedListType,
-          }
-
-          const response: any = await fetcher(saveQuery, saveVariables)
+          })
 
           if (response) {
             const saved = response?.data?.SaveMediaListEntry
@@ -932,10 +955,14 @@ class AniList {
     }
   }
   static async searchManga(search: string, count: number) {
-    const query = mangaSearchQuery
-    const variables = { search, page: 1, perPage: count }
-
-    const mangaSearchResult: any = await fetcher(query, variables)
+    const mangaSearchResult: {
+      data?: { Page: { media: { id: number; title: MediaTitle }[] } }
+      errors?: { message: string }[]
+    } = await fetcher(mangaSearchQuery, {
+      search,
+      page: 1,
+      perPage: count,
+    })
 
     if (mangaSearchResult) {
       const results = mangaSearchResult?.data?.Page?.media
@@ -945,7 +972,7 @@ class AniList {
           type: "list",
           name: "selectedMangaId",
           message: "Select manga to add to your list:",
-          choices: results.map((res: any, idx: number) => ({
+          choices: results.map((res, idx: number) => ({
             name: `[${idx + 1}] ${getTitle(res?.title)}`,
             value: res?.id,
           })),
@@ -953,26 +980,31 @@ class AniList {
         },
       ])
       // Options to save to the list
-      const { selectedListType } = await inquirer.prompt([
-        {
-          type: "list",
-          name: "selectedListType",
-          message: "Select the list where you want to save this manga:",
-          choices: [
-            { name: "Planning", value: "PLANNING" },
-            { name: "Reading", value: "CURRENT" },
-            { name: "Completed", value: "COMPLETED" },
-            { name: "Paused", value: "PAUSED" },
-            { name: "Dropped", value: "DROPPED" },
-          ],
-        },
-      ])
+      const { selectedListType }: { selectedListType: string } =
+        await inquirer.prompt([
+          {
+            type: "list",
+            name: "selectedListType",
+            message: "Select the list where you want to save this manga:",
+            choices: [
+              { name: "Planning", value: "PLANNING" },
+              { name: "Reading", value: "CURRENT" },
+              { name: "Completed", value: "COMPLETED" },
+              { name: "Paused", value: "PAUSED" },
+              { name: "Dropped", value: "DROPPED" },
+            ],
+          },
+        ])
 
       // If logged in save to the list
       if (await Auth.isLoggedIn()) {
-        const mutation = addMangaToListMutation
-        const variables = { mediaId: selectedMangaId, status: selectedListType }
-        const response: any = await fetcher(mutation, variables)
+        const response: {
+          data?: { SaveMediaListEntry: { id: number; status: string } }
+          errors?: { message: string }[]
+        } = await fetcher(addMangaToListMutation, {
+          mediaId: selectedMangaId,
+          status: selectedListType,
+        })
 
         if (response) {
           const saved = response?.data?.SaveMediaListEntry
@@ -990,10 +1022,10 @@ class AniList {
 class MyAnimeList {
   static async importAnime() {
     try {
-      const filename = await selectFile(".xml")
-      const filePath = join(getDownloadFolderPath(), filename)
-      const fileContent = await readFile(filePath, "utf8")
-      const parser = new XMLParser()
+      const filename: string = await selectFile(".xml")
+      const filePath: string = join(getDownloadFolderPath(), filename)
+      const fileContent: string = await readFile(filePath, "utf8")
+      const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
         const XMLObject = parser.parse(fileContent)
@@ -1010,9 +1042,9 @@ class MyAnimeList {
           }
 
           for (const anime of animeList) {
-            const malId = anime.series_animedb_id
-            const progress = anime.my_watched_episodes
-            const status = statusMap[anime.my_status]
+            const malId: number = anime.series_animedb_id
+            const progress: number = anime.my_watched_episodes
+            const status: string = statusMap[anime.my_status]
 
             try {
               // Fetch AniList ID using MAL ID
@@ -1066,10 +1098,10 @@ class MyAnimeList {
   }
   static async importManga() {
     try {
-      const filename = await selectFile(".xml")
-      const filePath = join(getDownloadFolderPath(), filename)
-      const fileContent = await readFile(filePath, "utf8")
-      const parser = new XMLParser()
+      const filename: string = await selectFile(".xml")
+      const filePath: string = join(getDownloadFolderPath(), filename)
+      const fileContent: string = await readFile(filePath, "utf8")
+      const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
         const XMLObject = parser.parse(fileContent)
@@ -1086,9 +1118,9 @@ class MyAnimeList {
           }
 
           for (const manga of mangas) {
-            const malId = manga.manga_mangadb_id
-            const progress = manga.my_read_chapters
-            const status = statusMap[manga.my_status]
+            const malId: number = manga.manga_mangadb_id
+            const progress: number = manga.my_read_chapters
+            const status: string = statusMap[manga.my_status]
 
             try {
               // Fetch AniList ID using MAL ID
@@ -1096,7 +1128,7 @@ class MyAnimeList {
                 malIdToAnilistMangaId,
                 { malId }
               )
-              const anilistId = anilistResponse?.data?.Media?.id
+              const anilistId: number = anilistResponse?.data?.Media?.id
 
               if (anilistId) {
                 // Save manga entry with progress
@@ -1108,7 +1140,8 @@ class MyAnimeList {
                     hiddenFromStatusLists: false,
                     private: false,
                   })
-                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+                const entryId: number =
+                  saveResponse?.data?.SaveMediaListEntry?.id
 
                 if (entryId) {
                   count++
@@ -1145,8 +1178,8 @@ class MyAnimeList {
         })
         if (animeList?.data?.MediaListCollection?.lists.length > 0) {
           const lists = animeList?.data?.MediaListCollection?.lists
-          const mediaWithProgress = lists.flatMap((list: any) =>
-            list.entries.map((entry: any) => ({
+          const mediaWithProgress = lists.flatMap((list: MediaList) =>
+            list.entries.map((entry: MediaListEntry) => ({
               id: entry?.media?.id,
               malId: entry?.media?.idMal,
               title: entry?.media?.title,
@@ -1187,17 +1220,18 @@ class MyAnimeList {
       })
       if (mangaList && mangaList?.data?.MediaListCollection?.lists.length > 0) {
         const lists = mangaList?.data?.MediaListCollection?.lists
-        const mediaWithProgress = lists.flatMap((list: any) =>
-          list.entries.map((entry: any) => ({
-            id: entry?.media?.id,
-            malId: entry?.media?.idMal,
-            title: entry?.media?.title,
-            private: entry.private,
-            chapters: entry.media.chapters,
-            progress: entry.progress,
-            status: entry?.status,
-            hiddenFromStatusLists: entry.hiddenFromStatusLists,
-          }))
+        const mediaWithProgress = lists.flatMap(
+          (list: { entries: MediaListEntry[] }) =>
+            list.entries.map((entry: MediaEntry) => ({
+              id: entry.media.id,
+              malId: entry.media.idMal,
+              title: entry.media.title,
+              private: entry.private,
+              chapters: entry.media.chapters,
+              progress: entry.progress,
+              status: entry.status,
+              hiddenFromStatusLists: entry.hiddenFromStatusLists,
+            }))
         )
         const XMLContent = createMangaListXML(mediaWithProgress)
         const path = join(

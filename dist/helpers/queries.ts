@@ -3,7 +3,7 @@ const currentUserQuery = `{
     id name about bans siteUrl options { profileColor timezone activityMergeTime }
     donatorTier donatorBadge createdAt updatedAt unreadNotificationCount previousNames { name createdAt updatedAt }
     moderatorRoles favourites { anime { nodes { id title { romaji english } } } manga { nodes { id title { romaji english } } } }
-    statistics { anime { count meanScore minutesWatched } manga { count chaptersRead volumesRead } }
+    statistics { anime { count meanScore minutesWatched episodesWatched } manga { count chaptersRead volumesRead meanScore } }
     mediaListOptions { scoreFormat rowOrder animeList { sectionOrder } mangaList { sectionOrder } }
   }
 }`

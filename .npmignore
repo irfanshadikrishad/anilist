@@ -4,6 +4,7 @@
 /tests
 .babelrc
 .prettierrc
+.prettierignore
 tsconfig.json
 eslint.config.js
 CHANGELOG.md

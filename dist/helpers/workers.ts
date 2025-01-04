@@ -315,6 +315,30 @@ function getCurrentPackageVersion(): string | null {
   return version || null
 }
 
+function timestampToTimeAgo(timestamp: number) {
+  const now = Math.floor(Date.now() / 1000)
+  const elapsed = now - timestamp
+
+  if (elapsed < 60) {
+    return `${elapsed} second${elapsed === 1 ? "" : "s"} ago`
+  } else if (elapsed < 3600) {
+    const minutes = Math.floor(elapsed / 60)
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
+  } else if (elapsed < 86400) {
+    const hours = Math.floor(elapsed / 3600)
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`
+  } else if (elapsed < 2592000) {
+    const days = Math.floor(elapsed / 86400)
+    return `${days} day${days === 1 ? "" : "s"} ago`
+  } else if (elapsed < 31536000) {
+    const months = Math.floor(elapsed / 2592000)
+    return `${months} month${months === 1 ? "" : "s"} ago`
+  } else {
+    const years = Math.floor(elapsed / 31536000)
+    return `${years} year${years === 1 ? "" : "s"} ago`
+  }
+}
+
 export {
   aniListEndpoint,
   createAnimeListXML,
@@ -332,4 +356,5 @@ export {
   saveJSONasCSV,
   saveJSONasJSON,
   selectFile,
+  timestampToTimeAgo,
 }

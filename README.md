@@ -48,14 +48,14 @@ anilist login -i <client-id> -s <client-secret>
 | ------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | **`login`**                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials                               |
 | **`logout`**                                | _None_                                                                  | Log out from your AniList account                                  |
-| **`me`**                                    | _None_                                                                  | Display information about the logged-in user                       |
+| **`whoami`**                                | _None_                                                                  | Display information about the logged-in user                       |
 | **`-V, --version`**                         | _None_                                                                  | Display the current version of the CLI                             |
 | **`-h, --help`**                            | _None_                                                                  | Display available commands and options                             |
 | **`trending`** <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)                         |
 | **`popular`** <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)                          |
 | **`user`**                                  | `<username>`                                                            | Get information about a specific AniList user                      |
 | **`lists`** <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user                   |
-| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-ac, --activity`                 | Delete collections of anime, manga or activities                   |
+| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                   |
 | **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                         |
 | **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                      |
 | **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                     |
