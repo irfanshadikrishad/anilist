@@ -584,7 +584,7 @@ class AniList {
           errors?: { message: string }[]
         } = await fetcher(popularQuery, { page, perPage: count })
 
-        if (response?.data) {
+        if (!response?.data) {
           console.error(
             `\nSomething went wrong. ${response?.errors?.[0]?.message || "Unknown error"}`
           )
