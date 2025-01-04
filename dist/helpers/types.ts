@@ -89,7 +89,7 @@ enum MALMangaStatus {
 interface AnimeList {
   data?: {
     MediaListCollection: {
-      lists: { name: string; entries: { id: number; progress: number }[] }[]
+      lists: MediaList[]
     }
   }
   errors?: {
@@ -110,6 +110,7 @@ interface MediaTitle {
   english?: string
   romaji?: string
   native?: string
+  userPreferred?: string
 }
 
 interface Media {
@@ -132,21 +133,10 @@ interface List {
   entries: MediaEntry[]
 }
 interface MediaList {
+  id(id: number | string): string
+  title: { english?: string; romaji?: string }
   name: string
-  entries: {
-    id: number
-    progress: number
-    hiddenFromStatusLists: boolean
-    private: boolean
-    status: string
-    media: {
-      id: number
-      idMal: number
-      title: MediaTitle
-      status: string
-      chapters: number
-    }
-  }[]
+  entries: MediaListEntry[]
 }
 interface Myself {
   data?: {
@@ -182,10 +172,52 @@ interface Myself {
   }
   errors?: { message: string }[]
 }
+interface DateMonthYear {
+  day?: string
+  month?: string
+  year?: string
+}
+interface AnimeDetails {
+  data?: {
+    Media: {
+      id: number
+      title: MediaTitle
+      description: string
+      duration: string
+      startDate: DateMonthYear
+      endDate: DateMonthYear
+      countryOfOrigin: string
+      isAdult: boolean
+      status: string
+      season: string
+      format: string
+      genres: [string]
+      siteUrl: string
+    }
+  }
+  errors?: { message: string }[]
+}
+interface MediaListEntry {
+  id?: number
+  media: {
+    id?: number
+    idMal?: number
+    title?: MediaTitle
+    episodes?: number
+    siteUrl?: string
+    chapters?: number
+  }
+  progress?: number
+  status?: string
+  hiddenFromStatusLists?: boolean
+  private?: boolean
+}
 
 export {
   AniListMediaStatus,
+  AnimeDetails,
   AnimeList,
+  DateMonthYear,
   DeleteMangaResponse,
   List,
   MALAnimeStatus,
@@ -194,6 +226,7 @@ export {
   MalIdToAnilistIdResponse,
   MediaEntry,
   MediaList,
+  MediaListEntry,
   MediaTitle,
   MediaWithProgress,
   Myself,
