@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import { createRequire } from "module"
 import process from "process"
 import { Auth } from "./helpers/auth.js"
 import { AniList } from "./helpers/lists.js"
