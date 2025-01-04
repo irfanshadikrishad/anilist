@@ -629,13 +629,24 @@ Statistics (Manga):
   }
   private static async LikeFollowing() {
     try {
-      let page = 1
-      let hasMoreActivities = true
-      let retryCount = 0
-      const maxRetries = 5
+      let page: number = 1
+      let hasMoreActivities: boolean = true
+      let retryCount: number = 0
+      const maxRetries: number = 5
 
       while (hasMoreActivities) {
-        const activities: any = await fetcher(followingActivitiesQuery, {
+        const activities: {
+          data?: {
+            Page: {
+              activities: {
+                isLiked: boolean
+                id: number
+                user: { name: string }
+              }[]
+            }
+          }
+          errors?: { message: string }[]
+        } = await fetcher(followingActivitiesQuery, {
           page,
           perPage: 50,
         })
@@ -647,15 +658,20 @@ Statistics (Manga):
           for (let activ of activiti) {
             if (!activ.isLiked && activ.id) {
               try {
-                const like: any = await fetcher(likeActivityMutation, {
-                  activityId: activ.id,
-                })
-                console.info(`[${activ.id}] liked ${activ.user.name}`)
+                const like: { data?: { ToggleLike: { id: number } } } =
+                  await fetcher(likeActivityMutation, {
+                    activityId: activ.id,
+                  })
+                console.info(
+                  `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
+                )
               } catch (error) {
-                console.error(`Activity possibly deleted.`)
+                console.error(
+                  `Activity possibly deleted. ${(error as Error).message}`
+                )
               }
             } else {
-              console.log(`[${activ?.id}] ${activ.user.name} already-liked`)
+              console.log(`[${activ?.id}]\t${activ.user.name} already-liked`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
@@ -696,7 +712,18 @@ Statistics (Manga):
             : followingActivitiesQuery
 
       while (hasMoreActivities) {
-        const activities: any = await fetcher(activity, {
+        const activities: {
+          data?: {
+            Page: {
+              activities: {
+                isLiked: boolean
+                user: { name: string }
+                id: number
+              }[]
+            }
+          }
+          errors?: { message: string }[]
+        } = await fetcher(activity, {
           page,
           perPage: 50,
         })
@@ -707,20 +734,25 @@ Statistics (Manga):
           for (let activ of activiti) {
             if (!activ.isLiked && activ.id) {
               try {
-                const like: any = await fetcher(likeActivityMutation, {
-                  activityId: activ.id,
-                })
+                const like: { data?: { ToggleLike: { id: number } } } =
+                  await fetcher(likeActivityMutation, {
+                    activityId: activ.id,
+                  })
                 // const ToggleLike = like?.data?.ToggleLike
-                console.info(`[${activ.id}] liked ${activ.user.name}`)
+                console.info(
+                  `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
+                )
               } catch (error) {
-                console.error(`Activity possibly deleted.`)
+                console.error(
+                  `Activity possibly deleted. ${(error as Error).message}`
+                )
               }
             } else {
-              console.log(`[${activ?.id}] ${activ.user.name} already-liked`)
+              console.log(`[${activ?.id}]\t${activ.user.name} already-liked`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
-              setTimeout(resolve, 2000)
+              setTimeout(resolve, 1500)
             })
           }
 
@@ -747,7 +779,10 @@ Statistics (Manga):
         },
       ])
 
-      const userDetails = await fetcher(userQuery, { username: username })
+      const userDetails: {
+        data?: { User: { id: number } }
+        errors?: { message: string }[]
+      } = await fetcher(userQuery, { username: username })
 
       if (userDetails) {
         let page = 1
@@ -756,7 +791,18 @@ Statistics (Manga):
 
         if (userId) {
           while (true) {
-            const activities = await fetcher(specificUserActivitiesQuery, {
+            const activities: {
+              data?: {
+                Page: {
+                  activities: {
+                    isLiked: boolean
+                    id: number
+                    user: { name: string }
+                  }[]
+                }
+              }
+              errors?: { message: string }[]
+            } = await fetcher(specificUserActivitiesQuery, {
               page,
               perPage,
               userId,
@@ -772,20 +818,26 @@ Statistics (Manga):
             for (let activ of activiti) {
               if (!activ.isLiked && activ.id) {
                 try {
-                  const like = await fetcher(likeActivityMutation, {
+                  const like: {
+                    data?: { ToggleLike: { id: number } }
+                  } = await fetcher(likeActivityMutation, {
                     activityId: activ.id,
                   })
-                  console.info(`[${activ.id}] liked ${activ.user?.name}`)
+                  console.info(
+                    `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
+                  )
                 } catch (error) {
-                  console.error(`Activity possibly deleted.`)
+                  console.error(
+                    `Activity possibly deleted. ${(error as Error).message}`
+                  )
                 }
               } else {
-                console.log(`[${activ?.id}] ${activ.user?.name} already liked`)
+                console.log(`[${activ?.id}]\t${activ.user?.name} already-liked`)
               }
 
               // Avoiding rate limit
               await new Promise((resolve) => {
-                setTimeout(resolve, 2000)
+                setTimeout(resolve, 1500)
               })
             }
 
@@ -807,7 +859,7 @@ Statistics (Manga):
         console.error(`\nPlease login to use this feature.`)
         return
       }
-      const { activityType } = await inquirer.prompt([
+      const { activityType }: { activityType: number } = await inquirer.prompt([
         {
           type: "list",
           name: "activityType",
