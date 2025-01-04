@@ -24,7 +24,7 @@ import {
   deleteMediaEntryMutation,
   userActivityQuery,
 } from "./queries.js"
-import { DeleteMangaResponse, MediaList, MediaTitle, Myself } from "./types.js"
+import { MediaList, MediaTitle, Myself } from "./types.js"
 import {
   aniListEndpoint,
   getTitle,
@@ -311,6 +311,7 @@ Statistics (Manga):
         const query: string = queryMap[activityType]
 
         let hasMoreActivities: boolean = true
+        let totalCount = 0
 
         while (hasMoreActivities) {
           const response: {
@@ -324,6 +325,7 @@ Statistics (Manga):
 
           if (response?.data?.Page?.activities) {
             let count = 0
+
             const activities = response?.data?.Page?.activities
 
             if (!activities || activities.length === 0) {
@@ -342,9 +344,10 @@ Statistics (Manga):
                   const isDeleted =
                     deleteResponse?.data?.DeleteActivity?.deleted
                   count++
+                  totalCount++
 
                   console.log(
-                    `[${count}/${activities.length}] ${act?.id} ${
+                    `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
                       isDeleted ? "✅" : "❌"
                     }`
                   )
@@ -429,22 +432,12 @@ Statistics (Manga):
   }
   static async DeleteAnimeById(id: number, title?: MediaTitle) {
     try {
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-        },
-        body: JSON.stringify({
-          query: deleteMediaEntryMutation,
-          variables: { id },
-        }),
-      })
       const response: {
         data?: { DeleteMediaListEntry: { deleted: boolean } }
         errors?: { message: string }[]
-      } = await request.json()
-      if (request.status === 200) {
+      } = await fetcher(deleteMediaEntryMutation, { id: id })
+
+      if (response?.data) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
         console.log(
           `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
@@ -520,27 +513,18 @@ Statistics (Manga):
   }
   static async DeleteMangaById(id: number, title?: MediaTitle) {
     try {
-      const request = await fetch(aniListEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${await Auth.RetriveAccessToken()}`,
-        },
-        body: JSON.stringify({
-          query: deleteMangaEntryMutation,
-          variables: { id },
-        }),
-      })
-
-      const { data, errors }: DeleteMangaResponse = await request.json()
+      const response: {
+        data?: { DeleteMediaListEntry: { deleted: boolean } }
+        errors?: { message: string }[]
+      } = await fetcher(deleteMangaEntryMutation, { id })
 
       const statusMessage: string = title ? getTitle(title) : ""
 
-      if (request.ok) {
-        const deleted: boolean = data?.DeleteMediaListEntry?.deleted
+      if (response?.data) {
+        const deleted: boolean = response?.data?.DeleteMediaListEntry?.deleted
         console.log(`del ${statusMessage} ${deleted ? "✅" : "❌"}`)
       } else {
-        console.error(`Error deleting manga. ${errors?.[0]?.message}`)
+        console.error(`Error deleting manga. ${response?.errors?.[0]?.message}`)
       }
     } catch (error) {
       console.error(
@@ -557,17 +541,14 @@ Statistics (Manga):
         return
       }
 
-      const query: string = saveTextActivityMutation
-      const variables: { status: string } = {
-        status:
-          status +
-          `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
-      }
-
       const data: {
         data?: { SaveTextActivity: { id: number } }
         errors?: { message: string }[]
-      } = await fetcher(query, variables)
+      } = await fetcher(saveTextActivityMutation, {
+        status:
+          status +
+          `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
+      })
 
       if (!data) {
         console.error(`\nSomething went wrong. ${data}.`)
