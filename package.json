@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.2.1-forbidden.1",
+  "version": "1.2.2-forbidden.1",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
@@ -67,7 +67,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "@babel/preset-env": "^7.26.0",
-    "@typescript-eslint/eslint-plugin": "^8.19.0"
+    "@typescript-eslint/eslint-plugin": "^8.19.1"
   },
   "dependencies": {
     "commander": "^13.0.0",
