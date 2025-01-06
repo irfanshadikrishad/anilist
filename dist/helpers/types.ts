@@ -213,6 +213,31 @@ interface MediaListEntry {
   private?: boolean
 }
 
+interface TheActivity {
+  type: string
+  id: number
+  message?: string
+  createdAt: number
+  recipient?: {
+    id: number
+    name: string
+  }
+  isLiked?: boolean
+  user?: {
+    id?: number
+    name?: string
+  }
+  messenger?: {
+    name: string
+  }
+  media?: {
+    title?: {
+      userPreferred: string
+    }
+  }
+  progress: string | null
+}
+
 export {
   AniListMediaStatus,
   AnimeDetails,
@@ -230,5 +255,6 @@ export {
   MediaTitle,
   MediaWithProgress,
   Myself,
+  TheActivity,
   saveAnimeWithProgressResponse,
 }

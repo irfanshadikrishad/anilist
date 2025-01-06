@@ -29,8 +29,9 @@ import {
   userActivityQuery,
   userQuery,
 } from "./queries.js"
-import { MediaList, MediaTitle, Myself } from "./types.js"
+import { MediaList, MediaTitle, Myself, TheActivity } from "./types.js"
 import {
+  activityBy,
   aniListEndpoint,
   getTitle,
   redirectUri,
@@ -638,11 +639,7 @@ Statistics (Manga):
         const activities: {
           data?: {
             Page: {
-              activities: {
-                isLiked: boolean
-                id: number
-                user: { name: string }
-              }[]
+              activities: TheActivity[]
             }
           }
           errors?: { message: string }[]
@@ -662,16 +659,14 @@ Statistics (Manga):
                   await fetcher(likeActivityMutation, {
                     activityId: activ.id,
                   })
-                console.info(
-                  `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
-                )
+                console.info(`${activityBy(activ)} ${like?.data ? "✅" : "❌"}`)
               } catch (error) {
                 console.error(
                   `Activity possibly deleted. ${(error as Error).message}`
                 )
               }
             } else {
-              console.log(`[${activ?.id}]\t${activ.user.name} already-liked`)
+              console.log(`${activityBy(activ)} 🔵`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
@@ -715,11 +710,7 @@ Statistics (Manga):
         const activities: {
           data?: {
             Page: {
-              activities: {
-                isLiked: boolean
-                user: { name: string }
-                id: number
-              }[]
+              activities: TheActivity[]
             }
           }
           errors?: { message: string }[]
@@ -739,16 +730,14 @@ Statistics (Manga):
                     activityId: activ.id,
                   })
                 // const ToggleLike = like?.data?.ToggleLike
-                console.info(
-                  `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
-                )
+                console.info(`${activityBy(activ)} ${like?.data ? "✅" : "❌"}`)
               } catch (error) {
                 console.error(
                   `Activity possibly deleted. ${(error as Error).message}`
                 )
               }
             } else {
-              console.log(`[${activ?.id}]\t${activ.user.name} already-liked`)
+              console.log(`${activityBy(activ)} 🔵`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
@@ -794,11 +783,7 @@ Statistics (Manga):
             const activities: {
               data?: {
                 Page: {
-                  activities: {
-                    isLiked: boolean
-                    id: number
-                    user: { name: string }
-                  }[]
+                  activities: TheActivity[]
                 }
               }
               errors?: { message: string }[]
@@ -824,7 +809,7 @@ Statistics (Manga):
                     activityId: activ.id,
                   })
                   console.info(
-                    `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
+                    `${activityBy(activ)} ${like?.data ? "✅" : "❌"}`
                   )
                 } catch (error) {
                   console.error(
@@ -832,7 +817,7 @@ Statistics (Manga):
                   )
                 }
               } else {
-                console.log(`[${activ?.id}]\t${activ.user?.name} already-liked`)
+                console.log(`${activityBy(activ)} 🔵`)
               }
 
               // Avoiding rate limit

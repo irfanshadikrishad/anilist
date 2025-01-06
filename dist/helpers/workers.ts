@@ -8,7 +8,12 @@ import { homedir } from "os"
 import { join } from "path"
 import process from "process"
 import { Auth } from "./auth.js"
-import { MALAnimeStatus, MALMangaStatus, MediaWithProgress } from "./types.js"
+import {
+  MALAnimeStatus,
+  MALMangaStatus,
+  MediaWithProgress,
+  TheActivity,
+} from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = "https://anilist.co/api/v2/oauth/pin"
@@ -339,7 +344,13 @@ function timestampToTimeAgo(timestamp: number) {
   }
 }
 
+function activityBy(activity: TheActivity): string {
+  const name = activity?.messenger?.name || activity?.user?.name
+  return name ? `[${activity.id}]\t${name}` : `???`
+}
+
 export {
+  activityBy,
   aniListEndpoint,
   createAnimeListXML,
   createAnimeXML,

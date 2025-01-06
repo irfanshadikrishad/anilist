@@ -176,7 +176,7 @@ query ($page: Int, $perPage: Int, $userId: Int) {
     activities(userId: $userId, sort: ID_DESC) {
       ... on TextActivity { id type isLiked createdAt user { id name } }
       ... on ListActivity { id type isLiked status progress media { title { userPreferred } } createdAt user { id name } }
-      ... on MessageActivity { id type isLiked message createdAt recipient { id name } }
+      ... on MessageActivity { messenger { name } id type isLiked message createdAt recipient { id name } }
     }
   }
 }
