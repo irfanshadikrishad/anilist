@@ -29,8 +29,9 @@ import {
   userActivityQuery,
   userQuery,
 } from "./queries.js"
-import { MediaList, MediaTitle, Myself } from "./types.js"
+import { MediaList, MediaTitle, Myself, TheActivity } from "./types.js"
 import {
+  activityBy,
   aniListEndpoint,
   getTitle,
   redirectUri,
@@ -794,11 +795,7 @@ Statistics (Manga):
             const activities: {
               data?: {
                 Page: {
-                  activities: {
-                    isLiked: boolean
-                    id: number
-                    user: { name: string }
-                  }[]
+                  activities: TheActivity[]
                 }
               }
               errors?: { message: string }[]
@@ -824,7 +821,7 @@ Statistics (Manga):
                     activityId: activ.id,
                   })
                   console.info(
-                    `[${activ.id}]\t${activ.user?.name} ${like?.data ? "✅" : "❌"}`
+                    `${activityBy(activ)} ${like?.data ? "✅" : "❌"}`
                   )
                 } catch (error) {
                   console.error(
@@ -832,7 +829,7 @@ Statistics (Manga):
                   )
                 }
               } else {
-                console.log(`[${activ?.id}]\t${activ.user?.name} already-liked`)
+                console.log(`${activityBy(activ)} 🔵`)
               }
 
               // Avoiding rate limit
