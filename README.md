@@ -237,9 +237,4 @@ Since you are creating your own API client for login no else else can get your c
 
 Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
 
-#### Donation
-
-<img src='/assets/binance.jpg' alt='irfanshadikrishad_binance_pay' width='200px'><br>
-Support the project if you find it useful to you.
-
 #### **_Thanks for visiting 💙_**
