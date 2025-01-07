@@ -345,8 +345,19 @@ function timestampToTimeAgo(timestamp: number) {
 }
 
 function activityBy(activity: TheActivity): string {
-  const name = activity?.messenger?.name || activity?.user?.name
-  return name ? `[${activity.id}]\t${name}` : `???`
+  if (activity?.messenger?.name) {
+    return `[${activity.id}]\t${activity.messenger.name} messaged ${activity.recipient.name}`
+  } else if (activity?.media?.title?.userPreferred) {
+    if (activity.progress) {
+      return `[${activity.id}]\t${activity.status} ${activity.progress} of ${activity.media.title.userPreferred}`
+    } else {
+      return `[${activity.id}]\t${activity.status} ${activity.media.title.userPreferred}`
+    }
+  } else if (activity?.user?.name) {
+    return `[${activity.id}]\t${activity.user.name}`
+  } else {
+    return `[${activity?.id}] ???`
+  }
 }
 
 export {

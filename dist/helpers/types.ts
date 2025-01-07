@@ -235,7 +235,8 @@ interface TheActivity {
       userPreferred: string
     }
   }
-  progress: string | null
+  progress?: string | null
+  status?: string
 }
 
 export {
