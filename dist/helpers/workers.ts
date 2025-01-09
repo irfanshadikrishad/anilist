@@ -349,9 +349,9 @@ function activityBy(activity: TheActivity): string {
     return `[${activity.id}]\t${activity.messenger.name} messaged ${activity.recipient.name}`
   } else if (activity?.media?.title?.userPreferred) {
     if (activity.progress) {
-      return `[${activity.id}]\t${activity.status} ${activity.progress} of ${activity.media.title.userPreferred}`
+      return `[${activity.id}]\t${activity.user.name} ${activity.status} ${activity.progress} of ${activity.media.title.userPreferred}`
     } else {
-      return `[${activity.id}]\t${activity.status} ${activity.media.title.userPreferred}`
+      return `[${activity.id}]\t${activity.user.name} ${activity.status} ${activity.media.title.userPreferred}`
     }
   } else if (activity?.user?.name) {
     return `[${activity.id}]\t${activity.user.name}`
