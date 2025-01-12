@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 import { readFile, writeFile } from "fs/promises"
 import inquirer from "inquirer"
+import open from "open"
 import { join } from "path"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
