@@ -1,10 +1,11 @@
-name: Lint and Format
+name: Linter
 on:
   pull_request:
     branches:
       - master
+
 jobs:
-  lint-and-prettier:
+  eslint:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,8 +19,6 @@ jobs:
           node-version: "18"
       - name: Install dependencies
         run: npm install
-      - name: Run Prettier
-        run: npm run format
       - name: Run ESLint with fix
         run: npm run lint:fix
       - name: Commit and push changes back to PR
@@ -27,7 +26,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          git diff --quiet || git commit -m "chore: apply lint fixes and prettier formatting"
+          git diff --quiet || git commit -m "chore: apply linting fixes"
           git push origin HEAD:${{ github.head_ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
