@@ -183,7 +183,7 @@ class AniList {
           choices: [
             { name: "CSV", value: 1 },
             { name: "JSON", value: 2 },
-            { name: "XML (MyAnimeList)", value: 3 },
+            { name: "XML (MyAnimeList/AniDB)", value: 3 },
           ],
           pageSize: 10,
         },
