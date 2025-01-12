@@ -23,8 +23,16 @@ import {
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
 } from "./queries.js"
-import { MediaList, MediaTitle, Myself } from "./types.js"
+import {
+  MediaList,
+  MediaTitle,
+  Myself,
+  UserFollower,
+  UserFollowing,
+} from "./types.js"
 import {
   aniListEndpoint,
   getTitle,
@@ -150,6 +158,21 @@ class Auth {
             perPage: 10,
           })
           const activities = activiResponse?.data?.Page?.activities
+          // Get follower/following information
+          const req_followers: UserFollower = await fetcher(
+            userFollowersQuery,
+            {
+              userId: user?.id,
+            }
+          )
+          const req_following: UserFollowing = await fetcher(
+            userFollowingQuery,
+            {
+              userId: user?.id,
+            }
+          )
+          const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
+          const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
 
           console.log(`
 ID:                     ${user?.id}
@@ -163,6 +186,9 @@ donatorBadge:           ${user?.donatorBadge}
 unreadNotificationCount:${user?.unreadNotificationCount}
 Account Created:        ${new Date(user?.createdAt * 1000).toUTCString()}
 Account Updated:        ${new Date(user?.updatedAt * 1000).toUTCString()}
+
+Followers:              ${followersCount}
+Following:              ${followingCount}
       
 Statistics (Anime):
   Count:                ${user?.statistics?.anime?.count}

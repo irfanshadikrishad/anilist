@@ -150,6 +150,22 @@ const malIdToAnilistMangaId = `query ($malId: Int) {
 }
 `
 
+const userFollowingQuery = `query ($userId: Int!) {
+  Page {
+    pageInfo { total perPage currentPage lastPage hasNextPage }
+    following(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+  }
+}
+`
+
+const userFollowersQuery = `query ($userId: Int!) {
+  Page {
+    pageInfo { total perPage currentPage lastPage hasNextPage }
+    followers(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+  }
+}
+`
+
 export {
   activityAllQuery,
   activityAnimeListQuery,
@@ -171,5 +187,7 @@ export {
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
   userQuery,
 }

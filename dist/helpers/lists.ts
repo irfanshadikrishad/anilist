@@ -22,6 +22,8 @@ import {
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
   userQuery,
 } from "./queries.js"
 import {
@@ -34,6 +36,10 @@ import {
   MediaListEntry,
   MediaTitle,
   saveAnimeWithProgressResponse,
+  UserActivitiesResponse,
+  UserFollower,
+  UserFollowing,
+  UserResponse,
 } from "./types.js"
 import {
   createAnimeListXML,
@@ -755,36 +761,7 @@ class AniList {
   }
   static async getUserByUsername(username: string) {
     try {
-      const response: {
-        data?: {
-          User: {
-            id: number
-            name: string
-            siteUrl: string
-            donatorTier: string
-            donatorBadge: string
-            createdAt: number
-            updatedAt: number
-            isBlocked: boolean
-            isFollower: boolean
-            isFollowing: boolean
-            options: { profileColor: string; timezone: string }
-            statistics: {
-              anime: {
-                count: number
-                episodesWatched: number
-                minutesWatched: number
-              }
-              manga: {
-                count: number
-                chaptersRead: number
-                volumesRead: number
-              }
-            }
-          }
-        }
-        errors?: { message: string }[]
-      } = await fetcher(userQuery, { username })
+      const response: UserResponse = await fetcher(userQuery, { username })
 
       if (!response?.data?.User) {
         return console.error(
@@ -793,24 +770,24 @@ class AniList {
       }
 
       const user = response.data.User
-      const userActivityResponse: {
-        data?: {
-          Page: {
-            activities: {
-              status: string
-              progress: number
-              createdAt: number
-              media: { title: MediaTitle }
-            }[]
-          }
+      const userActivityResponse: UserActivitiesResponse = await fetcher(
+        userActivityQuery,
+        {
+          id: user.id,
+          page: 1,
+          perPage: 10,
         }
-        errors?: { message: string }[]
-      } = await fetcher(userActivityQuery, {
-        id: user.id,
-        page: 1,
-        perPage: 10,
-      })
+      )
       const activities = userActivityResponse?.data?.Page?.activities ?? []
+      // Get follower/following information
+      const req_followers: UserFollower = await fetcher(userFollowersQuery, {
+        userId: user?.id,
+      })
+      const req_following: UserFollowing = await fetcher(userFollowingQuery, {
+        userId: user?.id,
+      })
+      const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
+      const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
 
       console.log(`\nID:\t\t${user.id}`)
       console.log(`Name:\t\t${user.name}`)
@@ -827,12 +804,16 @@ class AniList {
       console.log(`Follower:\t${user.isFollower}`)
       console.log(`Following:\t${user.isFollowing}`)
       console.log(`Profile Color:\t${user.options?.profileColor}`)
-      console.log(`Timezone:\t${user.options?.timezone}`)
       console.log(
-        `\nStatistics (Anime)\nCount: ${user.statistics?.anime?.count || 0} Episodes Watched: ${user.statistics?.anime?.episodesWatched || 0} Minutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
+        `Timezone:\t${user.options?.timezone ? user.options?.timezone : "N/A"}`
+      )
+      console.log(`\nFollowers:\t${followersCount}`)
+      console.log(`Following:\t${followingCount}`)
+      console.log(
+        `\nStatistics (Anime)\n\tCount: ${user.statistics?.anime?.count || 0}\tEpisodes Watched: ${user.statistics?.anime?.episodesWatched || 0}\tMinutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
       )
       console.log(
-        `Statistics (Manga)\nCount: ${user.statistics?.manga?.count || 0} Chapters Read: ${user.statistics?.manga?.chaptersRead || 0} Volumes Read: ${user.statistics?.manga?.volumesRead || 0}`
+        `Statistics (Manga)\n\tCount: ${user.statistics?.manga?.count || 0}\tChapters Read: ${user.statistics?.manga?.chaptersRead || 0}\tVolumes Read: ${user.statistics?.manga?.volumesRead || 0}`
       )
 
       if (activities.length > 0) {
