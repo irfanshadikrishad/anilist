@@ -5,7 +5,7 @@ import open from "open"
 import os from "os"
 import path from "path"
 import { fetcher } from "./fetcher.js"
-import { AniList, MyAnimeList } from "./lists.js"
+import { AniDB, AniList, MyAnimeList } from "./lists.js"
 import {
   deleteActivityMutation,
   saveTextActivityMutation,
@@ -600,6 +600,7 @@ Statistics (Manga):
           choices: [
             { name: "Exported JSON file.", value: 1 },
             { name: "MyAnimeList (XML)", value: 2 },
+            { name: "AniDB (json-large)", value: 3 },
           ],
           pageSize: 10,
         },
@@ -610,6 +611,9 @@ Statistics (Manga):
           break
         case 2:
           await MyAnimeList.importAnime()
+          break
+        case 3:
+          await AniDB.importAnime()
           break
         default:
           console.log(`\nInvalid Choice.`)

@@ -173,9 +173,9 @@ interface Myself {
   errors?: { message: string }[]
 }
 interface DateMonthYear {
-  day?: string
-  month?: string
-  year?: string
+  day?: number
+  month?: number
+  year?: number
 }
 interface AnimeDetails {
   data?: {
@@ -300,10 +300,27 @@ type UserFollowing = {
   errors?: { message: string }[]
 }
 
+type AnimeSearchResponse = {
+  data?: {
+    Page: {
+      media: {
+        id: number
+        title: MediaTitle
+        startDate: DateMonthYear
+        episodes: number
+        status: string
+        description: string
+      }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
 export {
   AniListMediaStatus,
   AnimeDetails,
   AnimeList,
+  AnimeSearchResponse,
   DateMonthYear,
   DeleteMangaResponse,
   List,
