@@ -1268,9 +1268,17 @@ class AniDB {
             const romanjiName = anime.romanjiName
             const englishName = anime.englishName
 
-            const anidbStatusMap = {
-              complete: AniListMediaStatus.COMPLETED,
-              incomplete: AniListMediaStatus.PLANNING,
+            function getStatus(anidbStatus: string, episodesSeen: string) {
+              if (anidbStatus === "complete") {
+                return AniListMediaStatus.COMPLETED
+              } else if (
+                anidbStatus === "incomplete" &&
+                Number(episodesSeen) > 0
+              ) {
+                return AniListMediaStatus.CURRENT
+              } else {
+                return AniListMediaStatus.PLANNING
+              }
             }
 
             let anilistId = await anidbToanilistMapper(
@@ -1286,8 +1294,8 @@ class AniDB {
                   errors?: { message: string }[]
                 } = await fetcher(saveAnimeWithProgressMutation, {
                   mediaId: anilistId,
-                  progress: ownEpisodes,
-                  status: anidbStatusMap[status],
+                  progress: ownEpisodes - 2,
+                  status: getStatus(status, ownEpisodes),
                   hiddenFromStatusLists: false,
                   private: false,
                 })
@@ -1296,7 +1304,7 @@ class AniDB {
                 if (entryId) {
                   count++
                   console.log(
-                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t${englishName}`
+                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}→${getStatus(status, ownEpisodes)}`
                   )
                 }
 
