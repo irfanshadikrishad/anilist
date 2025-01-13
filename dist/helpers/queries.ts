@@ -77,7 +77,7 @@ const userActivityQuery = `query ($id: Int, $page: Int, $perPage: Int) {
 
 const animeSearchQuery = `query ($search: String, $perPage: Int) {
   Page(perPage: $perPage) {
-    media(search: $search, type: ANIME) { id title { romaji english native userPreferred } episodes status description }
+    media(search: $search, type: ANIME) { id title { romaji english native userPreferred } startDate { day month year } episodes status description }
   }
 }`
 

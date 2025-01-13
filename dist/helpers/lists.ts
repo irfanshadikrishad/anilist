@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 import { readFile, writeFile } from "fs/promises"
 import inquirer from "inquirer"
+import { jsonrepair } from "jsonrepair"
 import open from "open"
 import { join } from "path"
 import { Auth } from "./auth.js"
@@ -43,6 +44,7 @@ import {
   UserResponse,
 } from "./types.js"
 import {
+  anidbToanilistMapper,
   createAnimeListXML,
   createMangaListXML,
   formatDateObject,
@@ -1235,4 +1237,105 @@ class MyAnimeList {
   }
 }
 
-export { AniList, MyAnimeList }
+class AniDB {
+  static async importAnime() {
+    try {
+      const filename: string = await selectFile(".json")
+      const filePath: string = join(getDownloadFolderPath(), filename)
+      const fileContent: string = await readFile(filePath, "utf8")
+      const js0n_repaired = jsonrepair(fileContent)
+
+      if (fileContent) {
+        const obj3ct = await JSON.parse(js0n_repaired)
+        const animeList = obj3ct?.anime
+
+        if (animeList?.length > 0) {
+          let count = 0
+          let iteration = 0
+          let missed: {
+            anidbId: number
+            englishTitle?: string
+            romajiTitle?: string
+          }[] = []
+          for (const anime of animeList) {
+            iteration++
+            const anidbId: number = anime.id
+            const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
+            const status: string = anime.status
+            const type = anime.type
+            const totalEpisodes = anime.totalEpisodes
+            const ownEpisodes = anime.ownEpisodes
+            const romanjiName = anime.romanjiName
+            const englishName = anime.englishName
+
+            const anidbStatusMap = {
+              complete: AniListMediaStatus.COMPLETED,
+              incomplete: AniListMediaStatus.PLANNING,
+            }
+
+            let anilistId = await anidbToanilistMapper(
+              romanjiName,
+              Number(released.split(".")[2]),
+              englishName
+            )
+
+            if (anilistId) {
+              try {
+                const saveResponse: {
+                  data?: { SaveMediaListEntry: { id: number; status: string } }
+                  errors?: { message: string }[]
+                } = await fetcher(saveAnimeWithProgressMutation, {
+                  mediaId: anilistId,
+                  progress: ownEpisodes,
+                  status: anidbStatusMap[status],
+                  hiddenFromStatusLists: false,
+                  private: false,
+                })
+
+                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+                if (entryId) {
+                  count++
+                  console.log(
+                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t${englishName}`
+                  )
+                }
+
+                // Rate limit each API call to avoid server overload
+                // await new Promise((resolve) => setTimeout(resolve, 1100))
+              } catch (error) {
+                console.error(
+                  `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`
+                )
+              }
+            } else {
+              missed.push({
+                anidbId: anidbId,
+                englishTitle: englishName,
+                romajiTitle: romanjiName,
+              })
+            }
+          }
+          console.log(
+            `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
+          )
+          if (missed.length > 0) {
+            console.log(
+              `Exporting missed entries to JSON file, Please add them manually.`
+            )
+            await saveJSONasJSON(missed, "anidb-missed")
+          }
+        } else {
+          console.log(`\nNo anime list found in the file.`)
+        }
+      } else {
+        console.log(`\nNo content found in the file or unable to read.`)
+      }
+    } catch (error) {
+      console.error(
+        `\nError in AniDB import process: ${(error as Error).message}`
+      )
+    }
+  }
+}
+
+export { AniDB, AniList, MyAnimeList }
