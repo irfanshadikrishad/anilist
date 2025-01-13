@@ -44,24 +44,24 @@ anilist login -i <client-id> -s <client-secret>
 
 #### CLI Commands Overview
 
-| **Command**                                 | **Options**                                                             | **Description**                                                    |
-| ------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| **`login`**                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials                               |
-| **`logout`**                                | _None_                                                                  | Log out from your AniList account                                  |
-| **`whoami`**                                | _None_                                                                  | Display information about the logged-in user                       |
-| **`-V, --version`**                         | _None_                                                                  | Display the current version of the CLI                             |
-| **`-h, --help`**                            | _None_                                                                  | Display available commands and options                             |
-| **`trending`** <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)                         |
-| **`popular`** <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)                          |
-| **`user`**                                  | `<username>`                                                            | Get information about a specific AniList user                      |
-| **`lists`** <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user                   |
-| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                   |
-| **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                         |
-| **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                      |
-| **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                     |
-| **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                             |
-| **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList)       |
-| **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON or MyAnimeList (XML) |
+| **Command**                                 | **Options**                                                             | **Description**                                                                        |
+| ------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **`login`**                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials                                                   |
+| **`logout`**                                | _None_                                                                  | Log out from your AniList account                                                      |
+| **`whoami`**                                | _None_                                                                  | Display information about the logged-in user                                           |
+| **`-V, --version`**                         | _None_                                                                  | Display the current version of the CLI                                                 |
+| **`-h, --help`**                            | _None_                                                                  | Display available commands and options                                                 |
+| **`trending`** <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)                                             |
+| **`popular`** <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)                                              |
+| **`user`**                                  | `<username>`                                                            | Get information about a specific AniList user                                          |
+| **`lists`** <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user                                       |
+| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                                       |
+| **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                                             |
+| **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                          |
+| **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                         |
+| **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                 |
+| **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                     |
+| **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON, MyAnimeList (XML) or AniDB (json-large) |
 
 #### Command Breakdown:
 
@@ -224,7 +224,10 @@ anilist import -m
 - **Options**:
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
-- **Description**: Import anime or manga list. If you want to import anime/manga list from MyAnimeList, export the XML from [here](https://myanimelist.net/panel.php?go=export).
+- **Description**: Import anime or manga list. If you want to import anime/manga list from `MyAnimeList`, export the XML from [here](https://myanimelist.net/panel.php?go=export), for exporting list from `AniDB` go [here](https://anidb.net/user/export).
+
+> [!NOTE]
+> If you have exported from `AniDB`, you will have to unzip it, and there should be a file named `mylist.json`, copy and paste it in your systems download folder, and select it from import option.
 
 > [!IMPORTANT]
 > If you are importing from a file, place the file in the system specific download folder, And the exported file will also be exported there as well.
