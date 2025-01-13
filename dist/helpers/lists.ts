@@ -1262,7 +1262,7 @@ class AniDB {
             const anidbId: number = anime.id
             const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
             const status: string = anime.status
-            const type = anime.type
+            // const type = anime.type
             const totalEpisodes = anime.totalEpisodes
             const ownEpisodes = anime.ownEpisodes
             const romanjiName = anime.romanjiName
