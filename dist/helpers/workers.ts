@@ -8,7 +8,10 @@ import { homedir } from "os"
 import { join } from "path"
 import process from "process"
 import { Auth } from "./auth.js"
+import { fetcher } from "./fetcher.js"
+import { animeSearchQuery } from "./queries.js"
 import {
+  AnimeSearchResponse,
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
@@ -23,7 +26,7 @@ function getTitle(title: { english?: string; romaji?: string }) {
 }
 
 function formatDateObject(
-  dateObj: { day?: string; month?: string; year?: string } | null
+  dateObj: { day?: number; month?: number; year?: number } | null
 ) {
   if (!dateObj) return "null"
   return (
@@ -360,8 +363,46 @@ function activityBy(activity: TheActivity): string {
   }
 }
 
+const anidbToanilistMapper = async (
+  romanjiName: string,
+  year: number,
+  englishName?: string
+): Promise<number | null> => {
+  const fetchAnime = async (search: string) => {
+    try {
+      const response: AnimeSearchResponse = await fetcher(animeSearchQuery, {
+        search,
+        perPage: 50,
+      })
+
+      return response.data?.Page.media || []
+    } catch (error) {
+      console.error("Error fetching AniList data:", error)
+      return []
+    }
+  }
+
+  // Search using romanjiName first
+  let results = await fetchAnime(romanjiName)
+
+  // If no results, fallback to englishName
+  if (!results.length && englishName) {
+    results = await fetchAnime(englishName)
+  }
+
+  // Match using year
+  for (const anime of results) {
+    if (anime.startDate.year === year) {
+      return anime.id
+    }
+  }
+
+  return null
+}
+
 export {
   activityBy,
+  anidbToanilistMapper,
   aniListEndpoint,
   createAnimeListXML,
   createAnimeXML,

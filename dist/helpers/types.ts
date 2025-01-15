@@ -173,9 +173,9 @@ interface Myself {
   errors?: { message: string }[]
 }
 interface DateMonthYear {
-  day?: string
-  month?: string
-  year?: string
+  day?: number
+  month?: number
+  year?: number
 }
 interface AnimeDetails {
   data?: {
@@ -239,10 +239,114 @@ interface TheActivity {
   status?: string
 }
 
+type UserActivitiesResponse = {
+  data?: {
+    Page: {
+      activities: {
+        status: string
+        progress: number
+        createdAt: number
+        media: { title: MediaTitle }
+      }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type UserResponse = {
+  data?: {
+    User: {
+      id: number
+      name: string
+      siteUrl: string
+      donatorTier: string
+      donatorBadge: string
+      createdAt: number
+      updatedAt: number
+      isBlocked: boolean
+      isFollower: boolean
+      isFollowing: boolean
+      options: { profileColor: string; timezone: string }
+      statistics: {
+        anime: {
+          count: number
+          episodesWatched: number
+          minutesWatched: number
+        }
+        manga: {
+          count: number
+          chaptersRead: number
+          volumesRead: number
+        }
+      }
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type UserFollower = {
+  data?: {
+    Page: {
+      pageInfo: {
+        total: number
+        perPage: number
+        currentPage: number
+        lastPage: number
+        hasNextPage: boolean
+      }
+      followers: {
+        id: number
+        name: string
+        avatar: { large: string; medium: string }
+        bannerImage: string
+      }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type UserFollowing = {
+  data?: {
+    Page: {
+      pageInfo: {
+        total: number
+        perPage: number
+        currentPage: number
+        lastPage: number
+        hasNextPage: boolean
+      }
+      following: {
+        id: number
+        name: string
+        avatar: { large: string; medium: string }
+        bannerImage: string
+      }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type AnimeSearchResponse = {
+  data?: {
+    Page: {
+      media: {
+        id: number
+        title: MediaTitle
+        startDate: DateMonthYear
+        episodes: number
+        status: string
+        description: string
+      }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
 export {
   AniListMediaStatus,
   AnimeDetails,
   AnimeList,
+  AnimeSearchResponse,
   DateMonthYear,
   DeleteMangaResponse,
   List,
@@ -257,5 +361,9 @@ export {
   MediaWithProgress,
   Myself,
   TheActivity,
+  UserActivitiesResponse,
+  UserFollower,
+  UserFollowing,
+  UserResponse,
   saveAnimeWithProgressResponse,
 }

@@ -77,7 +77,7 @@ const userActivityQuery = `query ($id: Int, $page: Int, $perPage: Int) {
 
 const animeSearchQuery = `query ($search: String, $perPage: Int) {
   Page(perPage: $perPage) {
-    media(search: $search, type: ANIME) { id title { romaji english native userPreferred } episodes status description }
+    media(search: $search, type: ANIME) { id title { romaji english native userPreferred } startDate { day month year } episodes status description }
   }
 }`
 
@@ -182,6 +182,22 @@ query ($page: Int, $perPage: Int, $userId: Int) {
 }
 `
 
+const userFollowingQuery = `query ($userId: Int!) {
+  Page {
+    pageInfo { total perPage currentPage lastPage hasNextPage }
+    following(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+  }
+}
+`
+
+const userFollowersQuery = `query ($userId: Int!) {
+  Page {
+    pageInfo { total perPage currentPage lastPage hasNextPage }
+    followers(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+  }
+}
+`
+
 export {
   activityAllQuery,
   activityAnimeListQuery,
@@ -206,5 +222,7 @@ export {
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
   userQuery,
 }

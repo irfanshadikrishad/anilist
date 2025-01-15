@@ -5,7 +5,7 @@ import open from "open"
 import os from "os"
 import path from "path"
 import { fetcher } from "./fetcher.js"
-import { AniList, MyAnimeList } from "./lists.js"
+import { AniDB, AniList, MyAnimeList } from "./lists.js"
 import {
   deleteActivityMutation,
   likeActivityMutation,
@@ -27,9 +27,18 @@ import {
   globalActivitiesQuery,
   specificUserActivitiesQuery,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
   userQuery,
 } from "./queries.js"
-import { MediaList, MediaTitle, Myself, TheActivity } from "./types.js"
+import {
+  MediaList,
+  MediaTitle,
+  Myself,
+  TheActivity,
+  UserFollower,
+  UserFollowing,
+} from "./types.js"
 import {
   activityBy,
   aniListEndpoint,
@@ -156,6 +165,21 @@ class Auth {
             perPage: 10,
           })
           const activities = activiResponse?.data?.Page?.activities
+          // Get follower/following information
+          const req_followers: UserFollower = await fetcher(
+            userFollowersQuery,
+            {
+              userId: user?.id,
+            }
+          )
+          const req_following: UserFollowing = await fetcher(
+            userFollowingQuery,
+            {
+              userId: user?.id,
+            }
+          )
+          const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
+          const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
 
           console.log(`
 ID:                     ${user?.id}
@@ -169,6 +193,9 @@ donatorBadge:           ${user?.donatorBadge}
 unreadNotificationCount:${user?.unreadNotificationCount}
 Account Created:        ${new Date(user?.createdAt * 1000).toUTCString()}
 Account Updated:        ${new Date(user?.updatedAt * 1000).toUTCString()}
+
+Followers:              ${followersCount}
+Following:              ${followingCount}
       
 Statistics (Anime):
   Count:                ${user?.statistics?.anime?.count}
@@ -580,6 +607,7 @@ Statistics (Manga):
           choices: [
             { name: "Exported JSON file.", value: 1 },
             { name: "MyAnimeList (XML)", value: 2 },
+            { name: "AniDB (json-large)", value: 3 },
           ],
           pageSize: 10,
         },
@@ -590,6 +618,9 @@ Statistics (Manga):
           break
         case 2:
           await MyAnimeList.importAnime()
+          break
+        case 3:
+          await AniDB.importAnime()
           break
         default:
           console.log(`\nInvalid Choice.`)

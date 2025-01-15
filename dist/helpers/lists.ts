@@ -1,6 +1,8 @@
 import { XMLParser } from "fast-xml-parser"
 import { readFile, writeFile } from "fs/promises"
 import inquirer from "inquirer"
+import { jsonrepair } from "jsonrepair"
+import open from "open"
 import { join } from "path"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
@@ -22,6 +24,8 @@ import {
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
+  userFollowersQuery,
+  userFollowingQuery,
   userQuery,
 } from "./queries.js"
 import {
@@ -34,8 +38,13 @@ import {
   MediaListEntry,
   MediaTitle,
   saveAnimeWithProgressResponse,
+  UserActivitiesResponse,
+  UserFollower,
+  UserFollowing,
+  UserResponse,
 } from "./types.js"
 import {
+  anidbToanilistMapper,
   createAnimeListXML,
   createMangaListXML,
   formatDateObject,
@@ -176,7 +185,7 @@ class AniList {
           choices: [
             { name: "CSV", value: 1 },
             { name: "JSON", value: 2 },
-            { name: "XML (MyAnimeList)", value: 3 },
+            { name: "XML (MyAnimeList/AniDB)", value: 3 },
           ],
           pageSize: 10,
         },
@@ -755,36 +764,7 @@ class AniList {
   }
   static async getUserByUsername(username: string) {
     try {
-      const response: {
-        data?: {
-          User: {
-            id: number
-            name: string
-            siteUrl: string
-            donatorTier: string
-            donatorBadge: string
-            createdAt: number
-            updatedAt: number
-            isBlocked: boolean
-            isFollower: boolean
-            isFollowing: boolean
-            options: { profileColor: string; timezone: string }
-            statistics: {
-              anime: {
-                count: number
-                episodesWatched: number
-                minutesWatched: number
-              }
-              manga: {
-                count: number
-                chaptersRead: number
-                volumesRead: number
-              }
-            }
-          }
-        }
-        errors?: { message: string }[]
-      } = await fetcher(userQuery, { username })
+      const response: UserResponse = await fetcher(userQuery, { username })
 
       if (!response?.data?.User) {
         return console.error(
@@ -793,24 +773,24 @@ class AniList {
       }
 
       const user = response.data.User
-      const userActivityResponse: {
-        data?: {
-          Page: {
-            activities: {
-              status: string
-              progress: number
-              createdAt: number
-              media: { title: MediaTitle }
-            }[]
-          }
+      const userActivityResponse: UserActivitiesResponse = await fetcher(
+        userActivityQuery,
+        {
+          id: user.id,
+          page: 1,
+          perPage: 10,
         }
-        errors?: { message: string }[]
-      } = await fetcher(userActivityQuery, {
-        id: user.id,
-        page: 1,
-        perPage: 10,
-      })
+      )
       const activities = userActivityResponse?.data?.Page?.activities ?? []
+      // Get follower/following information
+      const req_followers: UserFollower = await fetcher(userFollowersQuery, {
+        userId: user?.id,
+      })
+      const req_following: UserFollowing = await fetcher(userFollowingQuery, {
+        userId: user?.id,
+      })
+      const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
+      const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
 
       console.log(`\nID:\t\t${user.id}`)
       console.log(`Name:\t\t${user.name}`)
@@ -827,12 +807,16 @@ class AniList {
       console.log(`Follower:\t${user.isFollower}`)
       console.log(`Following:\t${user.isFollowing}`)
       console.log(`Profile Color:\t${user.options?.profileColor}`)
-      console.log(`Timezone:\t${user.options?.timezone}`)
       console.log(
-        `\nStatistics (Anime)\nCount: ${user.statistics?.anime?.count || 0} Episodes Watched: ${user.statistics?.anime?.episodesWatched || 0} Minutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
+        `Timezone:\t${user.options?.timezone ? user.options?.timezone : "N/A"}`
+      )
+      console.log(`\nFollowers:\t${followersCount}`)
+      console.log(`Following:\t${followingCount}`)
+      console.log(
+        `\nStatistics (Anime)\n\tCount: ${user.statistics?.anime?.count || 0}\tEpisodes Watched: ${user.statistics?.anime?.episodesWatched || 0}\tMinutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
       )
       console.log(
-        `Statistics (Manga)\nCount: ${user.statistics?.manga?.count || 0} Chapters Read: ${user.statistics?.manga?.chaptersRead || 0} Volumes Read: ${user.statistics?.manga?.volumesRead || 0}`
+        `Statistics (Manga)\n\tCount: ${user.statistics?.manga?.count || 0}\tChapters Read: ${user.statistics?.manga?.chaptersRead || 0}\tVolumes Read: ${user.statistics?.manga?.volumesRead || 0}`
       )
 
       if (activities.length > 0) {
@@ -1253,4 +1237,113 @@ class MyAnimeList {
   }
 }
 
-export { AniList, MyAnimeList }
+class AniDB {
+  static async importAnime() {
+    try {
+      const filename: string = await selectFile(".json")
+      const filePath: string = join(getDownloadFolderPath(), filename)
+      const fileContent: string = await readFile(filePath, "utf8")
+      const js0n_repaired = jsonrepair(fileContent)
+
+      if (fileContent) {
+        const obj3ct = await JSON.parse(js0n_repaired)
+        const animeList = obj3ct?.anime
+
+        if (animeList?.length > 0) {
+          let count = 0
+          let iteration = 0
+          let missed: {
+            anidbId: number
+            englishTitle?: string
+            romajiTitle?: string
+          }[] = []
+          for (const anime of animeList) {
+            iteration++
+            const anidbId: number = anime.id
+            const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
+            const status: string = anime.status
+            // const type = anime.type
+            const totalEpisodes = anime.totalEpisodes
+            const ownEpisodes = anime.ownEpisodes
+            const romanjiName = anime.romanjiName
+            const englishName = anime.englishName
+
+            function getStatus(anidbStatus: string, episodesSeen: string) {
+              if (anidbStatus === "complete") {
+                return AniListMediaStatus.COMPLETED
+              } else if (
+                anidbStatus === "incomplete" &&
+                Number(episodesSeen) > 0
+              ) {
+                return AniListMediaStatus.CURRENT
+              } else {
+                return AniListMediaStatus.PLANNING
+              }
+            }
+
+            let anilistId = await anidbToanilistMapper(
+              romanjiName,
+              Number(released.split(".")[2]),
+              englishName
+            )
+
+            if (anilistId) {
+              try {
+                const saveResponse: {
+                  data?: { SaveMediaListEntry: { id: number; status: string } }
+                  errors?: { message: string }[]
+                } = await fetcher(saveAnimeWithProgressMutation, {
+                  mediaId: anilistId,
+                  progress: ownEpisodes - 2,
+                  status: getStatus(status, ownEpisodes),
+                  hiddenFromStatusLists: false,
+                  private: false,
+                })
+
+                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+                if (entryId) {
+                  count++
+                  console.log(
+                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}→${getStatus(status, ownEpisodes)}`
+                  )
+                }
+
+                // Rate limit each API call to avoid server overload
+                // await new Promise((resolve) => setTimeout(resolve, 1100))
+              } catch (error) {
+                console.error(
+                  `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`
+                )
+              }
+            } else {
+              missed.push({
+                anidbId: anidbId,
+                englishTitle: englishName,
+                romajiTitle: romanjiName,
+              })
+            }
+          }
+          console.log(
+            `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
+          )
+          if (missed.length > 0) {
+            console.log(
+              `Exporting missed entries to JSON file, Please add them manually.`
+            )
+            await saveJSONasJSON(missed, "anidb-missed")
+          }
+        } else {
+          console.log(`\nNo anime list found in the file.`)
+        }
+      } else {
+        console.log(`\nNo content found in the file or unable to read.`)
+      }
+    } catch (error) {
+      console.error(
+        `\nError in AniDB import process: ${(error as Error).message}`
+      )
+    }
+  }
+}
+
+export { AniDB, AniList, MyAnimeList }
