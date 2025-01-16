@@ -344,13 +344,46 @@ type AnimeSearchResponse = {
   errors?: { message: string }[]
 }
 
+type LikeActivityResponse = {
+  data?: { ToggleLike: { id: number } }
+  errors?: { message: string }[]
+}
+
+type SpecificUserActivitiesResponse = {
+  data?: {
+    Page: {
+      pageInfo: {
+        total: number
+        perPage: number
+        currentPage: number
+        lastPage: number
+        hasNextPage: boolean
+      }
+      activities: TheActivity[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type SaveTextActivityResponse = {
+  data?: { SaveTextActivity: { id: number } }
+  errors?: { message: string }[]
+}
+
+type DeleteActivityResponse = {
+  data?: { DeleteMediaListEntry: { deleted: boolean } }
+  errors?: { message: string }[]
+}
+
 export {
   AniListMediaStatus,
   AnimeDetails,
   AnimeList,
   AnimeSearchResponse,
   DateMonthYear,
+  DeleteActivityResponse,
   DeleteMangaResponse,
+  LikeActivityResponse,
   List,
   MALAnimeStatus,
   MALAnimeXML,
@@ -362,6 +395,8 @@ export {
   MediaTitle,
   MediaWithProgress,
   Myself,
+  SaveTextActivityResponse,
+  SpecificUserActivitiesResponse,
   TheActivity,
   User,
   UserActivitiesResponse,

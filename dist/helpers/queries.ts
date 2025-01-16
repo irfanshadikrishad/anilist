@@ -173,6 +173,7 @@ query ($page: Int, $perPage: Int) {
 const specificUserActivitiesQuery = `
 query ($page: Int, $perPage: Int, $userId: Int) {
   Page(page: $page, perPage: $perPage) {
+    pageInfo { total perPage currentPage lastPage hasNextPage }
     activities(userId: $userId, sort: ID_DESC) {
       ... on TextActivity { id type isLiked createdAt user { id name } }
       ... on ListActivity { id type isLiked status progress media { title { userPreferred } } createdAt user { id name } }
