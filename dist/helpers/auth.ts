@@ -687,7 +687,7 @@ class Automate {
         if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
           hasNextPage = false
         }
-        allFollowingUsers.push(...followingUsers?.data?.Page?.following)
+        allFollowingUsers.push(...(followingUsers?.data?.Page?.following || []))
         pager++
       }
       // Filter users that do no follow me
