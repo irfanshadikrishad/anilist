@@ -36,6 +36,7 @@ import {
   MediaTitle,
   Myself,
   TheActivity,
+  User,
   UserFollower,
   UserFollowing,
 } from "./types.js"
@@ -866,6 +867,115 @@ Statistics (Manga):
       console.error(
         `\nError from LikeSpecificUser. ${(error as Error).message}`
       )
+    }
+  }
+
+  static async LikeFollowingActivityV2(perPage: number) {
+    try {
+      let hasNextPage = true
+      let page = 1
+      let allFollowingUsers: User[] = []
+
+      if (!(await Auth.isLoggedIn())) {
+        console.error(`\nPlease login to use this feature.`)
+        return
+      }
+      // Fetch all following users
+      while (hasNextPage) {
+        const followingUsers: UserFollowing = await fetcher(
+          userFollowingQuery,
+          {
+            userId: await Auth.MyUserId(),
+            page: page,
+          }
+        )
+        console.log(followingUsers)
+
+        allFollowingUsers.push(...followingUsers?.data?.Page?.following)
+
+        if (followingUsers.data?.Page?.pageInfo.hasNextPage) {
+          page++
+        } else {
+          hasNextPage = false
+        }
+
+        if (!followingUsers) {
+          console.error(`\nFailed to fetch following users.`)
+          hasNextPage = false
+          return
+        }
+      }
+      // Extract the IDs of all following users
+      const followingUserIds: number[] = allFollowingUsers.map(
+        (user) => user.id
+      )
+      // Calculations
+      console.log(
+        `\nTotal Following: ${followingUserIds.length}\nApproximately ${followingUserIds.length * 25} activities to like.\nWill take around ${Number((followingUserIds.length * 25) / 60).toFixed(2)} minutes.\n`
+      )
+      // Traverse the array and fetch users activities one by one and like them
+      let userNumber = 0
+      for (const userId of followingUserIds) {
+        userNumber++
+        console.log(`[${userNumber}]\t[User ID: ${userId}]`)
+        let page = 1
+        let hasNextPage = true
+        while (hasNextPage) {
+          const activities: {
+            data?: {
+              Page: {
+                activities: TheActivity[]
+              }
+            }
+            errors?: { message: string }[]
+          } = await fetcher(specificUserActivitiesQuery, {
+            page,
+            perPage: perPage,
+            userId,
+          })
+
+          if (activities && activities?.data?.Page?.activities.length > 0) {
+            const activiti = activities?.data?.Page?.activities
+            let activityCount = 0
+            for (let activ of activiti) {
+              activityCount++
+              if (!activ.isLiked && activ.id) {
+                try {
+                  const like: {
+                    data?: { ToggleLike: { id: number } }
+                  } = await fetcher(likeActivityMutation, {
+                    activityId: activ.id,
+                  })
+                  console.info(
+                    `[${userNumber}/${activityCount}/${activiti.length}] ${activityBy(activ)} ${like?.data ? "✅" : "❌"}`
+                  )
+                } catch (error) {
+                  console.error(
+                    `[${userNumber}/${activityCount}/${activiti.length}] Activity possibly deleted. ${(error as Error).message}`
+                  )
+                }
+              } else {
+                console.log(
+                  `[${userNumber}/${activityCount}/${activiti.length}] ${activityBy(activ)} 🔵`
+                )
+              }
+              // avoiding rate-limit
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1200)
+              })
+            }
+
+            page++
+          } else {
+            // No more activities to like
+            // console.log(`\nProbably the end of activities.`)
+            // console.info(activities)
+            hasNextPage = false
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`\nError from LikeFollowingV2. ${(error as Error).message}`)
     }
   }
 

@@ -305,6 +305,13 @@ type UserFollower = {
   errors?: { message: string }[]
 }
 
+type User = {
+  id: number
+  name: string
+  avatar: { large: string; medium: string }
+  bannerImage: string
+}
+
 type UserFollowing = {
   data?: {
     Page: {
@@ -315,12 +322,7 @@ type UserFollowing = {
         lastPage: number
         hasNextPage: boolean
       }
-      following: {
-        id: number
-        name: string
-        avatar: { large: string; medium: string }
-        bannerImage: string
-      }[]
+      following: User[]
     }
   }
   errors?: { message: string }[]
@@ -361,6 +363,7 @@ export {
   MediaWithProgress,
   Myself,
   TheActivity,
+  User,
   UserActivitiesResponse,
   UserFollower,
   UserFollowing,

@@ -182,8 +182,8 @@ query ($page: Int, $perPage: Int, $userId: Int) {
 }
 `
 
-const userFollowingQuery = `query ($userId: Int!) {
-  Page {
+const userFollowingQuery = `query ($userId: Int!, $page:Int) {
+  Page (page: $page) {
     pageInfo { total perPage currentPage lastPage hasNextPage }
     following(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
   }

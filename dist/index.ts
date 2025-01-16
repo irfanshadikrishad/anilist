@@ -193,9 +193,15 @@ cli
 cli
   .command("autolike")
   .alias("al")
+  .option("-2, --v2", "Like the activities", false)
+  .option("-c, --count <number>", "Number of activities to like", "25")
   .description("Autolike following or global activities.")
-  .action(async () => {
-    await Auth.AutoLike()
+  .action(async ({ v2, count }) => {
+    if (v2) {
+      await Auth.LikeFollowingActivityV2(count)
+    } else {
+      await Auth.AutoLike()
+    }
   })
 
 cli.parse(process.argv)
