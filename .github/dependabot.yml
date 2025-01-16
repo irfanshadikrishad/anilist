@@ -11,8 +11,4 @@ updates:
       - "javascript"
     allow:
       - dependency-type: "direct"
-    ignore:
-      - dependency-name: "*"
-        update-types:
-          - "version-update:semver-major"
     open-pull-requests-limit: 0
