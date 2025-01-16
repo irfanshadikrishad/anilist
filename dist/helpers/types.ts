@@ -258,6 +258,15 @@ type UserResponse = {
   errors?: { message: string }[]
 }
 
+type User = {
+  id: number
+  name: string
+  avatar: { large: string; medium: string }
+  bannerImage: string
+  isFollower: boolean
+  isFollowing: boolean
+}
+
 type UserFollower = {
   data?: {
     Page: {
@@ -268,12 +277,7 @@ type UserFollower = {
         lastPage: number
         hasNextPage: boolean
       }
-      followers: {
-        id: number
-        name: string
-        avatar: { large: string; medium: string }
-        bannerImage: string
-      }[]
+      followers: User[]
     }
   }
   errors?: { message: string }[]
@@ -289,12 +293,7 @@ type UserFollowing = {
         lastPage: number
         hasNextPage: boolean
       }
-      following: {
-        id: number
-        name: string
-        avatar: { large: string; medium: string }
-        bannerImage: string
-      }[]
+      following: User[]
     }
   }
   errors?: { message: string }[]
@@ -311,6 +310,18 @@ type AnimeSearchResponse = {
         status: string
         description: string
       }[]
+    }
+  }
+  errors?: { message: string }[]
+}
+
+type ToggleFollowResponse = {
+  data?: {
+    ToggleFollow: {
+      id: number
+      name: string
+      isFollower: boolean
+      isFollowing: boolean
     }
   }
   errors?: { message: string }[]
@@ -334,6 +345,8 @@ export {
   MediaTitle,
   MediaWithProgress,
   Myself,
+  ToggleFollowResponse,
+  User,
   UserActivitiesResponse,
   UserFollower,
   UserFollowing,

@@ -22,6 +22,7 @@ import {
   currentUserQuery,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
+  toggleFollowMutation,
   userActivityQuery,
   userFollowersQuery,
   userFollowingQuery,
@@ -30,6 +31,8 @@ import {
   MediaList,
   MediaTitle,
   Myself,
+  ToggleFollowResponse,
+  User,
   UserFollower,
   UserFollowing,
 } from "./types.js"
@@ -654,4 +657,70 @@ Statistics (Manga):
   }
 }
 
-export { Auth }
+class Automate {
+  /**
+   * Follow the users that follows you
+   */
+  static async follow() {
+    try {
+      console.warn("Not yet implemented")
+    } catch (error) {
+      console.log(`\nautomate_follow ${(error as Error).message}`)
+    }
+  }
+  /**
+   * Unfollow the users thats not following you
+   */
+  static async unfollow() {
+    try {
+      let pager = 1
+      let hasNextPage = true
+      let allFollowingUsers: User[] = []
+      while (hasNextPage) {
+        const followingUsers: UserFollowing = await fetcher(
+          userFollowingQuery,
+          {
+            userId: await Auth.MyUserId(),
+            page: pager,
+          }
+        )
+        if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
+          hasNextPage = false
+        }
+        allFollowingUsers.push(...followingUsers?.data?.Page?.following)
+        pager++
+      }
+      // Filter users that do no follow me
+      const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
+        .filter((user) => !user.isFollower)
+        .map((u3r) => ({ id: u3r.id, name: u3r.name }))
+      if (notFollowingMe.length <= 0) {
+        console.warn(`Not following list is empty!`)
+        return
+      }
+      let nfmCount = 0
+      console.log(`\n`)
+      for (let nfm of notFollowingMe) {
+        nfmCount++
+        try {
+          const unfollow: ToggleFollowResponse = await fetcher(
+            toggleFollowMutation,
+            {
+              userId: nfm.id,
+            }
+          )
+          console.log(
+            `[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+          )
+        } catch (error) {
+          console.log(`unfollow_toggle_follow. ${(error as Error).message}`)
+        }
+      }
+      console.log(`\nTotal Unfollowed: ${nfmCount}`)
+    } catch (error) {
+      console.error(`\nautomate_unfollow: ${(error as Error).message}`)
+    }
+  }
+}
+
+export { Auth, Automate }
