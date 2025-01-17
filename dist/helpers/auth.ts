@@ -29,6 +29,7 @@ import {
   userFollowingQuery,
 } from "./queries.js"
 import {
+  DeleteMediaListResponse,
   MediaList,
   MediaTitle,
   Myself,
@@ -234,32 +235,38 @@ Statistics (Manga):
       console.error(`\nError from Myself. ${(error as Error).message}`)
     }
   }
-  static async isLoggedIn() {
+  static async isLoggedIn(): Promise<boolean> {
     try {
-      if ((await Auth.RetriveAccessToken()) !== null) {
-        return true
-      } else {
-        return false
-      }
+      const token = await Auth.RetriveAccessToken()
+      return token !== null
     } catch (error) {
-      console.error(`\nError getting isLoggedIn. ${(error as Error).message}`)
+      console.error(`Error checking login status: ${(error as Error).message}`)
+      return false
     }
   }
-  static async Logout() {
+  static async Logout(): Promise<void> {
     try {
-      const username: string = await Auth.MyUserName()
+      const username = await Auth.MyUserName()
+
       if (fs.existsSync(save_path)) {
         try {
           fs.unlinkSync(save_path)
           console.log(`\nLogout successful. See you soon, ${username}.`)
         } catch (error) {
-          console.error("\nError logging out:", error)
+          console.error(
+            "\nFailed to remove the save file during logout:",
+            (error as Error).message
+          )
         }
       } else {
-        console.error("\nYou may already be logged out.")
+        console.warn(
+          "\nNo active session found. You may already be logged out."
+        )
       }
     } catch (error) {
-      console.error(`\nError logging out. ${(error as Error).message}`)
+      console.error(
+        `\nAn error occurred during logout: ${(error as Error).message}`
+      )
     }
   }
   static async MyUserId() {
@@ -463,10 +470,10 @@ Statistics (Manga):
   }
   static async DeleteAnimeById(id: number, title?: MediaTitle) {
     try {
-      const response: {
-        data?: { DeleteMediaListEntry: { deleted: boolean } }
-        errors?: { message: string }[]
-      } = await fetcher(deleteMediaEntryMutation, { id: id })
+      const response: DeleteMediaListResponse = await fetcher(
+        deleteMediaEntryMutation,
+        { id: id }
+      )
 
       if (response?.data) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
@@ -544,10 +551,10 @@ Statistics (Manga):
   }
   static async DeleteMangaById(id: number, title?: MediaTitle) {
     try {
-      const response: {
-        data?: { DeleteMediaListEntry: { deleted: boolean } }
-        errors?: { message: string }[]
-      } = await fetcher(deleteMangaEntryMutation, { id })
+      const response: DeleteMediaListResponse = await fetcher(
+        deleteMangaEntryMutation,
+        { id }
+      )
 
       const statusMessage: string = title ? getTitle(title) : ""
 
@@ -576,9 +583,7 @@ Statistics (Manga):
         data?: { SaveTextActivity: { id: number } }
         errors?: { message: string }[]
       } = await fetcher(saveTextActivityMutation, {
-        status:
-          status +
-          `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
+        status: status,
       })
 
       if (!data) {

@@ -327,6 +327,11 @@ type ToggleFollowResponse = {
   errors?: { message: string }[]
 }
 
+type DeleteMediaListResponse = {
+  data?: { DeleteMediaListEntry: { deleted: boolean } }
+  errors?: { message: string }[]
+}
+
 export {
   AniListMediaStatus,
   AnimeDetails,
@@ -334,6 +339,7 @@ export {
   AnimeSearchResponse,
   DateMonthYear,
   DeleteMangaResponse,
+  DeleteMediaListResponse,
   List,
   MALAnimeStatus,
   MALAnimeXML,
