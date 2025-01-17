@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import process from "process"
-import { Auth } from "./helpers/auth.js"
+import { Auth, Automate } from "./helpers/auth.js"
 import { AniList } from "./helpers/lists.js"
 import { getCurrentPackageVersion } from "./helpers/workers.js"
 
@@ -184,6 +184,27 @@ cli
           await Auth.callAnimeImporter()
         } else if (manga) {
           await Auth.callMangaImporter()
+        }
+      } else {
+        console.error(`\nPlease login to use this feature.`)
+      }
+    }
+  })
+cli
+  .command("automate")
+  .alias("auto")
+  .description("Automate your process")
+  .option("-f, --follow", "Follow the user whos following you.", false)
+  .option("-u, --unfollow", "Unfollow the user whos not following you.", false)
+  .action(async ({ follow, unfollow }) => {
+    if (!follow && !unfollow) {
+      console.error(`\nMust select an option, either --follow or --unfollow`)
+    } else {
+      if (await Auth.isLoggedIn()) {
+        if (follow) {
+          await Automate.follow()
+        } else if (unfollow) {
+          await Automate.unfollow()
         }
       } else {
         console.error(`\nPlease login to use this feature.`)

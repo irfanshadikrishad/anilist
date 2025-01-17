@@ -76,6 +76,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonrepair": "^3.11.2",
     "node-fetch": "^3.3.2",
-    "open": "^10.1.0"
+    "open": "^10.1.0",
+    "tiny-spinner": "^2.0.4"
   }
 }

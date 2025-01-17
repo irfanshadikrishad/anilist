@@ -4,6 +4,7 @@ import fetch from "node-fetch"
 import open from "open"
 import os from "os"
 import path from "path"
+import Spinner from "tiny-spinner"
 import { fetcher } from "./fetcher.js"
 import { AniDB, AniList, MyAnimeList } from "./lists.js"
 import {
@@ -22,14 +23,18 @@ import {
   currentUserQuery,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
+  toggleFollowMutation,
   userActivityQuery,
   userFollowersQuery,
   userFollowingQuery,
 } from "./queries.js"
 import {
+  DeleteMediaListResponse,
   MediaList,
   MediaTitle,
   Myself,
+  ToggleFollowResponse,
+  User,
   UserFollower,
   UserFollowing,
 } from "./types.js"
@@ -42,6 +47,7 @@ import {
 
 const home_dir = os.homedir()
 const save_path = path.join(home_dir, ".anilist_token")
+const spinner = new Spinner()
 
 class Auth {
   /**
@@ -229,32 +235,38 @@ Statistics (Manga):
       console.error(`\nError from Myself. ${(error as Error).message}`)
     }
   }
-  static async isLoggedIn() {
+  static async isLoggedIn(): Promise<boolean> {
     try {
-      if ((await Auth.RetriveAccessToken()) !== null) {
-        return true
-      } else {
-        return false
-      }
+      const token = await Auth.RetriveAccessToken()
+      return token !== null
     } catch (error) {
-      console.error(`\nError getting isLoggedIn. ${(error as Error).message}`)
+      console.error(`Error checking login status: ${(error as Error).message}`)
+      return false
     }
   }
-  static async Logout() {
+  static async Logout(): Promise<void> {
     try {
-      const username: string = await Auth.MyUserName()
+      const username = await Auth.MyUserName()
+
       if (fs.existsSync(save_path)) {
         try {
           fs.unlinkSync(save_path)
           console.log(`\nLogout successful. See you soon, ${username}.`)
         } catch (error) {
-          console.error("\nError logging out:", error)
+          console.error(
+            "\nFailed to remove the save file during logout:",
+            (error as Error).message
+          )
         }
       } else {
-        console.error("\nYou may already be logged out.")
+        console.warn(
+          "\nNo active session found. You may already be logged out."
+        )
       }
     } catch (error) {
-      console.error(`\nError logging out. ${(error as Error).message}`)
+      console.error(
+        `\nAn error occurred during logout: ${(error as Error).message}`
+      )
     }
   }
   static async MyUserId() {
@@ -458,10 +470,10 @@ Statistics (Manga):
   }
   static async DeleteAnimeById(id: number, title?: MediaTitle) {
     try {
-      const response: {
-        data?: { DeleteMediaListEntry: { deleted: boolean } }
-        errors?: { message: string }[]
-      } = await fetcher(deleteMediaEntryMutation, { id: id })
+      const response: DeleteMediaListResponse = await fetcher(
+        deleteMediaEntryMutation,
+        { id: id }
+      )
 
       if (response?.data) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
@@ -539,10 +551,10 @@ Statistics (Manga):
   }
   static async DeleteMangaById(id: number, title?: MediaTitle) {
     try {
-      const response: {
-        data?: { DeleteMediaListEntry: { deleted: boolean } }
-        errors?: { message: string }[]
-      } = await fetcher(deleteMangaEntryMutation, { id })
+      const response: DeleteMediaListResponse = await fetcher(
+        deleteMangaEntryMutation,
+        { id }
+      )
 
       const statusMessage: string = title ? getTitle(title) : ""
 
@@ -571,9 +583,7 @@ Statistics (Manga):
         data?: { SaveTextActivity: { id: number } }
         errors?: { message: string }[]
       } = await fetcher(saveTextActivityMutation, {
-        status:
-          status +
-          `<br><br><br><br>*Written using [@irfanshadikrishad/anilist](https://www.npmjs.com/package/@irfanshadikrishad/anilist).*`,
+        status: status,
       })
 
       if (!data) {
@@ -654,4 +664,137 @@ Statistics (Manga):
   }
 }
 
-export { Auth }
+class Automate {
+  /**
+   * Follow the users that follows you
+   */
+  static async follow() {
+    try {
+      let pager = 1
+      let hasNextPage = true
+      let allFollowerUsers: User[] = []
+      spinner.start("Fetching all the followers...")
+      while (hasNextPage) {
+        const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
+          userId: await Auth.MyUserId(),
+          page: pager,
+        })
+        spinner.update(
+          `Fetched page ${pager} of ${followerUsers?.data?.Page?.pageInfo?.lastPage}...`
+        )
+        if (!followerUsers?.data?.Page?.pageInfo?.hasNextPage) {
+          hasNextPage = false
+        }
+        allFollowerUsers.push(...(followerUsers?.data?.Page?.followers || []))
+        pager++
+      }
+      spinner.stop("Fetched all the followers. Starting follow back.")
+      // Filter users that do no follow me
+      const notFollowing: { id: number; name: string }[] = allFollowerUsers
+        .filter(({ isFollowing }) => !isFollowing)
+        .map(({ id, name }) => ({ id: id, name: name }))
+
+      console.log(
+        `\nTotal follower ${allFollowerUsers.length}.\nNot followed back ${notFollowing.length}\n`
+      )
+      if (notFollowing.length <= 0) {
+        console.log(`Probably followed back all the users.`)
+        return
+      }
+      // Traverse and follow back
+      const maxIdLength = Math.max(
+        ...notFollowing.map(({ id }) => String(id).length)
+      )
+      const maxNameLength = Math.max(
+        ...notFollowing.map(({ name }) => name.length)
+      )
+
+      for (let nf of notFollowing) {
+        try {
+          const follow: ToggleFollowResponse = await fetcher(
+            toggleFollowMutation,
+            { userId: nf.id }
+          )
+          console.log(
+            `${String(`[${nf.id}]`).padEnd(maxIdLength)}` +
+              `\t${String(`[${follow?.data?.ToggleFollow?.name}]`).padEnd(maxNameLength)}` +
+              `\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+          )
+        } catch (error) {
+          console.log(
+            `automate_follow_toggle_follow: ${(error as Error).message}`
+          )
+        }
+      }
+      console.log(`✅ Followed back ${notFollowing.length} users.`)
+    } catch (error) {
+      console.log(`\nautomate_follow ${(error as Error).message}`)
+    }
+  }
+  /**
+   * Unfollow the users thats not following you
+   */
+  static async unfollow() {
+    try {
+      let pager = 1
+      let hasNextPage = true
+      let allFollowingUsers: User[] = []
+      spinner.start("Fetching all following users...")
+      while (hasNextPage) {
+        const followingUsers: UserFollowing = await fetcher(
+          userFollowingQuery,
+          {
+            userId: await Auth.MyUserId(),
+            page: pager,
+          }
+        )
+        spinner.update(
+          `Fetched page ${pager} of ${followingUsers?.data?.Page?.pageInfo?.lastPage} ...`
+        )
+        if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
+          hasNextPage = false
+        }
+        allFollowingUsers.push(...(followingUsers?.data?.Page?.following || []))
+        pager++
+      }
+      spinner.update(
+        `Fetching complete. Total got ${allFollowingUsers.length} users.`
+      )
+      // Filter users that do no follow me
+      const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
+        .filter((user) => !user.isFollower)
+        .map((u3r) => ({ id: u3r.id, name: u3r.name }))
+      if (notFollowingMe.length <= 0) {
+        console.warn(`\nNot following list is empty!`)
+        spinner.stop(`No users to unfollow. Aborting process...`)
+        return
+      }
+      spinner.stop(
+        `Unfollow process activated with ${notFollowingMe.length} users.`
+      )
+      let nfmCount = 0
+      console.log(`\n`)
+      for (let nfm of notFollowingMe) {
+        nfmCount++
+        try {
+          const unfollow: ToggleFollowResponse = await fetcher(
+            toggleFollowMutation,
+            {
+              userId: nfm.id,
+            }
+          )
+          console.log(
+            `[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+          )
+        } catch (error) {
+          console.log(`unfollow_toggle_follow. ${(error as Error).message}`)
+        }
+      }
+      console.log(`\nTotal Unfollowed: ${nfmCount}`)
+    } catch (error) {
+      console.error(`\nautomate_unfollow: ${(error as Error).message}`)
+    }
+  }
+}
+
+export { Auth, Automate }

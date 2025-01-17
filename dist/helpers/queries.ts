@@ -150,19 +150,24 @@ const malIdToAnilistMangaId = `query ($malId: Int) {
 }
 `
 
-const userFollowingQuery = `query ($userId: Int!) {
-  Page {
+const userFollowingQuery = `query ($userId: Int!, $page: Int) {
+  Page (page: $page) {
     pageInfo { total perPage currentPage lastPage hasNextPage }
-    following(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+    following(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage isFollowing isFollower }
   }
 }
 `
 
-const userFollowersQuery = `query ($userId: Int!) {
-  Page {
+const userFollowersQuery = `query ($userId: Int!, $page: Int) {
+  Page (page: $page) {
     pageInfo { total perPage currentPage lastPage hasNextPage }
-    followers(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage }
+    followers(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage isFollowing isFollower }
   }
+}
+`
+
+const toggleFollowMutation = `mutation ($userId: Int!) {
+  ToggleFollow(userId: $userId) { id name isFollower isFollowing }
 }
 `
 
@@ -184,6 +189,7 @@ export {
   malIdToAnilistMangaId,
   mangaSearchQuery,
   popularQuery,
+  toggleFollowMutation,
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,
