@@ -4,6 +4,7 @@ import fetch from "node-fetch"
 import open from "open"
 import os from "os"
 import path from "path"
+import Spinner from "tiny-spinner"
 import { fetcher } from "./fetcher.js"
 import { AniDB, AniList, MyAnimeList } from "./lists.js"
 import {
@@ -45,6 +46,7 @@ import {
 
 const home_dir = os.homedir()
 const save_path = path.join(home_dir, ".anilist_token")
+const spinner = new Spinner()
 
 class Auth {
   /**
@@ -663,7 +665,49 @@ class Automate {
    */
   static async follow() {
     try {
-      console.warn("Not yet implemented")
+      let pager = 1
+      let hasNextPage = true
+      let allFollowerUsers: User[] = []
+      spinner.start("Fetching all the followers...")
+      while (hasNextPage) {
+        spinner.update(`Fetched page ${pager}...`)
+        const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
+          userId: await Auth.MyUserId(),
+          page: pager,
+        })
+        if (!followerUsers?.data?.Page?.pageInfo?.hasNextPage) {
+          hasNextPage = false
+        }
+        allFollowerUsers.push(...(followerUsers?.data?.Page?.followers || []))
+        pager++
+      }
+      spinner.stop("Fetched all the followers. Starting follow back.")
+      // Filter users that do no follow me
+      const notFollowing: { id: number; name: string }[] = allFollowerUsers
+        .filter(({ isFollowing }) => !isFollowing)
+        .map(({ id, name }) => ({ id: id, name: name }))
+
+      console.log(
+        `\nTotal follower ${allFollowerUsers.length}.\nNot followed back ${notFollowing.length}\n`
+      )
+
+      // Traverse and follow back
+      for (let nf of notFollowing) {
+        try {
+          const follow: ToggleFollowResponse = await fetcher(
+            toggleFollowMutation,
+            { userId: nf.id }
+          )
+          console.log(
+            `[${nf.id}]\t[${follow?.data?.ToggleFollow?.name}]\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+          )
+        } catch (error) {
+          console.log(
+            `automate_follow_toggle_follow: ${(error as Error).message}`
+          )
+        }
+      }
+      console.log(`✅ Followed back ${notFollowing.length} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
