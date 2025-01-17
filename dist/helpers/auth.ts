@@ -670,11 +670,13 @@ class Automate {
       let allFollowerUsers: User[] = []
       spinner.start("Fetching all the followers...")
       while (hasNextPage) {
-        spinner.update(`Fetched page ${pager}...`)
         const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
           userId: await Auth.MyUserId(),
           page: pager,
         })
+        spinner.update(
+          `Fetched page ${pager} of ${followerUsers?.data?.Page?.pageInfo?.lastPage}...`
+        )
         if (!followerUsers?.data?.Page?.pageInfo?.hasNextPage) {
           hasNextPage = false
         }
@@ -690,8 +692,18 @@ class Automate {
       console.log(
         `\nTotal follower ${allFollowerUsers.length}.\nNot followed back ${notFollowing.length}\n`
       )
-
+      if (notFollowing.length <= 0) {
+        console.log(`Probably followed back all the users.`)
+        return
+      }
       // Traverse and follow back
+      const maxIdLength = Math.max(
+        ...notFollowing.map(({ id }) => String(id).length)
+      )
+      const maxNameLength = Math.max(
+        ...notFollowing.map(({ name }) => name.length)
+      )
+
       for (let nf of notFollowing) {
         try {
           const follow: ToggleFollowResponse = await fetcher(
@@ -699,7 +711,9 @@ class Automate {
             { userId: nf.id }
           )
           console.log(
-            `[${nf.id}]\t[${follow?.data?.ToggleFollow?.name}]\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+            `${String(`[${nf.id}]`).padEnd(maxIdLength)}` +
+              `\t${String(`[${follow?.data?.ToggleFollow?.name}]`).padEnd(maxNameLength)}` +
+              `\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
           )
         } catch (error) {
           console.log(
@@ -720,6 +734,7 @@ class Automate {
       let pager = 1
       let hasNextPage = true
       let allFollowingUsers: User[] = []
+      spinner.start("Fetching all following users...")
       while (hasNextPage) {
         const followingUsers: UserFollowing = await fetcher(
           userFollowingQuery,
@@ -728,20 +743,30 @@ class Automate {
             page: pager,
           }
         )
+        spinner.update(
+          `Fetched page ${pager} of ${followingUsers?.data?.Page?.pageInfo?.lastPage} ...`
+        )
         if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
           hasNextPage = false
         }
         allFollowingUsers.push(...(followingUsers?.data?.Page?.following || []))
         pager++
       }
+      spinner.update(
+        `Fetching complete. Total got ${allFollowingUsers.length} users.`
+      )
       // Filter users that do no follow me
       const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
         .filter((user) => !user.isFollower)
         .map((u3r) => ({ id: u3r.id, name: u3r.name }))
       if (notFollowingMe.length <= 0) {
-        console.warn(`Not following list is empty!`)
+        console.warn(`\nNot following list is empty!`)
+        spinner.stop(`No users to unfollow. Aborting process...`)
         return
       }
+      spinner.stop(
+        `Unfollow process activated with ${notFollowingMe.length} users.`
+      )
       let nfmCount = 0
       console.log(`\n`)
       for (let nfm of notFollowingMe) {
