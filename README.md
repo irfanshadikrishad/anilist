@@ -62,7 +62,7 @@ anilist login -i <client-id> -s <client-secret>
 | **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
 | **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
 | **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON, MyAnimeList (XML) or AniDB (json-large)     |
-| \*\*`automate` <br> _(alias: `auto`)_       | `-f, --follow` <br> `-u, --unfollow`                                    | Follow users who follows you or Unfollow who doesn't follow you back with a simple command |
+| \*\*`social` <br> _(alias: `sol`)_          | `-f, --follow` <br> `-u, --unfollow`                                    | Follow users who follows you or Unfollow who doesn't follow you back with a simple command |
 
 #### Command Breakdown:
 
@@ -233,10 +233,10 @@ anilist import -m
 > [!IMPORTANT]
 > If you are importing from a file, place the file in the system specific download folder, And the exported file will also be exported there as well.
 
-#### `automate` _(alias: `auto`)_:
+#### `social` _(alias: `sol`)_:
 
 ```bash
-anilist auto -f
+anilist sol -f
 ```
 
 - **Options**:

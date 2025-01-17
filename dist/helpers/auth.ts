@@ -624,7 +624,7 @@ Statistics (Manga):
   }
 }
 
-class Automate {
+class Social {
   /**
    * Follow the users that follows you
    */
@@ -686,7 +686,7 @@ class Automate {
           )
         }
       }
-      console.log(`✅ Followed back ${notFollowing.length} users.`)
+      console.log(`\n✅ Followed back ${notFollowing.length} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
@@ -757,4 +757,4 @@ class Automate {
   }
 }
 
-export { Auth, Automate }
+export { Auth, Social }
