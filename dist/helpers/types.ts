@@ -128,6 +128,29 @@ interface MediaEntry {
   hiddenFromStatusLists: boolean
 }
 
+interface SaveTextActivityResponse {
+  data?: {
+    SaveTextActivity: {
+      id: number
+      userId: number
+      text: string
+      createdAt: number
+    }
+  }
+  errors?: { message: string }[]
+}
+
+interface MediaListCollectionResponse {
+  data?: {
+    MediaListCollection: {
+      lists: MediaList[]
+    }
+  }
+  errors?: {
+    message: string
+  }[]
+}
+
 interface List {
   name: string
   entries: MediaEntry[]
@@ -197,6 +220,10 @@ interface AnimeDetails {
   }
   errors?: { message: string }[]
 }
+interface SaveMediaListEntryResponse {
+  data?: { SaveMediaListEntry: { id: number; status: string } }
+  errors?: { message: string }[]
+}
 interface MediaListEntry {
   id?: number
   media: {
@@ -216,12 +243,7 @@ interface MediaListEntry {
 type UserActivitiesResponse = {
   data?: {
     Page: {
-      activities: {
-        status: string
-        progress: number
-        createdAt: number
-        media: { title: MediaTitle }
-      }[]
+      activities: Activity[]
     }
   }
   errors?: { message: string }[]
@@ -332,7 +354,17 @@ type DeleteMediaListResponse = {
   errors?: { message: string }[]
 }
 
+type Activity = {
+  id: number
+  type: string
+  status: string
+  progress: number | null
+  media: { id?: number; title: MediaTitle }
+  createdAt: number
+}
+
 export {
+  Activity,
   AniListMediaStatus,
   AnimeDetails,
   AnimeList,
@@ -347,10 +379,13 @@ export {
   MalIdToAnilistIdResponse,
   MediaEntry,
   MediaList,
+  MediaListCollectionResponse,
   MediaListEntry,
   MediaTitle,
   MediaWithProgress,
   Myself,
+  SaveMediaListEntryResponse,
+  SaveTextActivityResponse,
   ToggleFollowResponse,
   User,
   UserActivitiesResponse,
