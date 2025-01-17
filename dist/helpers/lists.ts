@@ -35,9 +35,11 @@ import {
   MalIdToAnilistIdResponse,
   MediaEntry,
   MediaList,
+  MediaListCollectionResponse,
   MediaListEntry,
   MediaTitle,
   saveAnimeWithProgressResponse,
+  SaveMediaListEntryResponse,
   UserActivitiesResponse,
   UserFollower,
   UserFollowing,
@@ -176,8 +178,82 @@ class AniList {
     }
   }
   static async exportAnime() {
-    if (await Auth.isLoggedIn()) {
-      const { exportType } = await inquirer.prompt([
+    if (!(await Auth.isLoggedIn())) {
+      console.error(`\nMust login to use this feature.`)
+      return
+    }
+    const { exportType }: { exportType: number } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "exportType",
+        message: "Choose export type:",
+        choices: [
+          { name: "CSV", value: 1 },
+          { name: "JSON", value: 2 },
+          { name: "XML (MyAnimeList/AniDB)", value: 3 },
+        ],
+        pageSize: 10,
+      },
+    ])
+    const animeList: MediaListCollectionResponse = await fetcher(
+      currentUserAnimeList,
+      {
+        id: await Auth.MyUserId(),
+      }
+    )
+    if (animeList) {
+      const lists = animeList?.data?.MediaListCollection?.lists ?? []
+      const mediaWithProgress = lists.flatMap((list: MediaList) =>
+        list.entries.map((entry: MediaListEntry) => ({
+          id: entry?.media?.id,
+          title:
+            exportType === 1
+              ? getTitle(entry?.media?.title)
+              : entry?.media?.title,
+          episodes: entry?.media?.episodes,
+          siteUrl: entry?.media?.siteUrl,
+          progress: entry.progress,
+          status: entry?.status,
+          hiddenFromStatusLists: entry.hiddenFromStatusLists,
+        }))
+      )
+
+      switch (exportType) {
+        case 1:
+          await saveJSONasCSV(mediaWithProgress, "anime")
+          break
+        case 2:
+          await saveJSONasJSON(mediaWithProgress, "anime")
+          break
+        case 3:
+          await MyAnimeList.exportAnime()
+          break
+        default:
+          console.log(`\nInvalid export type. ${exportType}`)
+          break
+      }
+    } else {
+      console.error(`\nNo anime(s) found in your lists.`)
+    }
+  }
+  static async exportManga() {
+    if (!(await Auth.isLoggedIn())) {
+      console.error(`\nPlease login to use this feature.`)
+      return
+    }
+    const mangaLists: MediaListCollectionResponse = await fetcher(
+      currentUserMangaList,
+      {
+        id: await Auth.MyUserId(),
+      }
+    )
+    if (!mangaLists?.data) {
+      console.error(`\nCould not get manga list.`)
+      return
+    }
+    const lists = mangaLists?.data?.MediaListCollection?.lists || []
+    if (lists.length > 0) {
+      const { exportType }: { exportType: number } = await inquirer.prompt([
         {
           type: "list",
           name: "exportType",
@@ -185,115 +261,41 @@ class AniList {
           choices: [
             { name: "CSV", value: 1 },
             { name: "JSON", value: 2 },
-            { name: "XML (MyAnimeList/AniDB)", value: 3 },
+            { name: "XML (MyAnimeList)", value: 3 },
           ],
           pageSize: 10,
         },
       ])
-      const animeList: {
-        data?: { MediaListCollection: { lists: MediaList[] } }
-        errors?: { message: string }[]
-      } = await fetcher(currentUserAnimeList, {
-        id: await Auth.MyUserId(),
-      })
-      if (animeList) {
-        const lists = animeList?.data?.MediaListCollection?.lists ?? []
-        const mediaWithProgress = lists.flatMap((list: MediaList) =>
-          list.entries.map((entry: MediaListEntry) => ({
-            id: entry?.media?.id,
-            title:
-              exportType === 1
-                ? getTitle(entry?.media?.title)
-                : entry?.media?.title,
-            episodes: entry?.media?.episodes,
-            siteUrl: entry?.media?.siteUrl,
-            progress: entry.progress,
-            status: entry?.status,
-            hiddenFromStatusLists: entry.hiddenFromStatusLists,
-          }))
-        )
-
-        switch (exportType) {
-          case 1:
-            await saveJSONasCSV(mediaWithProgress, "anime")
-            break
-          case 2:
-            await saveJSONasJSON(mediaWithProgress, "anime")
-            break
-          case 3:
-            await MyAnimeList.exportAnime()
-            break
-          default:
-            console.log(`\nInvalid export type. ${exportType}`)
-            break
-        }
-      } else {
-        console.error(`\nNo anime(s) found in your lists.`)
+      const mediaWithProgress = lists.flatMap((list: MediaList) =>
+        list.entries.map((entry: MediaListEntry) => ({
+          id: entry?.media?.id,
+          title:
+            exportType === 1
+              ? getTitle(entry?.media?.title)
+              : entry?.media?.title,
+          private: entry.private,
+          chapters: entry.media.chapters,
+          progress: entry.progress,
+          status: entry?.status,
+          hiddenFromStatusLists: entry.hiddenFromStatusLists,
+        }))
+      )
+      switch (exportType) {
+        case 1:
+          await saveJSONasCSV(mediaWithProgress, "manga")
+          break
+        case 2:
+          await saveJSONasJSON(mediaWithProgress, "manga")
+          break
+        case 3:
+          await MyAnimeList.exportManga()
+          break
+        default:
+          console.log(`\nInvalid export type. ${exportType}`)
+          break
       }
     } else {
-      console.error(`\nMust login to use this feature.`)
-    }
-  }
-  static async exportManga() {
-    if (await Auth.isLoggedIn()) {
-      const mangaLists: {
-        data?: { MediaListCollection: { lists: MediaList[] } }
-        errors?: { message: string }[]
-      } = await fetcher(currentUserMangaList, {
-        id: await Auth.MyUserId(),
-      })
-      if (mangaLists) {
-        const lists = mangaLists?.data?.MediaListCollection?.lists || []
-        if (lists.length > 0) {
-          const { exportType }: { exportType: number } = await inquirer.prompt([
-            {
-              type: "list",
-              name: "exportType",
-              message: "Choose export type:",
-              choices: [
-                { name: "CSV", value: 1 },
-                { name: "JSON", value: 2 },
-                { name: "XML (MyAnimeList)", value: 3 },
-              ],
-              pageSize: 10,
-            },
-          ])
-          const mediaWithProgress = lists.flatMap((list: MediaList) =>
-            list.entries.map((entry: MediaListEntry) => ({
-              id: entry?.media?.id,
-              title:
-                exportType === 1
-                  ? getTitle(entry?.media?.title)
-                  : entry?.media?.title,
-              private: entry.private,
-              chapters: entry.media.chapters,
-              progress: entry.progress,
-              status: entry?.status,
-              hiddenFromStatusLists: entry.hiddenFromStatusLists,
-            }))
-          )
-          switch (exportType) {
-            case 1:
-              await saveJSONasCSV(mediaWithProgress, "manga")
-              break
-            case 2:
-              await saveJSONasJSON(mediaWithProgress, "manga")
-              break
-            case 3:
-              await MyAnimeList.exportManga()
-              break
-            default:
-              console.log(`\nInvalid export type. ${exportType}`)
-              break
-          }
-        } else {
-          console.log(`\nList seems to be empty.`)
-        }
-      } else {
-        console.error(`\nCould not get manga list.`)
-      }
-    } else {
-      console.error(`\nPlease login to use this feature.`)
+      console.log(`\nList seems to be empty.`)
     }
   }
   static async MyAnime() {
@@ -302,17 +304,14 @@ class AniList {
         return console.error(`\nPlease log in first to access your lists.`)
       }
 
-      const userId = await Auth.MyUserId()
-      if (!userId) {
+      if (!(await Auth.MyUserId())) {
         return console.log(`\nFailed getting current user Id.`)
       }
 
-      const data: {
-        data?: {
-          MediaListCollection: { lists: MediaList[] }
-        }
-        errors?: { message: string }[]
-      } = await fetcher(currentUserAnimeList, { id: userId })
+      const data: MediaListCollectionResponse = await fetcher(
+        currentUserAnimeList,
+        { id: await Auth.MyUserId() }
+      )
 
       if (data?.errors) {
         return console.log(
@@ -378,13 +377,13 @@ class AniList {
           },
         ])
 
-      const saveResponse: {
-        data?: { SaveMediaListEntry: { id: number; status: string } }
-        errors?: { message: string }[]
-      } = await fetcher(addAnimeToListMutation, {
-        mediaId: selectedAnime,
-        status: selectedListType,
-      })
+      const saveResponse: SaveMediaListEntryResponse = await fetcher(
+        addAnimeToListMutation,
+        {
+          mediaId: selectedAnime,
+          status: selectedListType,
+        }
+      )
 
       if (saveResponse) {
         const savedEntry = saveResponse.data?.SaveMediaListEntry
@@ -408,10 +407,10 @@ class AniList {
       if (!userId) {
         return console.error(`\nFailed to get the current user ID.`)
       }
-      const response: {
-        data?: { MediaListCollection: { lists: MediaList[] } }
-        errors?: { message: string }[]
-      } = await fetcher(currentUserMangaList, { id: userId })
+      const response: MediaListCollectionResponse = await fetcher(
+        currentUserMangaList,
+        { id: userId }
+      )
 
       if (!response?.data) {
         return console.error(
@@ -474,13 +473,13 @@ class AniList {
           },
         ])
 
-      const saveResponse: {
-        data?: { SaveMediaListEntry: { id: number; status: string } }
-        errors?: { message: string }[]
-      } = await fetcher(addMangaToListMutation, {
-        mediaId: selectedManga,
-        status: selectedListType,
-      })
+      const saveResponse: SaveMediaListEntryResponse = await fetcher(
+        addMangaToListMutation,
+        {
+          mediaId: selectedManga,
+          status: selectedListType,
+        }
+      )
 
       const saved = saveResponse?.data?.SaveMediaListEntry
 

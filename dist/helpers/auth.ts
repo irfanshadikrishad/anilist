@@ -31,10 +31,13 @@ import {
 import {
   DeleteMediaListResponse,
   MediaList,
+  MediaListCollectionResponse,
   MediaTitle,
   Myself,
+  SaveTextActivityResponse,
   ToggleFollowResponse,
   User,
+  UserActivitiesResponse,
   UserFollower,
   UserFollowing,
 } from "./types.js"
@@ -53,7 +56,7 @@ class Auth {
   /**
    * Get access-token from user
    */
-  static async GetAccessToken() {
+  static async GetAccessToken(): Promise<string | null> {
     try {
       const { token }: { token: string } = await inquirer.prompt([
         {
@@ -62,19 +65,30 @@ class Auth {
           message: "Please enter your AniList access token:",
         },
       ])
+      if (!token) {
+        console.warn("\nNo token entered. Please try again.")
+        return null
+      }
       return token
     } catch (error) {
-      console.error(`\nSomething went wrong. ${(error as Error).message}`)
+      console.error(
+        `\nAn error occurred while getting the access token: ${(error as Error).message}`
+      )
+      return null
     }
   }
-  static async StoreAccessToken(token: string) {
+  static async StoreAccessToken(token: string): Promise<void> {
     try {
+      if (!token) {
+        console.warn("\nNo token provided. Nothing to store.")
+        return
+      }
       fs.writeFileSync(save_path, token, { encoding: "utf8" })
     } catch (error) {
-      console.error(`\nError storing acess-token. ${(error as Error).message}`)
+      console.error(`\nError storing access token: ${(error as Error).message}`)
     }
   }
-  static async RetriveAccessToken() {
+  static async RetriveAccessToken(): Promise<string | null> {
     try {
       if (fs.existsSync(save_path)) {
         return fs.readFileSync(save_path, { encoding: "utf8" })
@@ -85,6 +99,7 @@ class Auth {
       console.error(
         `\nError retriving acess-token. ${(error as Error).message}`
       )
+      return null
     }
   }
   static async Login(clientId: number, clientSecret: string) {
@@ -146,23 +161,14 @@ class Auth {
 
         if (request.status === 200) {
           const user = data?.Viewer
-          const activiResponse: {
-            data?: {
-              Page: {
-                activities: {
-                  status: string
-                  progress: number
-                  media: { title: MediaTitle }
-                  createdAt: number
-                }[]
-              }
+          const activiResponse: UserActivitiesResponse = await fetcher(
+            userActivityQuery,
+            {
+              id: user?.id,
+              page: 1,
+              perPage: 10,
             }
-            errors?: { message: string }[]
-          } = await fetcher(userActivityQuery, {
-            id: user?.id,
-            page: 1,
-            perPage: 10,
-          })
+          )
           const activities = activiResponse?.data?.Page?.activities
           // Get follower/following information
           const req_followers: UserFollower = await fetcher(
@@ -275,22 +281,8 @@ Statistics (Manga):
       return null
     }
 
-    const token: string = await Auth.RetriveAccessToken()
-    const request = await fetch(aniListEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ query: currentUserQuery }),
-    })
+    const { data }: Myself = await fetcher(currentUserQuery, {})
 
-    if (!(request.status === 200)) {
-      console.error(`Failed to fetch user data. Status: ${request.status}`)
-      return null
-    }
-
-    const { data }: { data?: { Viewer: { id: number } } } = await request.json()
     return data?.Viewer?.id ?? null
   }
   static async MyUserName() {
@@ -299,173 +291,145 @@ Statistics (Manga):
       return null
     }
 
-    const token: string = await Auth.RetriveAccessToken()
-    const request = await fetch(aniListEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ query: currentUserQuery }),
-    })
+    const { data }: Myself = await fetcher(currentUserQuery, {})
 
-    if (!request.ok) {
-      console.error(`Failed to fetch user data. Status: ${request.status}`)
-      return null
-    }
-
-    const { data }: { data?: { Viewer: { name: string } } } =
-      await request.json()
     return data?.Viewer?.name ?? null
   }
   static async DeleteMyActivities() {
     try {
-      if (await Auth.isLoggedIn()) {
-        const { activityType }: { activityType: number } =
-          await inquirer.prompt([
-            {
-              type: "list",
-              name: "activityType",
-              message: "What type of activity you want to delete?",
-              choices: [
-                { name: "All Activity", value: 0 },
-                { name: "Text Activity", value: 1 },
-                { name: "Media List Activity", value: 2 },
-                { name: "Anime List Activity", value: 3 },
-                { name: "Manga List Activity", value: 4 },
-                { name: "Message Activity", value: 5 },
-              ],
-            },
-          ])
+      if (!(await Auth.isLoggedIn())) {
+        console.error(`\nPlease log in to delete your activities.`)
+        return
+      }
+      const { activityType }: { activityType: number } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "activityType",
+          message: "What type of activity you want to delete?",
+          choices: [
+            { name: "All Activity", value: 0 },
+            { name: "Text Activity", value: 1 },
+            { name: "Media List Activity", value: 2 },
+            { name: "Anime List Activity", value: 3 },
+            { name: "Manga List Activity", value: 4 },
+            { name: "Message Activity", value: 5 },
+          ],
+        },
+      ])
 
-        const queryMap = {
-          0: activityAllQuery,
-          1: activityTextQuery,
-          2: activityMediaList,
-          3: activityAnimeListQuery,
-          4: activityMangaListQuery,
-          5: activityMessageQuery,
-        }
-        const query: string = queryMap[activityType]
+      const queryMap = {
+        0: activityAllQuery,
+        1: activityTextQuery,
+        2: activityMediaList,
+        3: activityAnimeListQuery,
+        4: activityMangaListQuery,
+        5: activityMessageQuery,
+      }
+      const query: string = queryMap[activityType]
 
-        let hasMoreActivities: boolean = true
-        let totalCount = 0
+      let hasMoreActivities: boolean = true
+      let totalCount = 0
 
-        while (hasMoreActivities) {
-          const response: {
-            data?: { Page: { activities: { id: number }[] } }
-            //  errors: { message: string }[]
-          } = await fetcher(query, {
-            page: 1,
-            perPage: 50,
-            userId: await Auth.MyUserId(),
-          })
+      while (hasMoreActivities) {
+        const response: UserActivitiesResponse = await fetcher(query, {
+          page: 1,
+          perPage: 50,
+          userId: await Auth.MyUserId(),
+        })
 
-          if (response?.data?.Page?.activities) {
-            let count = 0
+        if (response?.data?.Page?.activities) {
+          let count = 0
 
-            const activities = response?.data?.Page?.activities
+          const activities = response?.data?.Page?.activities
 
-            if (!activities || activities.length === 0) {
-              console.log(`\nNo more activities available.`)
-              hasMoreActivities = false
-            } else {
-              for (const act of activities) {
-                // Ensure ID is present to avoid unintended errors
-                if (act?.id) {
-                  const deleteResponse: {
-                    data?: { DeleteActivity: { deleted: boolean } }
-                    errors?: { message: string }[]
-                  } = await fetcher(deleteActivityMutation, {
-                    id: act?.id,
-                  })
-                  const isDeleted =
-                    deleteResponse?.data?.DeleteActivity?.deleted
-                  count++
-                  totalCount++
+          if (!activities || activities.length === 0) {
+            console.log(`\nNo more activities available.`)
+            hasMoreActivities = false
+          } else {
+            for (const act of activities) {
+              if (act?.id) {
+                const deleteResponse: {
+                  data?: { DeleteActivity: { deleted: boolean } }
+                  errors?: { message: string }[]
+                } = await fetcher(deleteActivityMutation, {
+                  id: act?.id,
+                })
+                const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted
+                count++
+                totalCount++
 
-                  console.log(
-                    `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
-                      isDeleted ? "✅" : "❌"
-                    }`
-                  )
+                console.log(
+                  `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
+                    isDeleted ? "✅" : "❌"
+                  }`
+                )
 
-                  // Avoiding rate-limit
-                  await new Promise((resolve) => setTimeout(resolve, 1100))
-                }
+                // Avoiding rate-limit
+                await new Promise((resolve) => setTimeout(resolve, 1100))
               }
             }
-          } else {
-            // In case of an unexpected null response, exit the loop
-            console.log(`\nProbably deleted all the activities of this type.`)
-            hasMoreActivities = false
           }
+        } else {
+          // In case of an unexpected null response, exit the loop
+          console.log(`\nProbably deleted all the activities of this type.`)
+          hasMoreActivities = false
         }
-      } else {
-        console.error(`\nPlease log in to delete your activities.`)
       }
     } catch (error) {
       console.error(`\nSomething went wrong. ${(error as Error).message}`)
     }
   }
   static async DeleteMyAnimeList() {
-    if (await Auth.isLoggedIn()) {
-      const userID: number = await Auth.MyUserId()
-      if (userID) {
-        const response: {
-          data?: {
-            MediaListCollection: {
-              lists: MediaList[]
-            }
-          }
-          errors?: {
-            message: string
-          }[]
-        } = await fetcher(currentUserAnimeList, { id: userID })
+    if (!(await Auth.isLoggedIn())) {
+      console.error(`\nPlease log in first to delete your lists.`)
+      return
+    }
+    if (!(await Auth.MyUserId())) {
+      console.log(`\nFailed getting current user Id.`)
+      return
+    }
+    const response: MediaListCollectionResponse = await fetcher(
+      currentUserAnimeList,
+      { id: await Auth.MyUserId() }
+    )
 
-        if (response !== null) {
-          const lists: MediaList[] = response?.data?.MediaListCollection?.lists
+    if (response !== null) {
+      const lists: MediaList[] = response?.data?.MediaListCollection?.lists
 
-          if (lists.length > 0) {
-            const { selectedList }: { selectedList: string } =
-              await inquirer.prompt([
-                {
-                  type: "list",
-                  name: "selectedList",
-                  message: "Select an anime list:",
-                  choices: lists.map((list: MediaList) => list.name),
-                  pageSize: 10,
-                },
-              ])
-            const selectedEntries: MediaList = lists.find(
-              (list: MediaList) => list.name === selectedList
-            )
-            if (selectedEntries) {
-              console.log(`\nDeleting entries of '${selectedEntries.name}':`)
+      if (lists.length > 0) {
+        const { selectedList }: { selectedList: string } =
+          await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedList",
+              message: "Select an anime list:",
+              choices: lists.map((list: MediaList) => list.name),
+              pageSize: 10,
+            },
+          ])
+        const selectedEntries: MediaList = lists.find(
+          (list: MediaList) => list.name === selectedList
+        )
+        if (selectedEntries) {
+          console.log(`\nDeleting entries of '${selectedEntries.name}':`)
 
-              for (const [, entry] of selectedEntries.entries.entries()) {
-                if (entry?.id) {
-                  await Auth.DeleteAnimeById(entry?.id, entry?.media?.title)
-                  await new Promise((resolve) => setTimeout(resolve, 1100))
-                } else {
-                  console.log(`No id in entry.`)
-                  console.log(entry)
-                }
-              }
+          for (const [, entry] of selectedEntries.entries.entries()) {
+            if (entry?.id) {
+              await Auth.DeleteAnimeById(entry?.id, entry?.media?.title)
+              await new Promise((resolve) => setTimeout(resolve, 1100))
             } else {
-              console.log("No entries found.")
+              console.log(`No id in entry.`)
+              console.log(entry)
             }
-          } else {
-            console.log(`\nNo anime(s) found in any list.`)
           }
         } else {
-          console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+          console.log("No entries found.")
         }
       } else {
-        console.log(`\nFailed getting current user Id.`)
+        console.log(`\nNo anime(s) found in any list.`)
       }
     } else {
-      console.error(`\nPlease log in first to delete your lists.`)
+      console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
     }
   }
   static async DeleteAnimeById(id: number, title?: MediaTitle) {
@@ -490,60 +454,56 @@ Statistics (Manga):
   }
   static async DeleteMyMangaList() {
     try {
-      if (await Auth.isLoggedIn()) {
-        const userID: number = await Auth.MyUserId()
-        if (userID) {
-          const response: {
-            data?: { MediaListCollection: { lists: MediaList[] } }
-            errors?: { message: string }[]
-          } = await fetcher(currentUserMangaList, { id: userID })
-          if (response?.data) {
-            const lists: MediaList[] =
-              response?.data?.MediaListCollection?.lists
-            if (lists.length > 0) {
-              const { selectedList }: { selectedList: string } =
-                await inquirer.prompt([
-                  {
-                    type: "list",
-                    name: "selectedList",
-                    message: "Select a manga list:",
-                    choices: lists.map((list: MediaList) => list.name),
-                    pageSize: 10,
-                  },
-                ])
+      if (!(await Auth.isLoggedIn())) {
+        console.error(`\nPlease log in first to delete your lists.`)
+        return
+      }
+      if (!(await Auth.MyUserId())) {
+        console.error(`\nFailed getting current user Id.`)
+        return
+      }
+      const response: MediaListCollectionResponse = await fetcher(
+        currentUserMangaList,
+        { id: await Auth.MyUserId() }
+      )
+      if (!response?.data) {
+        console.error(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+        return
+      }
+      const lists: MediaList[] = response?.data?.MediaListCollection?.lists
+      if (lists.length > 0) {
+        const { selectedList }: { selectedList: string } =
+          await inquirer.prompt([
+            {
+              type: "list",
+              name: "selectedList",
+              message: "Select a manga list:",
+              choices: lists.map((list: MediaList) => list.name),
+              pageSize: 10,
+            },
+          ])
 
-              const selectedEntries: MediaList = lists.find(
-                (list: MediaList) => list.name === selectedList
-              )
+        const selectedEntries: MediaList = lists.find(
+          (list: MediaList) => list.name === selectedList
+        )
 
-              if (selectedEntries) {
-                console.log(`\nDeleting entries of '${selectedEntries.name}':`)
+        if (selectedEntries) {
+          console.log(`\nDeleting entries of '${selectedEntries.name}':`)
 
-                for (const [, entry] of selectedEntries.entries.entries()) {
-                  if (entry?.id) {
-                    await Auth.DeleteMangaById(entry?.id, entry?.media?.title)
-                    await new Promise((resolve) => setTimeout(resolve, 1100))
-                  } else {
-                    console.log(`No id in entry.`)
-                    console.log(entry)
-                  }
-                }
-              } else {
-                console.error("\nNo entries found.")
-              }
+          for (const [, entry] of selectedEntries.entries.entries()) {
+            if (entry?.id) {
+              await Auth.DeleteMangaById(entry?.id, entry?.media?.title)
+              await new Promise((resolve) => setTimeout(resolve, 1100))
             } else {
-              console.error(`\nNo manga(s) found in any list.`)
+              console.log(`No id in entry.`)
+              console.log(entry)
             }
-          } else {
-            console.error(
-              `\nSomething went wrong. ${response?.errors[0]?.message}`
-            )
           }
         } else {
-          console.error(`\nFailed getting current user Id.`)
+          console.error("\nNo entries found.")
         }
       } else {
-        console.error(`\nPlease log in first to delete your lists.`)
+        console.error(`\nNo manga(s) found in any list.`)
       }
     } catch (error) {
       console.error(`\nError deleting manga. ${(error as Error).message}`)
@@ -579,22 +539,22 @@ Statistics (Manga):
         return
       }
 
-      const data: {
-        data?: { SaveTextActivity: { id: number } }
-        errors?: { message: string }[]
-      } = await fetcher(saveTextActivityMutation, {
-        status: status,
-      })
+      const { data }: SaveTextActivityResponse = await fetcher(
+        saveTextActivityMutation,
+        {
+          status: status,
+        }
+      )
 
       if (!data) {
         console.error(`\nSomething went wrong. ${data}.`)
         return
       }
 
-      const savedActivity: { id: number } = data.data?.SaveTextActivity
-
-      if (savedActivity?.id) {
-        console.log(`\n[${savedActivity.id}] status saved successfully!`)
+      if (data.SaveTextActivity.id) {
+        console.log(
+          `\n[${data.SaveTextActivity.id}] status saved successfully!`
+        )
       }
     } catch (error) {
       console.error(`\n${(error as Error).message}`)
@@ -664,7 +624,7 @@ Statistics (Manga):
   }
 }
 
-class Automate {
+class Social {
   /**
    * Follow the users that follows you
    */
@@ -726,7 +686,7 @@ class Automate {
           )
         }
       }
-      console.log(`✅ Followed back ${notFollowing.length} users.`)
+      console.log(`\n✅ Followed back ${notFollowing.length} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
@@ -797,4 +757,4 @@ class Automate {
   }
 }
 
-export { Auth, Automate }
+export { Auth, Social }
