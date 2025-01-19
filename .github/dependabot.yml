@@ -7,7 +7,5 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     ignore:
-      - dependency-type: "direct"
-        update-types: ["version-update:semver-major"]
-      - dependency-type: "indirect"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
