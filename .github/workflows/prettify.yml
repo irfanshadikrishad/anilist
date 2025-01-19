@@ -4,6 +4,11 @@ on:
     branches:
       - master
 
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
 jobs:
   prettier:
     runs-on: ubuntu-latest
