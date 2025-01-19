@@ -1,4 +1,5 @@
 name: Linter
+
 on:
   pull_request:
     branches:
@@ -30,5 +31,5 @@ jobs:
           git push origin HEAD:${{ github.head_ref }}
       - name: Run EsLint without fix
         run: npm run lint
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
