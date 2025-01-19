@@ -44,25 +44,25 @@ anilist login -i <client-id> -s <client-secret>
 
 #### CLI Commands Overview
 
-| **Command**                                 | **Options**                                                             | **Description**                                                                            |
-| ------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **`login`**                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials                                                       |
-| **`logout`**                                | _None_                                                                  | Log out from your AniList account                                                          |
-| **`whoami`**                                | _None_                                                                  | Display information about the logged-in user                                               |
-| **`-V, --version`**                         | _None_                                                                  | Display the current version of the CLI                                                     |
-| **`-h, --help`**                            | _None_                                                                  | Display available commands and options                                                     |
-| **`trending`** <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)                                                 |
-| **`popular`** <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)                                                  |
-| **`user`**                                  | `<username>`                                                            | Get information about a specific AniList user                                              |
-| **`lists`** <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user                                           |
-| **`delete`** <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                                           |
-| **`upcoming`** <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                                                 |
-| **`anime`**                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                              |
-| **`search`** <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                             |
-| **`status`** <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
-| **`export`** <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
-| **`import`** <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON, MyAnimeList (XML) or AniDB (json-large)     |
-| \*\*`social` <br> _(alias: `sol`)_          | `-f, --follow` <br> `-u, --unfollow`                                    | Follow users who follows you or Unfollow who doesn't follow you back with a simple command |
+| **Command**                             | **Options**                                                             | **Description**                                                                            |
+| --------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `login`                                 | `-i, --id` `-s, --secret`                                               | Log in with your AniList credentials                                                       |
+| `logout`                                | _None_                                                                  | Log out from your AniList account                                                          |
+| `whoami`                                | _None_                                                                  | Display information about the logged-in user                                               |
+| `-V, --version`                         | _None_                                                                  | Display the current version of the CLI                                                     |
+| `-h, --help`                            | _None_                                                                  | Display available commands and options                                                     |
+| `trending` <br> _(alias: `tr`)_         | `-c (default: 10)`                                                      | Fetch trending anime (default count is 10)                                                 |
+| `popular` <br> _(alias: `plr`)_         | `-c (default: 10)`                                                      | Fetch popular anime (default count is 10)                                                  |
+| `user`                                  | `<username>`                                                            | Get information about a specific AniList user                                              |
+| `lists` <br> _(alias: `ls`)_            | `-a, --anime` <br> `-m, --manga`                                        | Fetch anime or manga lists of the logged-in user                                           |
+| `delete` <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                                           |
+| `upcoming` <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                                                 |
+| `anime`                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                              |
+| `search` <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                             |
+| `status` <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
+| `export` <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
+| `import` <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON, MyAnimeList (XML) or AniDB (json-large)     |
+| `social` <br> _(alias: `sol`)_          | `-f, --follow` <br> `-u, --unfollow`                                    | Follow users who follows you or Unfollow who doesn't follow you back with a simple command |
 
 #### Command Breakdown:
 
@@ -72,10 +72,10 @@ anilist login -i <client-id> -s <client-secret>
 anilist login -i <client-id> -s <client-secret>
 ```
 
-- **Options**:
+- Options:
   - `-i, --id`: Specify AniList Client ID
   - `-s, --secret`: Provide the AniList Client Secret
-- **Usage**: Authenticate and log in to AniList using your ID and secret credentials.
+- Usage: Authenticate and log in to AniList using your ID and secret credentials.
 
 #### `logout`:
 
@@ -83,7 +83,7 @@ anilist login -i <client-id> -s <client-secret>
 anilist logout
 ```
 
-- **Description**: End the current session and log out from your AniList account.
+- Description: End the current session and log out from your AniList account.
 
 #### `me`:
 
@@ -91,7 +91,7 @@ anilist logout
 anilist me
 ```
 
-- **Description**: Retrieve and display information about the currently logged-in user, including stats and profile details.
+- Description: Retrieve and display information about the currently logged-in user, including stats and profile details.
 
 #### `-V, --version`:
 
@@ -99,7 +99,7 @@ anilist me
 anilist -V
 ```
 
-- **Description**: Quickly check which version of the CLI you are running.
+- Description: Quickly check which version of the CLI you are running.
 
 #### `-h, --help`:
 
@@ -107,7 +107,7 @@ anilist -V
 anilist -h
 ```
 
-- **Description**: List all available commands and their usage details for quick reference.
+- Description: List all available commands and their usage details for quick reference.
 
 #### `trending` _(alias: `tr`)_:
 
@@ -115,9 +115,9 @@ anilist -h
 anilist tr -c 15
 ```
 
-- **Options**:
+- Options:
   - `-c (count)`: Specify how many trending anime to fetch (default: 10).
-- **Description**: Fetch the current trending anime series, with the option to customize how many results to display.
+- Description: Fetch the current trending anime series, with the option to customize how many results to display.
 
 #### `popular` _(alias: `plr`)_:
 
@@ -125,9 +125,9 @@ anilist tr -c 15
 anilist popular
 ```
 
-- **Options**:
+- Options:
   - `-c (count)`: Specify how many popular anime to fetch (default: 10).
-- **Description**: Fetch the most popular anime series, with the option to customize how many results to display.
+- Description: Fetch the most popular anime series, with the option to customize how many results to display.
 
 #### `upcoming` _(alias: `up`)_:
 
@@ -135,9 +135,9 @@ anilist popular
 anilist up -c 25
 ```
 
-- **Options**:
+- Options:
   - `-c (count)`: Specify how many upcoming anime to fetch (default: 10).
-- **Description**: Fetch the upcoming anime series next season, with the option to customize how many results to display.
+- Description: Fetch the upcoming anime series next season, with the option to customize how many results to display.
 
 #### `user`:
 
@@ -145,9 +145,9 @@ anilist up -c 25
 anilist user <username>
 ```
 
-- **Options**:
+- Options:
   - `<username>`: Specify the AniList username to fetch.
-- **Description**: Retrieve profile information about a specific AniList user.
+- Description: Retrieve profile information about a specific AniList user.
 
 #### `lists` _(alias: `ls`)_:
 
@@ -155,10 +155,10 @@ anilist user <username>
 anilist ls -a
 ```
 
-- **Options**:
+- Options:
   - `-a, --anime`: Fetch the authenticated user's anime list.
   - `-m, --manga`: Fetch the authenticated user's manga list.
-- **Description**: Get the anime or manga lists of the logged-in user.
+- Description: Get the anime or manga lists of the logged-in user.
 
 #### `delete` _(alias: `del`)_:
 
@@ -166,11 +166,11 @@ anilist ls -a
 anilist del -ac
 ```
 
-- **Options**:
+- Options:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
   - `-ac, --activity`: Delete all or any type of activities you want.
-- **Description**: Delete the entire anime or manga collection from the logged-in user's profile.
+- Description: Delete the entire anime or manga collection from the logged-in user's profile.
 
 #### `anime`
 
@@ -178,9 +178,9 @@ anilist del -ac
 anilist anime <anime-id>
 ```
 
-- **Options**
+- Options
   - `<anime-id>` _(eg: 21)_ : Id of the anime you want to get details of.
-- **Description**: Get anime details by anime Id.
+- Description: Get anime details by anime Id.
 
 #### `search` _(alias: `srch`/`find`)_:
 
@@ -188,12 +188,12 @@ anilist anime <anime-id>
 anilist search <query> -a -c 20
 ```
 
-- **Options**:
+- Options:
   - `<query>` : What you want to search (eg: naruto).
   - `-a, --anime`: To get results of anime search.
   - `-m, --manga`: To get results of manga search.
   - `-c (count)`: Specify how many items to fetch (default: 10).
-- **Description**: Get anime/manga search results
+- Description: Get anime/manga search results
 
 #### `status` _(alias: `write`/`post`)_:
 
@@ -201,9 +201,9 @@ anilist search <query> -a -c 20
 anilist write <status>
 ```
 
-- **Options**:
+- Options:
   - `<status>` : This is what you want to write, It can be HTML, Markdown and/or Text. But wrap it with quotation mark (") else it might get cut-off.
-- **Description**: Get anime/manga search results
+- Description: Get anime/manga search results
 
 #### `export` _(alias: `exp`)_:
 
@@ -211,10 +211,10 @@ anilist write <status>
 anilist export -a
 ```
 
-- **Options**:
+- Options:
   - `-a, --anime`: To export anime list.
   - `-m, --manga`: To export manga list.
-- **Description**: Export anime or manga list. For `XML (MyAnimeList/AniDB)` file, to import it on MyAnimeList, go [here](https://myanimelist.net/import.php) and choose `MyAnimeList Import` for `AniDB` go [here](https://anidb.net/user/import) and select `MyAnimeList.net - XML anime list export`.
+- Description: Export anime or manga list. For `XML (MyAnimeList/AniDB)` file, to import it on MyAnimeList, go [here](https://myanimelist.net/import.php) and choose `MyAnimeList Import` for `AniDB` go [here](https://anidb.net/user/import) and select `MyAnimeList.net - XML anime list export`.
 
 #### `import` _(alias: `imp`)_:
 
@@ -222,10 +222,10 @@ anilist export -a
 anilist import -m
 ```
 
-- **Options**:
+- Options:
   - `-a, --anime`: To import anime list.
   - `-m, --manga`: To import manga list.
-- **Description**: Import anime or manga list. If you want to import anime/manga list from `MyAnimeList`, export the XML from [here](https://myanimelist.net/panel.php?go=export), for exporting list from `AniDB` go [here](https://anidb.net/user/export).
+- Description: Import anime or manga list. If you want to import anime/manga list from `MyAnimeList`, export the XML from [here](https://myanimelist.net/panel.php?go=export), for exporting list from `AniDB` go [here](https://anidb.net/user/export).
 
 > [!NOTE]
 > If you have exported from `AniDB`, you will have to unzip it, and there should be a file named `mylist.json`, copy and paste it in your systems download folder, and select it from import option.
@@ -239,10 +239,10 @@ anilist import -m
 anilist sol -f
 ```
 
-- **Options**:
+- Options:
   - `-f, --follow`: To follow users who follows you automatically.
   - `-u, --unfollow`: To unfollow users who doesn't follow you back.
-- **Description**: It follows users who follows you or unfollow users who doesn't follow you back at ease.
+- Description: It follows users who follows you or unfollow users who doesn't follow you back at ease.
 
 #### Security
 
@@ -252,4 +252,4 @@ Since you are creating your own API client for login no else else can get your c
 
 Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
 
-#### **_Thanks for visiting 💙_**
+#### _Thanks for visiting 💙_
