@@ -32,4 +32,4 @@ jobs:
       - name: Run EsLint without fix
         run: npm run lint
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.WORKFLOWS }}
