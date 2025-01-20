@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (${​{ matrix.language }})
+    name: Analyze (${{ matrix.language }})
     runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
     permissions:
       security-events: write
@@ -21,10 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language:
-          - javascript
-          - typescript
-        # Add other languages here if applicable, e.g., "python", "java", etc.
+        language: ["javascript-typescript"]
 
     steps:
       - name: Checkout repository
@@ -34,8 +31,6 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          # Uncomment and configure this section for custom queries if needed
-          # queries: security-extended, security-and-quality
 
       - name: Build your code (if needed)
         if: matrix.language == 'manual'
