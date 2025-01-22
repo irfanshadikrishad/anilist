@@ -69,6 +69,16 @@ class Validate {
       return false
     }
   }
+  static async Import_AniDBJSONLarge(file: string) {
+    if (!file || file.toString() === "") {
+      return false
+    }
+    const obj3ct = JSON.parse(file)
+    if (!obj3ct?.anime && !Array.isArray(obj3ct?.anime)) {
+      return false
+    }
+    return true
+  }
 }
 
 export { Validate }

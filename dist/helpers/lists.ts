@@ -1272,11 +1272,19 @@ class AniDB {
   static async importAnime() {
     try {
       const filename: string = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
       const js0n_repaired = jsonrepair(fileContent)
 
-      if (fileContent) {
+      if (!(await Validate.Import_AniDBJSONLarge(js0n_repaired))) {
+        console.error(`\nInvalid JSON Large file.`)
+        return
+      }
+
+      if (js0n_repaired) {
         const obj3ct = await JSON.parse(js0n_repaired)
         const animeList = obj3ct?.anime
 
@@ -1335,7 +1343,7 @@ class AniDB {
                 if (entryId) {
                   count++
                   console.log(
-                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}→${getStatus(status, ownEpisodes)}`
+                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
                   )
                 }
 
