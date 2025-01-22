@@ -36,7 +36,7 @@ jobs:
           if [[ -n "$CHANGED_FILES" ]]; then
             echo "The following files were modified:"
             echo "$CHANGED_FILES"
-            git commit -m "fix: apply Prettier formatting"
+            git commit -m "fix: prettier formatting"
             git push origin HEAD:${{ github.head_ref }}
           else
             echo "No changes to commit."

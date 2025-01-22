@@ -500,7 +500,7 @@ Statistics (Manga):
             }
           }
         } else {
-          console.error("\nNo entries found.")
+              console.error("\nNo entries found.")
         }
       } else {
         console.error(`\nNo manga(s) found in any list.`)
