@@ -45,6 +45,7 @@ import {
   UserFollowing,
   UserResponse,
 } from "./types.js"
+import { Validate } from "./validation.js"
 import {
   anidbToanilistMapper,
   createAnimeListXML,
@@ -65,9 +66,17 @@ class AniList {
   static async importAnime() {
     try {
       const filename = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const importedData = JSON.parse(fileContent)
+
+      if (!Validate.Import_JSON(importedData)) {
+        console.error(`\nInvalid JSON file.`)
+        return
+      }
 
       let count = 0
       const batchSize = 1 // Number of requests in each batch
@@ -120,9 +129,17 @@ class AniList {
   static async importManga() {
     try {
       const filename = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const importedData = JSON.parse(fileContent)
+
+      if (!Validate.Import_JSON(importedData)) {
+        console.error(`\nInvalid JSON file.`)
+        return
+      }
 
       let count = 0
       const batchSize = 1 // Adjust batch size as per rate-limit constraints

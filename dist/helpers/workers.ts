@@ -172,13 +172,14 @@ async function selectFile(fileType: string): Promise<string> {
 
       return answers.fileName
     } else {
-      throw new Error(
+      console.error(
         `\nNo importable ${fileType} file(s) found in download folder.`
       )
+      return null
     }
   } catch (error) {
     console.error("\nError selecting file:", error)
-    throw error
+    return null
   }
 }
 
