@@ -4,6 +4,7 @@ import inquirer from "inquirer"
 import { jsonrepair } from "jsonrepair"
 import open from "open"
 import { join } from "path"
+import Spinner from "tiny-spinner"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
 import {
@@ -61,6 +62,8 @@ import {
   selectFile,
   timestampToTimeAgo,
 } from "./workers.js"
+
+const spinner = new Spinner()
 
 class AniList {
   static async importAnime() {
@@ -1023,8 +1026,15 @@ class MyAnimeList {
   static async importAnime() {
     try {
       const filename: string = await selectFile(".xml")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
+      if (!(await Validate.Import_AnimeXML(fileContent))) {
+        return
+      }
+
       const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
@@ -1099,8 +1109,15 @@ class MyAnimeList {
   static async importManga() {
     try {
       const filename: string = await selectFile(".xml")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
+      if (!(await Validate.Import_MangaXML(fileContent))) {
+        console.error(`\nInvalid XML file.`)
+        return
+      }
       const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
