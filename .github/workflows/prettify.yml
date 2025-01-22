@@ -1,5 +1,4 @@
 name: Prettify
-
 on:
   pull_request:
     branches:
@@ -13,24 +12,19 @@ permissions:
 jobs:
   prettier:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-
       - name: Install dependencies
         run: npm install
-
       - name: Run Prettier
         run: npm run format
-
       - name: Commit and push changes back to PR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,3 +40,4 @@ jobs:
             git push origin HEAD:${{ github.head_ref }}
           else
             echo "No changes to commit."
+          fi
