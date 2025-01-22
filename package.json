@@ -59,6 +59,7 @@
     "@types/jest": "^29.5.14",
     "@types/json2csv": "^5.0.7",
     "@types/node": "^22.10.5",
+    "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^8.19.0",
     "eslint": "^9.17.0",
     "globals": "^15.14.0",
@@ -77,6 +78,7 @@
     "jsonrepair": "^3.11.2",
     "node-fetch": "^3.3.2",
     "open": "^10.1.0",
-    "tiny-spinner": "^2.0.4"
+    "tiny-spinner": "^2.0.4",
+    "xml2js": "^0.6.2"
   }
 }

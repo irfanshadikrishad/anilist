@@ -45,6 +45,7 @@ import {
   UserFollowing,
   UserResponse,
 } from "./types.js"
+import { Validate } from "./validation.js"
 import {
   anidbToanilistMapper,
   createAnimeListXML,
@@ -65,9 +66,17 @@ class AniList {
   static async importAnime() {
     try {
       const filename = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const importedData = JSON.parse(fileContent)
+
+      if (!Validate.Import_JSON(importedData)) {
+        console.error(`\nInvalid JSON file.`)
+        return
+      }
 
       let count = 0
       const batchSize = 1 // Number of requests in each batch
@@ -120,9 +129,17 @@ class AniList {
   static async importManga() {
     try {
       const filename = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath = join(getDownloadFolderPath(), filename)
       const fileContent = await readFile(filePath, "utf8")
       const importedData = JSON.parse(fileContent)
+
+      if (!Validate.Import_JSON(importedData)) {
+        console.error(`\nInvalid JSON file.`)
+        return
+      }
 
       let count = 0
       const batchSize = 1 // Adjust batch size as per rate-limit constraints
@@ -1006,8 +1023,16 @@ class MyAnimeList {
   static async importAnime() {
     try {
       const filename: string = await selectFile(".xml")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
+      if (!(await Validate.Import_AnimeXML(fileContent))) {
+        console.error(`\nInvalid XML file.`)
+        return
+      }
+
       const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
@@ -1082,8 +1107,15 @@ class MyAnimeList {
   static async importManga() {
     try {
       const filename: string = await selectFile(".xml")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
+      if (!(await Validate.Import_MangaXML(fileContent))) {
+        console.error(`\nInvalid XML file.`)
+        return
+      }
       const parser: XMLParser = new XMLParser()
 
       if (fileContent) {
@@ -1240,11 +1272,19 @@ class AniDB {
   static async importAnime() {
     try {
       const filename: string = await selectFile(".json")
+      if (!filename) {
+        return
+      }
       const filePath: string = join(getDownloadFolderPath(), filename)
       const fileContent: string = await readFile(filePath, "utf8")
       const js0n_repaired = jsonrepair(fileContent)
 
-      if (fileContent) {
+      if (!(await Validate.Import_AniDBJSONLarge(js0n_repaired))) {
+        console.error(`\nInvalid JSON Large file.`)
+        return
+      }
+
+      if (js0n_repaired) {
         const obj3ct = await JSON.parse(js0n_repaired)
         const animeList = obj3ct?.anime
 
@@ -1303,7 +1343,7 @@ class AniDB {
                 if (entryId) {
                   count++
                   console.log(
-                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}→${getStatus(status, ownEpisodes)}`
+                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
                   )
                 }
 

@@ -172,13 +172,14 @@ async function selectFile(fileType: string): Promise<string> {
 
       return answers.fileName
     } else {
-      throw new Error(
+      console.error(
         `\nNo importable ${fileType} file(s) found in download folder.`
       )
+      return null
     }
   } catch (error) {
     console.error("\nError selecting file:", error)
-    throw error
+    return null
   }
 }
 
@@ -252,7 +253,10 @@ async function createAnimeListXML(
     DROPPED: MALAnimeStatus.DROPPED,
   }
 
-  const xmlEntries = mediaWithProgress.map((anime) => {
+  // Filter out anime without malId
+  const filteredMedia = mediaWithProgress.filter((anime) => anime.malId)
+
+  const xmlEntries = filteredMedia.map((anime) => {
     const malId = anime.malId
     const progress = anime.progress
     const episodes = anime.episodes
@@ -277,6 +281,7 @@ async function createAnimeListXML(
             \n${xmlEntries.join("\n")}\n
           </myanimelist>`
 }
+
 async function createMangaListXML(
   mediaWithProgress: MediaWithProgress[]
 ): Promise<string> {
@@ -288,7 +293,10 @@ async function createMangaListXML(
     DROPPED: MALMangaStatus.DROPPED,
   }
 
-  const xmlEntries = mediaWithProgress.map((manga) => {
+  // Filter out manga without malId
+  const filteredMedia = mediaWithProgress.filter((manga) => manga.malId)
+
+  const xmlEntries = filteredMedia.map((manga) => {
     const malId = manga.malId
     const progress = manga.progress
     const chapters = manga.chapters
