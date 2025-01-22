@@ -9,6 +9,11 @@ class Validate {
       )
     )
   }
+  /**
+   * Validate if MyAnimeList Anime XML file is valid or not
+   * @param xmlData string
+   * @returns boolean
+   */
   static async Import_AnimeXML(xmlData: string): Promise<boolean> {
     try {
       const result = await parseStringPromise(xmlData, { explicitArray: false })
@@ -34,6 +39,11 @@ class Validate {
       return false
     }
   }
+  /**
+   * Validate if MyAnimeList Anime XML file is valid or not
+   * @param xmlData string
+   * @returns boolean
+   */
   static async Import_MangaXML(xmlData: string): Promise<boolean> {
     try {
       const result = await parseStringPromise(xmlData, { explicitArray: false })
