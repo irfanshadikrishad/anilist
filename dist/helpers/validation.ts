@@ -108,7 +108,7 @@ class Validate {
       }
       return true
     } catch (error) {
-      console.error("Failed to parse JSON file:", error)
+        console.error("Failed to parse JSON file:", error)
       return false
     }
   }
