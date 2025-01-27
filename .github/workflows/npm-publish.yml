@@ -25,7 +25,9 @@ jobs:
           npm version patch --no-git-tag-version
       - name: Get New Version
         id: version
-        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_ENV
+        shell: bash
       - name: Commit the Version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
