@@ -107,7 +107,7 @@ function getFormattedDate(): string {
 /**
  * Export JSON as JSON
  * @param js0n
- * @param dataType (eg: anime/manga)
+ * @param dataType (eg: anime|manga)
  */
 async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
   try {
@@ -124,10 +124,10 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
 /**
  * Export JSON as CSV
  * @param js0n
- * @param dataType (eg: anime/manga)
+ * @param dataType (eg: anime|manga)
  */
 async function saveJSONasCSV(
-  js0n: Record<string, any>[],
+  js0n: Record<string, string>[],
   dataType: string
 ): Promise<void> {
   try {
