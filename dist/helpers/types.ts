@@ -95,7 +95,7 @@ interface AnimeList {
 }
 
 interface MediaWithProgress {
-  malId: number
+  malId?: number
   progress: number
   status: string
   episodes?: number

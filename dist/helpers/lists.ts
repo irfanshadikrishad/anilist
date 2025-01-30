@@ -220,10 +220,7 @@ class AniList {
       const mediaWithProgress = lists.flatMap((list: MediaList) =>
         list.entries.map((entry: MediaListEntry) => ({
           id: entry?.media?.id,
-          title:
-            exportType === 1
-              ? getTitle(entry?.media?.title)
-              : entry?.media?.title,
+          title: entry?.media?.title,
           episodes: entry?.media?.episodes,
           siteUrl: entry?.media?.siteUrl,
           progress: entry.progress,
@@ -283,10 +280,7 @@ class AniList {
       const mediaWithProgress = lists.flatMap((list: MediaList) =>
         list.entries.map((entry: MediaListEntry) => ({
           id: entry?.media?.id,
-          title:
-            exportType === 1
-              ? getTitle(entry?.media?.title)
-              : entry?.media?.title,
+          title: entry?.media?.title,
           private: entry.private,
           chapters: entry.media.chapters,
           progress: entry.progress,

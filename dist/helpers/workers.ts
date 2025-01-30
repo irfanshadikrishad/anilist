@@ -127,11 +127,15 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
  * @param dataType (eg: anime|manga)
  */
 async function saveJSONasCSV(
-  js0n: Record<string, string>[],
+  js0n: MediaWithProgress[],
   dataType: string
 ): Promise<void> {
   try {
-    const csvData = Papa.unparse(js0n)
+    const js0n_WTAS = js0n.map(({ title, ...rest }) => ({
+      ...rest,
+      title: getTitle(title),
+    }))
+    const csvData = Papa.unparse(js0n_WTAS)
     const path = await saveToPath(dataType, ".csv")
     await writeFile(path, csvData, "utf8")
     console.log(`\nSaved as CSV successfully.`)
