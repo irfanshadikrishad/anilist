@@ -115,6 +115,7 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
     const path = await saveToPath(dataType, ".json")
     await writeFile(path, jsonData, "utf8")
     console.log(`\nSaved as JSON successfully.`)
+
     open(getDownloadFolderPath())
   } catch (error) {
     console.error("\nError saving JSON data:", error)
@@ -139,6 +140,7 @@ async function saveJSONasCSV(
     const path = await saveToPath(dataType, ".csv")
     await writeFile(path, csvData, "utf8")
     console.log(`\nSaved as CSV successfully.`)
+
     open(getDownloadFolderPath())
   } catch (error) {
     console.error("\nError saving CSV data:", error)
