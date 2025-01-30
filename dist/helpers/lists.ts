@@ -1,8 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
-import { readFile, writeFile } from "fs/promises"
+import { readFile } from "fs/promises"
 import inquirer from "inquirer"
 import { jsonrepair } from "jsonrepair"
-import open from "open"
 import { join } from "path"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
@@ -48,16 +47,14 @@ import {
 import { Validate } from "./validation.js"
 import {
   anidbToanilistMapper,
-  createAnimeListXML,
-  createMangaListXML,
   formatDateObject,
   getDownloadFolderPath,
-  getFormattedDate,
   getNextSeasonAndYear,
   getTitle,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
+  saveJSONasXML,
   selectFile,
   timestampToTimeAgo,
 } from "./workers.js"
@@ -1203,17 +1200,10 @@ class MyAnimeList {
               progress: entry.progress,
               status: entry?.status,
               hiddenFromStatusLists: false,
+              format: entry?.media?.format,
             }))
           )
-          const xmlContent = createAnimeListXML(mediaWithProgress)
-          const path = join(
-            getDownloadFolderPath(),
-            `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(anime)-${getFormattedDate()}.xml`
-          )
-          await writeFile(path, await xmlContent, "utf8")
-          console.log(`Generated XML for MyAnimeList.`)
-
-          open(getDownloadFolderPath())
+          await saveJSONasXML(mediaWithProgress, 0)
         } else {
           console.log(
             `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`
@@ -1248,15 +1238,7 @@ class MyAnimeList {
               hiddenFromStatusLists: entry.hiddenFromStatusLists,
             }))
         )
-        const XMLContent = createMangaListXML(mediaWithProgress)
-        const path = join(
-          getDownloadFolderPath(),
-          `${await Auth.MyUserName()}@irfanshadikrishad-anilist-myanimelist(manga)-${getFormattedDate()}.xml`
-        )
-        await writeFile(path, await XMLContent, "utf8")
-        console.log(`Generated XML for MyAnimeList.`)
-
-        open(getDownloadFolderPath())
+        await saveJSONasXML(mediaWithProgress, 1)
       } else {
         console.log(
           `\nHey, ${await Auth.MyUserName()}. Your anime list seems to be empty.`

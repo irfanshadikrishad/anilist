@@ -1,10 +1,10 @@
 import fs from "fs"
 import { readdir, writeFile } from "fs/promises"
 import inquirer from "inquirer"
-import { parse } from "json2csv"
 import { createRequire } from "module"
 import open from "open"
 import { homedir } from "os"
+import Papa from "papaparse"
 import { join } from "path"
 import process from "process"
 import { Auth } from "./auth.js"
@@ -112,10 +112,7 @@ function getFormattedDate(): string {
 async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
   try {
     const jsonData = JSON.stringify(js0n, null, 2)
-    const path = join(
-      getDownloadFolderPath(),
-      `${await Auth.MyUserName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.json`
-    )
+    const path = await saveToPath(dataType, ".json")
     await writeFile(path, jsonData, "utf8")
     console.log(`\nSaved as JSON successfully.`)
     open(getDownloadFolderPath())
@@ -129,18 +126,31 @@ async function saveJSONasJSON(js0n: object, dataType: string): Promise<void> {
  * @param js0n
  * @param dataType (eg: anime/manga)
  */
-async function saveJSONasCSV(js0n: object, dataType: string): Promise<void> {
+async function saveJSONasCSV(
+  js0n: Record<string, any>[],
+  dataType: string
+): Promise<void> {
   try {
-    const csvData = parse(js0n)
-    const path = join(
-      getDownloadFolderPath(),
-      `${await Auth.MyUserName()}@irfanshadikrishad-anilist-${dataType}-${getFormattedDate()}.csv`
-    )
+    const csvData = Papa.unparse(js0n)
+    const path = await saveToPath(dataType, ".csv")
     await writeFile(path, csvData, "utf8")
     console.log(`\nSaved as CSV successfully.`)
     open(getDownloadFolderPath())
   } catch (error) {
     console.error("\nError saving CSV data:", error)
+  }
+}
+async function saveJSONasXML(js0n: MediaWithProgress[], data_type: 0 | 1) {
+  try {
+    const xmlContent =
+      data_type === 0 ? createAnimeListXML(js0n) : createMangaListXML(js0n)
+    const path = await saveToPath(data_type === 0 ? "anime" : "manga", ".xml")
+    await writeFile(path, await xmlContent, "utf8")
+    console.log(`\nGenerated XML for MyAnimeList.`)
+
+    open(getDownloadFolderPath())
+  } catch (error) {
+    console.error(`Error saving XML data:`, error)
   }
 }
 async function listFilesInDownloadFolder(): Promise<string[]> {
@@ -188,13 +198,14 @@ function createAnimeXML(
   progress: number,
   status: MALAnimeStatus,
   episodes: number,
-  title: string
+  title: string,
+  format: string
 ): string {
   return `
     <anime>
       <series_animedb_id>${malId}</series_animedb_id>
       <series_title><![CDATA[${title}]]></series_title>
-      <series_type>""</series_type>
+      <series_type>${format}</series_type>
       <series_episodes>${episodes}</series_episodes>
       <my_id>0</my_id>
       <my_watched_episodes>${progress}</my_watched_episodes>
@@ -257,13 +268,16 @@ async function createAnimeListXML(
   const filteredMedia = mediaWithProgress.filter((anime) => anime.malId)
 
   const xmlEntries = filteredMedia.map((anime) => {
+    console.log(anime)
+
     const malId = anime.malId
     const progress = anime.progress
     const episodes = anime.episodes
     const title = getTitle(anime.title)
     const status = statusMap[anime.status as keyof typeof statusMap]
+    const format = anime.format ? anime.format : ""
 
-    return createAnimeXML(malId, progress, status, episodes, title)
+    return createAnimeXML(malId, progress, status, episodes, title, format)
   })
 
   return `<myanimelist>
@@ -390,6 +404,18 @@ const anidbToanilistMapper = async (
 
   return null
 }
+/**
+ * Extract the save file path
+ * @param data_type - anime|manga
+ * @param file_format - save format (eg: .json|.csv)
+ * @returns string of file path
+ */
+async function saveToPath(data_type: string, file_format: string) {
+  return join(
+    getDownloadFolderPath(),
+    `${await Auth.MyUserName()}@irfanshadikrishad-anilist-${data_type}-${getFormattedDate()}.${file_format}`
+  )
+}
 
 export {
   anidbToanilistMapper,
@@ -408,6 +434,8 @@ export {
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
+  saveJSONasXML,
+  saveToPath,
   selectFile,
   timestampToTimeAgo,
 }

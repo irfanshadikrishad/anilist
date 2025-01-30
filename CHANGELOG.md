@@ -1,5 +1,6 @@
 #### Changelog
 
-#### v1.2.3
+#### v1.2.11
 
-- Unit Testing
+- chore: cleaned up repository history
+- chore(deps): update dependencies

@@ -46,10 +46,7 @@ interface MalIdToAnilistIdResponse {
   data?: {
     Media: {
       id: number
-      title: {
-        english?: string
-        romaji?: string
-      }
+      title: MediaTitle
     }
   }
   errors?: {
@@ -103,7 +100,8 @@ interface MediaWithProgress {
   status: string
   episodes?: number
   chapters?: number
-  title: { english?: string; romaji?: string }
+  format?: string
+  title: MediaTitle
 }
 
 interface MediaTitle {
@@ -157,7 +155,7 @@ interface List {
 }
 interface MediaList {
   id(id: number | string): string
-  title: { english?: string; romaji?: string }
+  title: MediaTitle
   name: string
   entries: MediaListEntry[]
 }
@@ -233,6 +231,7 @@ interface MediaListEntry {
     episodes?: number
     siteUrl?: string
     chapters?: number
+    format?: string
   }
   progress?: number
   status?: string
