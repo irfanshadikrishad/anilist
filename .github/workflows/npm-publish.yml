@@ -23,12 +23,19 @@ jobs:
       - name: Bump Version
         run: |
           npm version patch --no-git-tag-version
-      - name: Commit the version
+      - name: Get Version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+        shell: bash
+      - name: Commit the Version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ env.VERSION }}
         run: |
           git add package.json package-lock.json
-          git commit -m "npmjs: sync-version"
+          git commit -m "npmjs: updated to v${VERSION}"
           git push origin master
       - name: Install Dependencies
         run: npm ci

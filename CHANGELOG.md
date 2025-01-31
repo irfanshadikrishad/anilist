@@ -1,5 +1,7 @@
 #### Changelog
 
-#### v1.2.3
+#### v1.2.11
 
-- Unit Testing
+- chore: json2csv to papaparser
+- chore: cleaned up repository history
+- chore(deps): update dependencies

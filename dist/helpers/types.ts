@@ -46,10 +46,7 @@ interface MalIdToAnilistIdResponse {
   data?: {
     Media: {
       id: number
-      title: {
-        english?: string
-        romaji?: string
-      }
+      title: MediaTitle
     }
   }
   errors?: {
@@ -98,12 +95,13 @@ interface AnimeList {
 }
 
 interface MediaWithProgress {
-  malId: number
+  malId?: number
   progress: number
   status: string
   episodes?: number
   chapters?: number
-  title: { english?: string; romaji?: string }
+  format?: string
+  title: MediaTitle
 }
 
 interface MediaTitle {
@@ -157,7 +155,7 @@ interface List {
 }
 interface MediaList {
   id(id: number | string): string
-  title: { english?: string; romaji?: string }
+  title: MediaTitle
   name: string
   entries: MediaListEntry[]
 }
@@ -233,37 +231,12 @@ interface MediaListEntry {
     episodes?: number
     siteUrl?: string
     chapters?: number
+    format?: string
   }
   progress?: number
   status?: string
   hiddenFromStatusLists?: boolean
   private?: boolean
-}
-
-interface TheActivity {
-  type: string
-  id: number
-  message?: string
-  createdAt: number
-  recipient?: {
-    id: number
-    name: string
-  }
-  isLiked?: boolean
-  user?: {
-    id?: number
-    name?: string
-  }
-  messenger?: {
-    name: string
-  }
-  media?: {
-    title?: {
-      userPreferred: string
-    }
-  }
-  progress?: string | null
-  status?: string
 }
 
 type UserActivitiesResponse = {
@@ -306,6 +279,15 @@ type UserResponse = {
   errors?: { message: string }[]
 }
 
+type User = {
+  id: number
+  name: string
+  avatar: { large: string; medium: string }
+  bannerImage: string
+  isFollower: boolean
+  isFollowing: boolean
+}
+
 type UserFollower = {
   data?: {
     Page: {
@@ -320,15 +302,6 @@ type UserFollower = {
     }
   }
   errors?: { message: string }[]
-}
-
-type User = {
-  id: number
-  name: string
-  avatar: { large: string; medium: string }
-  bannerImage: string
-  isFollower: boolean
-  isFollowing: boolean
 }
 
 type UserFollowing = {
@@ -363,32 +336,6 @@ type AnimeSearchResponse = {
   errors?: { message: string }[]
 }
 
-type LikeActivityResponse = {
-  data?: { ToggleLike: { id: number } }
-  errors?: { message: string }[]
-}
-
-type SpecificUserActivitiesResponse = {
-  data?: {
-    Page: {
-      pageInfo: {
-        total: number
-        perPage: number
-        currentPage: number
-        lastPage: number
-        hasNextPage: boolean
-      }
-      activities: TheActivity[]
-    }
-  }
-  errors?: { message: string }[]
-}
-
-type DeleteActivityResponse = {
-  data?: { DeleteMediaListEntry: { deleted: boolean } }
-  errors?: { message: string }[]
-}
-
 type ToggleFollowResponse = {
   data?: {
     ToggleFollow: {
@@ -414,6 +361,50 @@ type Activity = {
   media: { id?: number; title: MediaTitle }
   createdAt: number
 }
+interface TheActivity {
+  type: string
+  id: number
+  message?: string
+  createdAt: number
+  recipient?: {
+    id: number
+    name: string
+  }
+  isLiked?: boolean
+  user?: {
+    id?: number
+    name?: string
+  }
+  messenger?: {
+    name: string
+  }
+  media?: {
+    title?: {
+      userPreferred: string
+    }
+  }
+  progress?: string | null
+  status?: string
+}
+type LikeActivityResponse = {
+  data?: { ToggleLike: { id: number } }
+  errors?: { message: string }[]
+}
+type SpecificUserActivitiesResponse = {
+  data?: {
+    Page: {
+      pageInfo: {
+        total: number
+        perPage: number
+        currentPage: number
+        lastPage: number
+        hasNextPage: boolean
+      }
+      activities: TheActivity[]
+    }
+  }
+  errors?: { message: string }[]
+}
 
 export {
   Activity,
@@ -422,7 +413,6 @@ export {
   AnimeList,
   AnimeSearchResponse,
   DateMonthYear,
-  DeleteActivityResponse,
   DeleteMangaResponse,
   DeleteMediaListResponse,
   LikeActivityResponse,
