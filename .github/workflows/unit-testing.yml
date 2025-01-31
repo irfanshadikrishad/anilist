@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - forbidden
   pull_request:
     branches:
       - master
+      - forbidden
 
 permissions:
   contents: read
