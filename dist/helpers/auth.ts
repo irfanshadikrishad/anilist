@@ -4,6 +4,7 @@ import fetch from "node-fetch"
 import open from "open"
 import os from "os"
 import path from "path"
+import { exit } from "process"
 import Spinner from "tiny-spinner"
 import { fetcher } from "./fetcher.js"
 import { AniDB, AniList, MyAnimeList } from "./lists.js"
@@ -652,6 +653,9 @@ Statistics (Manga):
         })
 
         if (activities && activities?.data?.Page?.activities.length > 0) {
+          spinner.success(
+            `Got ${activities?.data?.Page?.activities.length} activities..`
+          )
           retryCount = 0 // Reset retry count on successful fetch
           const activiti = activities?.data?.Page?.activities
 
@@ -682,16 +686,16 @@ Statistics (Manga):
           page++
         } else {
           if (retryCount < maxRetries) {
+            spinner.start("Getting activities...")
             retryCount++
-            console.warn(
+            spinner.update(
               `Empty activities returned. Retrying... (${retryCount}/${maxRetries})`
             )
-            await new Promise((resolve) => setTimeout(resolve, 3000))
+            await new Promise((resolve) => setTimeout(resolve, 2000))
           } else {
-            console.log(
-              `\nProbably the end of activities after ${maxRetries} retries.`
+            spinner.error(
+              `Probably the end of activities after ${maxRetries} retries.`
             )
-            console.info(activities)
             hasMoreActivities = false
           }
         }
@@ -700,16 +704,13 @@ Statistics (Manga):
       console.error(`\nError from likeFollowing. ${(error as Error).message}`)
     }
   }
-  private static async Like(type: number) {
+  private static async LikeGlobal() {
     try {
       let page = 1
       let hasMoreActivities = true
-      let activity =
-        type === 0
-          ? followingActivitiesQuery
-          : type === 1
-            ? globalActivitiesQuery
-            : followingActivitiesQuery
+      let likedCount = 0
+
+      spinner.start(`Getting global activities...`)
 
       while (hasMoreActivities) {
         const activities: {
@@ -719,13 +720,14 @@ Statistics (Manga):
             }
           }
           errors?: { message: string }[]
-        } = await fetcher(activity, {
+        } = await fetcher(globalActivitiesQuery, {
           page,
           perPage: 50,
         })
 
         if (activities && activities?.data?.Page?.activities.length > 0) {
           const activiti = activities?.data?.Page?.activities
+          spinner.success(`Got ${activiti.length} activities...`)
 
           for (let activ of activiti) {
             if (!activ.isLiked && activ.id) {
@@ -737,7 +739,10 @@ Statistics (Manga):
                   }
                 )
                 // const ToggleLike = like?.data?.ToggleLike
-                console.info(`${activityBy(activ)} ${like?.data ? "✅" : "❌"}`)
+                likedCount++
+                console.info(
+                  `${activityBy(activ, likedCount)} ${like?.data ? "✅" : "❌"}`
+                )
               } catch (error) {
                 console.error(
                   `Activity possibly deleted. ${(error as Error).message}`
@@ -755,8 +760,9 @@ Statistics (Manga):
           page++
         } else {
           // No more activities to like
-          console.log(`\nProbably the end of activities.`)
-          console.info(activities)
+          spinner.error(
+            `Probably the end of activities. ${activities?.data?.Page?.activities}`
+          )
           hasMoreActivities = false
         }
       }
@@ -780,10 +786,13 @@ Statistics (Manga):
         errors?: { message: string }[]
       } = await fetcher(userQuery, { username: username })
 
-      if (userDetails) {
+      spinner.start(`Getting activities by ${username}`)
+
+      if (userDetails?.data?.User?.id) {
         let page = 1
         const perPage = 50
         const userId = userDetails?.data?.User?.id
+        let likedCount = 0
 
         if (userId) {
           while (true) {
@@ -799,9 +808,10 @@ Statistics (Manga):
 
             // Break the loop if no more activities are found
             if (!activiti || activiti.length === 0) {
-              console.log("No more activities found.")
+              spinner.error("No more activities found.")
               break
             }
+            spinner.success(`Got ${activiti.length} activities...`)
 
             for (let activ of activiti) {
               if (!activ.isLiked && activ.id) {
@@ -812,8 +822,9 @@ Statistics (Manga):
                       activityId: activ.id,
                     }
                   )
+                  likedCount++
                   console.info(
-                    `${activityBy(activ)} ${like?.data ? "✅" : "❌"}`
+                    `${activityBy(activ, likedCount)} ${like?.data ? "✅" : "❌"}`
                   )
                 } catch (error) {
                   console.error(
@@ -834,6 +845,9 @@ Statistics (Manga):
             page += 1
           }
         }
+      } else {
+        spinner.error(`User ${username} does not exist.`)
+        exit(1)
       }
     } catch (error) {
       console.error(
@@ -981,7 +995,7 @@ Statistics (Manga):
           await this.LikeFollowing()
           break
         case 2:
-          await this.Like(1)
+          await this.LikeGlobal()
           break
         case 3:
           await this.LikeSpecificUser()
