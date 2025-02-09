@@ -633,6 +633,7 @@ class Social {
       let pager = 1
       let hasNextPage = true
       let allFollowerUsers: User[] = []
+      let followedBack = 0
       spinner.start("Fetching all the followers...")
       while (hasNextPage) {
         const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
@@ -680,13 +681,17 @@ class Social {
               `\t${String(`[${follow?.data?.ToggleFollow?.name}]`).padEnd(maxNameLength)}` +
               `\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
           )
+          // Count the followed back users
+          if (follow?.data?.ToggleFollow?.id) {
+            followedBack++
+          }
         } catch (error) {
           console.log(
             `automate_follow_toggle_follow: ${(error as Error).message}`
           )
         }
       }
-      console.log(`\n✅ Followed back ${notFollowing.length} users.`)
+      console.log(`\n✅ Followed back ${followedBack} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
@@ -699,6 +704,7 @@ class Social {
       let pager = 1
       let hasNextPage = true
       let allFollowingUsers: User[] = []
+      let unfollowedUsers = 0
       spinner.start("Fetching all following users...")
       while (hasNextPage) {
         const followingUsers: UserFollowing = await fetcher(
@@ -709,7 +715,7 @@ class Social {
           }
         )
         spinner.update(
-          `Fetched page ${pager} of ${followingUsers?.data?.Page?.pageInfo?.lastPage} ...`
+          `Fetched page ${pager} of ${followingUsers?.data?.Page?.pageInfo?.lastPage}...`
         )
         if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
           hasNextPage = false
@@ -725,8 +731,7 @@ class Social {
         .filter((user) => !user.isFollower)
         .map((u3r) => ({ id: u3r.id, name: u3r.name }))
       if (notFollowingMe.length <= 0) {
-        console.warn(`\nNot following list is empty!`)
-        spinner.stop(`No users to unfollow. Aborting process...`)
+        spinner.stop(`No users to unfollow. Exiting operation...`)
         return
       }
       spinner.stop(
@@ -746,11 +751,17 @@ class Social {
           console.log(
             `[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
           )
+          // Count the unfollowed users
+          if (unfollow?.data?.ToggleFollow?.id) {
+            unfollowedUsers++
+          }
         } catch (error) {
           console.log(`unfollow_toggle_follow. ${(error as Error).message}`)
         }
       }
-      console.log(`\nTotal Unfollowed: ${nfmCount}`)
+      console.log(
+        `\nTotal Unfollowed: ${unfollowedUsers} of ${nfmCount} users.`
+      )
     } catch (error) {
       console.error(`\nautomate_unfollow: ${(error as Error).message}`)
     }
