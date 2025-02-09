@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     permissions:
       security-events: write
       packages: read
@@ -22,6 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         language: ["javascript-typescript", "actions"]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout repository
@@ -32,11 +33,11 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      - name: Build your code (if needed)
-        if: matrix.language == 'manual'
+      - name: Build your code
+        if: matrix.language == 'javascript-typescript'
         run: |
-          # Replace with your build commands if required for certain languages
-          echo "Manual build steps go here, e.g., 'npm install && npm run build'"
+          npm install
+          npm run build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
