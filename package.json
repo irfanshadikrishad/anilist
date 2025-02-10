@@ -2,7 +2,7 @@
   "name": "@irfanshadikrishad/anilist",
   "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
   "author": "Irfan Shadik Rishad",
-  "version": "1.2.12",
+  "version": "1.2.13",
   "main": "./bin/index.js",
   "type": "module",
   "types": "./bin/index.d.ts",
