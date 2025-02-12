@@ -35,12 +35,12 @@ Create an API client from [anilist developer setting](https://anilist.co/setting
 
 To login:
 
-```
+```bash
 anilist login -i <client-id> -s <client-secret>
 ```
 
 > [!NOTE]
-> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
+> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting. Also don't include `<>`, this only indicates need-to-be-replaced data.
 
 #### CLI Commands Overview
 
@@ -85,10 +85,10 @@ anilist logout
 
 - Description: End the current session and log out from your AniList account.
 
-#### `me`:
+#### `whoami`:
 
 ```bash
-anilist me
+anilist whoami
 ```
 
 - Description: Retrieve and display information about the currently logged-in user, including stats and profile details.
@@ -163,13 +163,13 @@ anilist ls -a
 #### `delete` _(alias: `del`)_:
 
 ```bash
-anilist del -ac
+anilist del -s,
 ```
 
 - Options:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
-  - `-ac, --activity`: Delete all or any type of activities you want.
+  - `-s,, --activity`: Delete all or any type of activities you want.
 - Description: Delete the entire anime or manga collection from the logged-in user's profile.
 
 #### `anime`
