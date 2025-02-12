@@ -9,7 +9,7 @@ Thank you for considering contributing to **@irfanshadikrishad/anilist**! We wel
 1.  Click the "Fork" button in the top right corner of the repository page.
 2.  Clone your forked repository to your local machine:
     ```bash
-    git clone https://github.com/your-username/anilist.git
+    git clone https://github.com/<your-username>/anilist.git
     ```
 3.  Navigate to the project directory:
     ```bash
@@ -55,10 +55,10 @@ Thank you for considering contributing to **@irfanshadikrishad/anilist**! We wel
     git push origin feature/my-new-feature
     ```
 10. Create a Pull Request
-    1. Go to the original repository where you want to submit your changes.
-    2. Click on the "New Pull Request" button.
-    3. Select your branch from the dropdown and submit the pull request.
-    4. Provide a clear description of the changes you made and why they are needed.
+    1. Go to the repository you forked.
+    2. Click on the `Contribute` then `Open Pull Request` button.
+    3. Provide a clear description of the changes you made and why they are needed.
+    4. Check if the branches are correctly selected in the dropdown and submit the pull request.
 
 #### Code of Conduct
 
@@ -72,4 +72,4 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 #### Thank You!
 
-Your contributions help make @irfanshadikrishad/anilist a better tool for everyone. We appreciate your time and effort in making this project great!
+Your contributions help make `@irfanshadikrishad/anilist` a better tool for everyone. We appreciate your time and effort in making this project great!
