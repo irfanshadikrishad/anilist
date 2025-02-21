@@ -12,6 +12,7 @@ import { fetcher } from "./fetcher.js"
 import { animeSearchQuery } from "./queries.js"
 import {
   AnimeSearchResponse,
+  DateMonthYear,
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
@@ -423,6 +424,13 @@ async function saveToPath(data_type: string, file_format: string) {
   )
 }
 
+function simpleDateFormat(date: DateMonthYear) {
+  if (!date.day && !date.month && !date.year) {
+    return `null`
+  }
+  return `${date?.day}/${date?.month}/${date?.year}`
+}
+
 export {
   anidbToanilistMapper,
   aniListEndpoint,
@@ -443,5 +451,6 @@ export {
   saveJSONasXML,
   saveToPath,
   selectFile,
+  simpleDateFormat,
   timestampToTimeAgo,
 }
