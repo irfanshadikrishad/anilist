@@ -18,6 +18,7 @@ import {
   currentUserMangaList,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
+  mangaDetailsQuery,
   mangaSearchQuery,
   popularQuery,
   trendingQuery,
@@ -32,6 +33,7 @@ import {
   AnimeDetails,
   AnimeList,
   MalIdToAnilistIdResponse,
+  MangaDetails,
   MediaEntry,
   MediaList,
   MediaListCollectionResponse,
@@ -56,6 +58,7 @@ import {
   saveJSONasJSON,
   saveJSONasXML,
   selectFile,
+  simpleDateFormat,
   timestampToTimeAgo,
 } from "./workers.js"
 
@@ -875,6 +878,29 @@ class AniList {
       console.log(`isAdult: ${isAdult ? "Yes" : "No"}`)
       console.log(`Released: ${formatDateObject(startDate) || "Unknown"}`)
       console.log(`Finished: ${formatDateObject(endDate) || "Ongoing"}`)
+    }
+  }
+  static async getMangaDetailsByID(mangaID: number) {
+    try {
+      const response: MangaDetails = await fetcher(mangaDetailsQuery, {
+        id: mangaID,
+      })
+      if (response?.errors) {
+        console.error(`${response.errors[0].message}`)
+        return
+      }
+      const manga = response?.data?.Media
+      if (manga) {
+        console.log(`\n[${getTitle(manga.title)}]`)
+        console.log(`${manga.description}`)
+        console.log(`Chapters: ${manga.chapters}\t Volumes: ${manga.volumes}`)
+        console.log(`Status:\t${manga.status}`)
+        console.log(`Genres:\t${manga.genres.join(", ")}`)
+        console.log(`Start:\t${simpleDateFormat(manga.startDate)}`)
+        console.log(`End:\t${simpleDateFormat(manga.endDate)}`)
+      }
+    } catch (error) {
+      console.error(`${(error as Error).message}`)
     }
   }
   static async searchAnime(search: string, count: number) {

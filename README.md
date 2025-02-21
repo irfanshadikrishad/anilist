@@ -58,6 +58,7 @@ anilist login -i <client-id> -s <client-secret>
 | `delete` <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                                           |
 | `upcoming` <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                                                 |
 | `anime`                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                              |
+| `manga`                                 | `<manga-id>`                                                            | Get manga details by Manga ID                                                              |
 | `search` <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                             |
 | `status` <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
 | `export` <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
@@ -181,6 +182,16 @@ anilist anime <anime-id>
 - Options
   - `<anime-id>` _(eg: 21)_ : Id of the anime you want to get details of.
 - Description: Get anime details by anime Id.
+
+#### `manga`
+
+```bash
+anilist manga <manga-id>
+```
+
+- Options
+  - `<anime-id>` _(eg: 21)_ : Id of the manga you want to get details of.
+- Description: Get manga details by manga Id.
 
 #### `search` _(alias: `srch`/`find`)_:
 

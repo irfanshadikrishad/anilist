@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "rm -rf ./bin && tsc",
-    "buildw": "rm -rf ./bin && tsc -w",
+    "build:watch": "rm -rf ./bin && tsc -w",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
