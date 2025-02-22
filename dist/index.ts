@@ -124,6 +124,13 @@ cli
     }
   })
 cli
+  .command("manga <id>")
+  .description("Get manga details by their ID")
+  .option("-c, --count <number>", "Number of items to get", "10")
+  .action(async (id) => {
+    await AniList.getMangaDetailsByID(id)
+  })
+cli
   .command("search <query>")
   .alias("srch")
   .alias("find")

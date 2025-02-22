@@ -194,9 +194,9 @@ interface Myself {
   errors?: { message: string }[]
 }
 interface DateMonthYear {
-  day?: number
-  month?: number
-  year?: number
+  day?: number | null
+  month?: number | null
+  year?: number | null
 }
 interface AnimeDetails {
   data?: {
@@ -406,6 +406,36 @@ type SpecificUserActivitiesResponse = {
   errors?: { message: string }[]
 }
 
+type Error = {
+  message: string
+}[]
+
+type CoverImage = {
+  color: string
+  medium: string
+  large: string
+  extraLarge: string
+}
+
+type MangaDetails = {
+  data?: {
+    Media: {
+      id: number
+      title: MediaTitle
+      coverImage: CoverImage
+      bannerImage: string
+      description: string
+      chapters: number | null
+      volumes: number | null
+      status: string
+      genres: [string]
+      startDate: DateMonthYear
+      endDate: DateMonthYear
+    }
+  }
+  errors?: Error
+}
+
 export {
   Activity,
   AniListMediaStatus,
@@ -421,6 +451,7 @@ export {
   MALAnimeXML,
   MALMangaStatus,
   MalIdToAnilistIdResponse,
+  MangaDetails,
   MediaEntry,
   MediaList,
   MediaListCollectionResponse,

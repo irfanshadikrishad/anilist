@@ -204,6 +204,15 @@ const toggleFollowMutation = `mutation ($userId: Int!) {
 }
 `
 
+const mangaDetailsQuery = `query ($id: Int) {
+  Media(id: $id, type: MANGA) {
+    id title { romaji english native userPreferred } coverImage { color medium large extraLarge } 
+    bannerImage description chapters volumes status genres
+    startDate { year month day } endDate { year month day }
+  }
+}
+`
+
 export {
   activityAllQuery,
   activityAnimeListQuery,
@@ -222,6 +231,7 @@ export {
   globalActivitiesQuery,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
+  mangaDetailsQuery,
   mangaSearchQuery,
   popularQuery,
   specificUserActivitiesQuery,

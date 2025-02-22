@@ -35,12 +35,12 @@ Create an API client from [anilist developer setting](https://anilist.co/setting
 
 To login:
 
-```
+```bash
 anilist login -i <client-id> -s <client-secret>
 ```
 
 > [!NOTE]
-> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting.
+> here `<client-id>` and `<client-secret>` should be replaced by the ones that you recieved from the developer setting. Also don't include `<>`, this only indicates need-to-be-replaced data.
 
 #### CLI Commands Overview
 
@@ -58,6 +58,7 @@ anilist login -i <client-id> -s <client-secret>
 | `delete` <br> _(alias: `del`)_          | `-a, --anime` <br> `-m, --manga` <br> `-s, --activity`                  | Delete collections of anime, manga or activities                                           |
 | `upcoming` <br> _(alias:`up`)_          | `-c (default: 10)`                                                      | Fetch upcoming anime (default count is 10)                                                 |
 | `anime`                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                              |
+| `manga`                                 | `<manga-id>`                                                            | Get manga details by Manga ID                                                              |
 | `search` <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                             |
 | `status` <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
 | `export` <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
@@ -85,10 +86,10 @@ anilist logout
 
 - Description: End the current session and log out from your AniList account.
 
-#### `me`:
+#### `whoami`:
 
 ```bash
-anilist me
+anilist whoami
 ```
 
 - Description: Retrieve and display information about the currently logged-in user, including stats and profile details.
@@ -163,13 +164,13 @@ anilist ls -a
 #### `delete` _(alias: `del`)_:
 
 ```bash
-anilist del -ac
+anilist del -s,
 ```
 
 - Options:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
-  - `-ac, --activity`: Delete all or any type of activities you want.
+  - `-s,, --activity`: Delete all or any type of activities you want.
 - Description: Delete the entire anime or manga collection from the logged-in user's profile.
 
 #### `anime`
@@ -181,6 +182,16 @@ anilist anime <anime-id>
 - Options
   - `<anime-id>` _(eg: 21)_ : Id of the anime you want to get details of.
 - Description: Get anime details by anime Id.
+
+#### `manga`
+
+```bash
+anilist manga <manga-id>
+```
+
+- Options
+  - `<anime-id>` _(eg: 21)_ : Id of the manga you want to get details of.
+- Description: Get manga details by manga Id.
 
 #### `search` _(alias: `srch`/`find`)_:
 
