@@ -638,6 +638,7 @@ Statistics (Manga):
       let hasMoreActivities: boolean = true
       let retryCount: number = 0
       const maxRetries: number = 5
+      let likedCount = 0
 
       while (hasMoreActivities) {
         const activities: {
@@ -668,14 +669,19 @@ Statistics (Manga):
                     activityId: activ.id,
                   }
                 )
-                console.info(`${activityBy(activ)} ${like?.data ? "✅" : "❌"}`)
+                if (like?.data) {
+                  likedCount++
+                }
+                console.info(
+                  `${like?.data ? "✅" : "❌"} ${activityBy(activ, likedCount)}`
+                )
               } catch (error) {
                 console.error(
                   `Activity possibly deleted. ${(error as Error).message}`
                 )
               }
             } else {
-              console.log(`${activityBy(activ)} 🔵`)
+              console.log(`🔵 ${activityBy(activ)}`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
@@ -741,7 +747,7 @@ Statistics (Manga):
                 // const ToggleLike = like?.data?.ToggleLike
                 likedCount++
                 console.info(
-                  `${activityBy(activ, likedCount)} ${like?.data ? "✅" : "❌"}`
+                  `${like?.data ? "✅" : "❌"} ${activityBy(activ, likedCount)}`
                 )
               } catch (error) {
                 console.error(
@@ -749,7 +755,7 @@ Statistics (Manga):
                 )
               }
             } else {
-              console.log(`${activityBy(activ)} 🔵`)
+              console.log(`🔵 ${activityBy(activ)}`)
             }
             // avoiding rate-limit
             await new Promise((resolve) => {
@@ -824,7 +830,7 @@ Statistics (Manga):
                   )
                   likedCount++
                   console.info(
-                    `${activityBy(activ, likedCount)} ${like?.data ? "✅" : "❌"}`
+                    `${like?.data ? "✅" : "❌"} ${activityBy(activ, likedCount)}`
                   )
                 } catch (error) {
                   console.error(
@@ -832,7 +838,7 @@ Statistics (Manga):
                   )
                 }
               } else {
-                console.log(`${activityBy(activ)} 🔵`)
+                console.log(`🔵 ${activityBy(activ)}`)
               }
 
               // Avoiding rate limit
@@ -941,22 +947,18 @@ Statistics (Manga):
                 }
               )
               console.info(
-                `[${userNumber}/${i + 1}/${activiti.length}] ${activityBy(
-                  activ
-                )} ${like?.data ? "✅" : "❌"}`
+                `${like?.data ? "✅" : "❌"} ${activityBy(activ, i + 1)}`
               )
               if (like?.data) {
                 liked++
               }
             } catch (error) {
               console.error(
-                `[${userNumber}/${i + 1}/${activiti.length}] Activity possibly deleted. ${(error as Error).message}`
+                `Activity possibly deleted. ${(error as Error).message}`
               )
             }
           } else {
-            console.log(
-              `[${userNumber}/${i + 1}/${activiti.length}] ${activityBy(activ)} 🔵`
-            )
+            console.log(`🔵 ${activityBy(activ, i + 1)}`)
           }
 
           // Avoid rate-limiting
