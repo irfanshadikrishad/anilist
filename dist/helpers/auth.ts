@@ -28,6 +28,7 @@ import {
   userFollowersQuery,
   userFollowingQuery,
 } from "./queries.js"
+import { responsiveOutput } from "./truncate.js"
 import {
   DeleteMediaListResponse,
   MediaList,
@@ -218,7 +219,7 @@ Statistics (Manga):
           console.log(`\nRecent Activities:`)
           if (activities.length > 0) {
             activities.map(({ status, progress, media, createdAt }) => {
-              console.log(
+              responsiveOutput(
                 `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ""}${getTitle(
                   media?.title
                 )}`
