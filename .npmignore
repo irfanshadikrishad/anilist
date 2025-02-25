@@ -1,0 +1,12 @@
+/.github
+/.vscode
+/dist
+/tests
+.babelrc
+.prettierrc
+.prettierignore
+tsconfig.json
+eslint.config.js
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
