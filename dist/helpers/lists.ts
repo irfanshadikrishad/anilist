@@ -28,6 +28,7 @@ import {
   userFollowingQuery,
   userQuery,
 } from "./queries.js"
+import { responsiveOutput } from "./truncate.js"
 import {
   AniListMediaStatus,
   AnimeDetails,
@@ -832,7 +833,7 @@ class AniList {
       if (activities.length > 0) {
         console.log(`\nRecent Activities:`)
         activities.forEach(({ status, progress, media, createdAt }) => {
-          console.log(
+          responsiveOutput(
             `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ""}${getTitle(media?.title)}`
           )
         })
@@ -1344,7 +1345,7 @@ class AniDB {
                 const entryId = saveResponse?.data?.SaveMediaListEntry?.id
                 if (entryId) {
                   count++
-                  console.log(
+                  responsiveOutput(
                     `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
                   )
                 }
@@ -1364,11 +1365,11 @@ class AniDB {
               })
             }
           }
-          console.log(
+          responsiveOutput(
             `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
           )
           if (missed.length > 0) {
-            console.log(
+            responsiveOutput(
               `Exporting missed entries to JSON file, Please add them manually.`
             )
             await saveJSONasJSON(missed, "anidb-missed")
