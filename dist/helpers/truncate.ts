@@ -1,5 +1,5 @@
 import cliTruncate from "cli-truncate"
-
+import process from "process"
 /**
  * Truncate text (No line break)
  * @param str - Long text to trancate
