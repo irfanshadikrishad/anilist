@@ -412,18 +412,19 @@ const anidbToanilistMapper = async (
 }
 
 function activityBy(activity: TheActivity, count?: number): string {
+  const countStr = `[${count ? count : "?"}]`.padEnd(6)
   if (activity?.messenger?.name) {
-    return `[${count ? count : "?"}]\t${activity.messenger.name} >> messaged ${activity.recipient.name}`
+    return `${countStr}${activity.messenger.name} >> messaged ${activity.recipient.name}`
   } else if (activity?.media?.title?.userPreferred) {
     if (activity.progress) {
-      return `[${count ? count : "?"}]\t${activity.user.name} >> ${activity.status} ${activity.progress} of ${activity.media.title.userPreferred}`
+      return `${countStr}${activity.user.name} >> ${activity.status} ${activity.progress} of ${activity.media.title.userPreferred}`
     } else {
-      return `[${count ? count : "?"}]\t${activity.user.name} >> ${activity.status} ${activity.media.title.userPreferred}`
+      return `${countStr}${activity.user.name} >> ${activity.status} ${activity.media.title.userPreferred}`
     }
   } else if (activity?.user?.name) {
-    return `[${count ? count : "?"}]\t${activity.user.name}`
+    return `${countStr}${activity.user.name}`
   } else {
-    return `[${count ? count : "?"}\t???`
+    return `${countStr}???`
   }
 }
 
