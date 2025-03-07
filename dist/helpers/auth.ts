@@ -1,3 +1,4 @@
+import { Cipher } from "@irfanshadikrishad/cipher"
 import fs from "fs"
 import inquirer from "inquirer"
 import fetch from "node-fetch"
@@ -50,8 +51,9 @@ import {
 } from "./workers.js"
 
 const home_dir = os.homedir()
-const save_path = path.join(home_dir, ".anilist_token")
+const save_path = path.join(home_dir, ".anilist_tok3n")
 const spinner = new Spinner()
+const vigenere = new Cipher.Vigenere("anilist")
 
 class Auth {
   /**
@@ -84,7 +86,7 @@ class Auth {
         console.warn("\nNo token provided. Nothing to store.")
         return
       }
-      fs.writeFileSync(save_path, token, { encoding: "utf8" })
+      fs.writeFileSync(save_path, vigenere.encrypt(token), { encoding: "utf8" })
     } catch (error) {
       console.error(`\nError storing access token: ${(error as Error).message}`)
     }
@@ -92,7 +94,9 @@ class Auth {
   static async RetriveAccessToken(): Promise<string | null> {
     try {
       if (fs.existsSync(save_path)) {
-        return fs.readFileSync(save_path, { encoding: "utf8" })
+        return vigenere.decrypt(
+          fs.readFileSync(save_path, { encoding: "utf8" })
+        )
       } else {
         return null
       }
