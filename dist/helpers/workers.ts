@@ -16,7 +16,10 @@ import {
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
+<<<<<<< HEAD
   TheActivity,
+=======
+>>>>>>> 690adec945b38a869cc0bcc0ffee7227c6ba02c3
 } from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
