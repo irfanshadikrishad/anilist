@@ -990,9 +990,10 @@ Statistics (Manga):
           name: "activityType",
           message: "Select activity type:",
           choices: [
-            { name: "Following", value: 1 },
-            { name: "Global", value: 2 },
-            { name: "Specific User", value: 3 },
+            { name: "Following • v1", value: 1 },
+            { name: "Following • v2", value: 2 },
+            { name: "Global", value: 3 },
+            { name: "Specific User", value: 4 },
           ],
           pageSize: 10,
         },
@@ -1001,10 +1002,21 @@ Statistics (Manga):
         case 1:
           await this.LikeFollowing()
           break
-        case 2:
+        case 2: {
+          const { count } = await inquirer.prompt([
+            {
+              type: "number",
+              name: "count",
+              message: "Likes to give:",
+            },
+          ])
+          await this.LikeFollowingActivityV2(count)
+          break
+        }
+        case 3:
           await this.LikeGlobal()
           break
-        case 3:
+        case 4:
           await this.LikeSpecificUser()
           break
         default:
