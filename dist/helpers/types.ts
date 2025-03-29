@@ -1,10 +1,14 @@
+type Error = {
+  message: string
+}[]
+
 interface DeleteMangaResponse {
   data?: {
     DeleteMediaListEntry?: {
       deleted?: boolean
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 enum AniListMediaStatus {
@@ -49,9 +53,7 @@ interface MalIdToAnilistIdResponse {
       title: MediaTitle
     }
   }
-  errors?: {
-    message: string
-  }[]
+  errors?: Error
 }
 
 interface saveAnimeWithProgressResponse {
@@ -62,9 +64,7 @@ interface saveAnimeWithProgressResponse {
       hiddenFromStatusLists: boolean
     }
   }
-  errors?: {
-    message: string
-  }[]
+  errors?: Error
 }
 
 enum MALAnimeStatus {
@@ -89,9 +89,7 @@ interface AnimeList {
       lists: MediaList[]
     }
   }
-  errors?: {
-    message: string
-  }[]
+  errors?: Error
 }
 
 interface MediaWithProgress {
@@ -135,7 +133,7 @@ interface SaveTextActivityResponse {
       createdAt: number
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 interface MediaListCollectionResponse {
@@ -144,9 +142,7 @@ interface MediaListCollectionResponse {
       lists: MediaList[]
     }
   }
-  errors?: {
-    message: string
-  }[]
+  errors?: Error
 }
 
 interface List {
@@ -161,37 +157,9 @@ interface MediaList {
 }
 interface Myself {
   data?: {
-    Viewer: {
-      id: number
-      name: string
-      siteUrl: string
-      options: {
-        profileColor: string
-        timezone: string
-        activityMergeTime: string
-      }
-      donatorTier: string
-      donatorBadge: string
-      unreadNotificationCount: number
-      createdAt: number
-      updatedAt: number
-      statistics: {
-        anime: {
-          count: number
-          meanScore: string
-          minutesWatched: string
-          episodesWatched: number
-        }
-        manga: {
-          count: number
-          meanScore: string
-          chaptersRead: number
-          volumesRead: number
-        }
-      }
-    }
+    Viewer: User
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 interface DateMonthYear {
   day?: number | null
@@ -216,11 +184,11 @@ interface AnimeDetails {
       siteUrl: string
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 interface SaveMediaListEntryResponse {
   data?: { SaveMediaListEntry: { id: number; status: string } }
-  errors?: { message: string }[]
+  errors?: Error
 }
 interface MediaListEntry {
   id?: number
@@ -245,47 +213,54 @@ type UserActivitiesResponse = {
       activities: Activity[]
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type UserResponse = {
   data?: {
-    User: {
-      id: number
-      name: string
-      siteUrl: string
-      donatorTier: string
-      donatorBadge: string
-      createdAt: number
-      updatedAt: number
-      isBlocked: boolean
-      isFollower: boolean
-      isFollowing: boolean
-      options: { profileColor: string; timezone: string }
-      statistics: {
-        anime: {
-          count: number
-          episodesWatched: number
-          minutesWatched: number
-        }
-        manga: {
-          count: number
-          chaptersRead: number
-          volumesRead: number
-        }
-      }
-    }
+    User: User
   }
-  errors?: { message: string }[]
+  errors?: Error
+}
+
+type Avatar = {
+  large?: string
+  medium?: string
 }
 
 type User = {
   id: number
-  name: string
-  avatar: { large: string; medium: string }
-  bannerImage: string
-  isFollower: boolean
-  isFollowing: boolean
+  name?: string
+  avatar?: Avatar
+  bannerImage?: string
+  isFollower?: boolean
+  isFollowing?: boolean
+  siteUrl?: string
+  donatorTier?: string
+  donatorBadge?: string
+  createdAt?: number
+  updatedAt?: number
+  isBlocked?: boolean
+  unreadNotificationCount?: number
+  options?: {
+    profileColor?: string
+    timezone?: string
+    activityMergeTime?: number
+  }
+  statistics?: {
+    anime?: {
+      count?: number
+      episodesWatched?: number
+      minutesWatched?: number
+      meanScore?: number
+    }
+    manga?: {
+      count?: number
+      chaptersRead?: number
+      volumesRead?: number
+      meanScore?: number
+    }
+  }
 }
 
 type UserFollower = {
@@ -301,7 +276,7 @@ type UserFollower = {
       followers: User[]
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type UserFollowing = {
@@ -317,7 +292,7 @@ type UserFollowing = {
       following: User[]
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type AnimeSearchResponse = {
@@ -333,7 +308,7 @@ type AnimeSearchResponse = {
       }[]
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type ToggleFollowResponse = {
@@ -345,12 +320,12 @@ type ToggleFollowResponse = {
       isFollowing: boolean
     }
   }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type DeleteMediaListResponse = {
   data?: { DeleteMediaListEntry: { deleted: boolean } }
-  errors?: { message: string }[]
+  errors?: Error
 }
 
 type Activity = {
@@ -361,10 +336,6 @@ type Activity = {
   media: { id?: number; title: MediaTitle }
   createdAt: number
 }
-
-type Error = {
-  message: string
-}[]
 
 type CoverImage = {
   color: string

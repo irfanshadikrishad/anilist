@@ -1,6 +1,6 @@
 import fetch from "node-fetch"
 import { Auth } from "./auth.js"
-import { aniListEndpoint } from "./workers.js"
+import { aniListEndpoint, handleRateLimitRetry } from "./workers.js"
 
 /**
  * Sends a GraphQL request to the AniList API.
@@ -18,13 +18,14 @@ async function fetcher(
   variables: object
 ): Promise<object | null> {
   try {
-    const headers = {
+    const headers: Record<string, string> = {
       "content-type": "application/json",
     }
 
-    if (await Auth.isLoggedIn()) {
-      headers["Authorization"] = `Bearer ${await Auth.RetriveAccessToken()}`
-    }
+    const token = (await Auth.isLoggedIn())
+      ? await Auth.RetriveAccessToken()
+      : null
+    if (token) headers["Authorization"] = `Bearer ${token}`
 
     const request = await fetch(aniListEndpoint, {
       method: "POST",
@@ -37,9 +38,8 @@ async function fetcher(
     if (request.status === 200) {
       return response
     } else if (request.status === 429) {
-      console.warn("Rate limit reached. Retrying in 1 minute...")
-      await new Promise((resolve) => setTimeout(resolve, 60000)) // Wait for 1 minute
-      return await fetcher(query, variables) // Retry the request
+      await handleRateLimitRetry(60)
+      return await fetcher(query, variables)
     } else {
       console.error(
         `\n${request.status} ${response?.errors?.[0]?.message || "Unknown error"}.`
