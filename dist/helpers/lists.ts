@@ -81,8 +81,7 @@ class AniList {
       }
 
       let count = 0
-      const batchSize = 1 // Number of requests in each batch
-      const delay = 1100 // delay to avoid rate-limiting
+      const batchSize = 1
 
       for (let i = 0; i < importedData.length; i += batchSize) {
         const batch = importedData.slice(i, i + batchSize)
@@ -118,9 +117,6 @@ class AniList {
             }
           )
         )
-
-        // Avoid rate-limiting: Wait before sending the next batch
-        await new Promise((resolve) => setTimeout(resolve, delay))
       }
 
       console.log(`\nTotal ${count} anime(s) imported successfully.`)
@@ -144,10 +140,8 @@ class AniList {
       }
 
       let count = 0
-      const batchSize = 1 // Adjust batch size as per rate-limit constraints
-      const delay = 1100 // 2 seconds delay to avoid rate-limit
+      const batchSize = 1
 
-      // Process in batches
       for (let i = 0; i < importedData.length; i += batchSize) {
         const batch = importedData.slice(i, i + batchSize)
 
@@ -186,9 +180,6 @@ class AniList {
             }
           )
         )
-
-        // Avoid rate-limit by adding delay after processing each batch
-        await new Promise((resolve) => setTimeout(resolve, delay))
       }
 
       console.log(`\nTotal ${count} manga(s) imported successfully.`)
