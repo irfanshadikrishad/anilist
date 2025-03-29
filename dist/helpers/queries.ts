@@ -42,14 +42,6 @@ const currentUserMangaList = `query ($id: Int) {
 }
 `
 
-const deleteMediaEntryMutation = `mutation($id: Int!) {
-  DeleteMediaListEntry(id: $id) { deleted }
-}`
-
-const deleteMangaEntryMutation = `mutation($id: Int) {
-  DeleteMediaListEntry(id: $id) { deleted }
-}`
-
 const upcomingAnimesQuery = `query GetNextSeasonAnime($nextSeason: MediaSeason, $nextYear: Int, $perPage: Int) {
   Page(perPage: $perPage) {
     media(season: $nextSeason, seasonYear: $nextYear, type: ANIME, sort: POPULARITY_DESC) {
@@ -139,15 +131,11 @@ const activityMediaList = `query ($userId: Int, $page: Int, $perPage: Int, $type
 }`
 
 const malIdToAnilistAnimeId = `query ($malId: Int) {
-  Media(idMal: $malId, type: ANIME) {
-    id title { romaji english } } 
-}
+  Media(idMal: $malId, type: ANIME) { id title { romaji english } } }
 `
 
 const malIdToAnilistMangaId = `query ($malId: Int) {
-  Media(idMal: $malId, type: MANGA) {
-    id title { romaji english } } 
-}
+  Media(idMal: $malId, type: MANGA) { id title { romaji english } } }
 `
 
 const userFollowingQuery = `query ($userId: Int!, $page: Int) {
@@ -163,11 +151,6 @@ const userFollowersQuery = `query ($userId: Int!, $page: Int) {
     pageInfo { total perPage currentPage lastPage hasNextPage }
     followers(userId: $userId, sort: [USERNAME]) { id name avatar { large medium } bannerImage isFollowing isFollower }
   }
-}
-`
-
-const toggleFollowMutation = `mutation ($userId: Int!) {
-  ToggleFollow(userId: $userId) { id name isFollower isFollowing }
 }
 `
 
@@ -192,14 +175,11 @@ export {
   currentUserAnimeList,
   currentUserMangaList,
   currentUserQuery,
-  deleteMangaEntryMutation,
-  deleteMediaEntryMutation,
   malIdToAnilistAnimeId,
   malIdToAnilistMangaId,
   mangaDetailsQuery,
   mangaSearchQuery,
   popularQuery,
-  toggleFollowMutation,
   trendingQuery,
   upcomingAnimesQuery,
   userActivityQuery,

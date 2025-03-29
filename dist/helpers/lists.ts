@@ -54,6 +54,7 @@ import {
   getDownloadFolderPath,
   getNextSeasonAndYear,
   getTitle,
+  logUserDetails,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
@@ -803,32 +804,7 @@ class AniList {
       const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
       const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
 
-      console.log(`\nID:\t\t${user.id}`)
-      console.log(`Name:\t\t${user.name}`)
-      console.log(`Site URL:\t${user.siteUrl}`)
-      console.log(`Donator Tier:\t${user.donatorTier}`)
-      console.log(`Donator Badge:\t${user.donatorBadge}`)
-      console.log(
-        `Account Created:\t${user.createdAt ? new Date(user.createdAt * 1000).toUTCString() : "N/A"}`
-      )
-      console.log(
-        `Account Updated:\t${user.updatedAt ? new Date(user.updatedAt * 1000).toUTCString() : "N/A"}`
-      )
-      console.log(`Blocked:\t${user.isBlocked}`)
-      console.log(`Follower:\t${user.isFollower}`)
-      console.log(`Following:\t${user.isFollowing}`)
-      console.log(`Profile Color:\t${user.options?.profileColor}`)
-      console.log(
-        `Timezone:\t${user.options?.timezone ? user.options?.timezone : "N/A"}`
-      )
-      console.log(`\nFollowers:\t${followersCount}`)
-      console.log(`Following:\t${followingCount}`)
-      console.log(
-        `\nStatistics (Anime)\n\tCount: ${user.statistics?.anime?.count || 0}\tEpisodes Watched: ${user.statistics?.anime?.episodesWatched || 0}\tMinutes Watched: ${user.statistics?.anime?.minutesWatched || 0}`
-      )
-      console.log(
-        `Statistics (Manga)\n\tCount: ${user.statistics?.manga?.count || 0}\tChapters Read: ${user.statistics?.manga?.chaptersRead || 0}\tVolumes Read: ${user.statistics?.manga?.volumesRead || 0}`
-      )
+      logUserDetails(user, followersCount, followingCount)
 
       if (activities.length > 0) {
         console.log(`\nRecent Activities:`)
@@ -1096,9 +1072,6 @@ class MyAnimeList {
                   count++
                   console.log(`[${count}] ${entryId} ✅`)
                 }
-
-                // Rate limit each API call to avoid server overload
-                await new Promise((resolve) => setTimeout(resolve, 1100))
               } else {
                 console.error(
                   `Could not retrieve AniList ID for MAL ID ${malId}`
@@ -1349,9 +1322,6 @@ class AniDB {
                     `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
                   )
                 }
-
-                // Rate limit each API call to avoid server overload
-                // await new Promise((resolve) => setTimeout(resolve, 1100))
               } catch (error) {
                 console.error(
                   `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`

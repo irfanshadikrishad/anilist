@@ -7,6 +7,7 @@ import { homedir } from "os"
 import Papa from "papaparse"
 import { join } from "path"
 import process from "process"
+import Spinner from "tiny-spinner"
 import { Auth } from "./auth.js"
 import { fetcher } from "./fetcher.js"
 import { animeSearchQuery } from "./queries.js"
@@ -16,10 +17,12 @@ import {
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
+  User,
 } from "./types.js"
 
 const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = "https://anilist.co/api/v2/oauth/pin"
+const spinner = new Spinner()
 
 function getTitle(title: { english?: string; romaji?: string }) {
   return title?.english || title?.romaji || "???"
@@ -431,6 +434,67 @@ function simpleDateFormat(date: DateMonthYear) {
   return `${date?.day}/${date?.month}/${date?.year}`
 }
 
+async function handleRateLimitRetry(retryCount: number): Promise<void> {
+  let seconds = 2 ** retryCount * 1000
+  const maxWait = 60 * 1000
+  seconds = Math.min(seconds, maxWait)
+
+  spinner.start(`Rate limit reached. Retrying in ${seconds / 1000} sec...`)
+
+  let remainingTime = seconds / 1000
+  const interval = setInterval(() => {
+    remainingTime--
+    spinner.update(`Rate limit reached. Retrying in ${remainingTime} sec...`)
+    if (remainingTime <= 0) clearInterval(interval)
+  }, 1000)
+
+  await new Promise((resolve) => setTimeout(resolve, seconds))
+  clearInterval(interval)
+  spinner.stop()
+}
+
+function formatDate(timestamp?: number): string {
+  return timestamp ? new Date(timestamp * 1000).toUTCString() : "N/A"
+}
+
+function logUserDetails(
+  user: User,
+  followersCount: number,
+  followingCount: number
+) {
+  console.log("\n📌 User Information:")
+  console.table({
+    "ID": user.id,
+    "Name": user.name,
+    "Site URL": user.siteUrl,
+    "Donator Tier": user.donatorTier,
+    "Donator Badge": user.donatorBadge,
+    "Account Created": formatDate(user.createdAt),
+    "Account Updated": formatDate(user.updatedAt),
+    "Blocked": user.isBlocked,
+    "isFollower": user.isFollower,
+    "isFollowing": user.isFollowing,
+    "Profile Color": user.options?.profileColor || "N/A",
+    "Timezone": user.options?.timezone || "N/A",
+    "Followers": followersCount,
+    "Following": followingCount,
+  })
+
+  console.log("\n📊 Anime Statistics:")
+  console.table({
+    "Count": user.statistics?.anime?.count || 0,
+    "Episodes Watched": user.statistics?.anime?.episodesWatched || 0,
+    "Minutes Watched": user.statistics?.anime?.minutesWatched || 0,
+  })
+
+  console.log("\n📖 Manga Statistics:")
+  console.table({
+    "Count": user.statistics?.manga?.count || 0,
+    "Chapters Read": user.statistics?.manga?.chaptersRead || 0,
+    "Volumes Read": user.statistics?.manga?.volumesRead || 0,
+  })
+}
+
 export {
   anidbToanilistMapper,
   aniListEndpoint,
@@ -444,6 +508,8 @@ export {
   getFormattedDate,
   getNextSeasonAndYear,
   getTitle,
+  handleRateLimitRetry,
+  logUserDetails,
   redirectUri,
   removeHtmlAndMarkdown,
   saveJSONasCSV,

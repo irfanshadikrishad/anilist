@@ -10,7 +10,10 @@ import { fetcher } from "./fetcher.js"
 import { AniDB, AniList, MyAnimeList } from "./lists.js"
 import {
   deleteActivityMutation,
+  deleteMangaEntryMutation,
+  deleteMediaEntryMutation,
   saveTextActivityMutation,
+  toggleFollowMutation,
 } from "./mutations.js"
 import {
   activityAllQuery,
@@ -22,9 +25,6 @@ import {
   currentUserAnimeList,
   currentUserMangaList,
   currentUserQuery,
-  deleteMangaEntryMutation,
-  deleteMediaEntryMutation,
-  toggleFollowMutation,
   userActivityQuery,
   userFollowersQuery,
   userFollowingQuery,

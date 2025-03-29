@@ -19,7 +19,7 @@
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
     "lint:fix": "eslint ./dist --fix",
-    "all": "npm run lint && npm run lint:fix && npm run format && npm test",
+    "all": "npm run build && npm run lint && npm run lint:fix && npm run format && npm test",
     "test": "jest ./tests"
   },
   "keywords": [

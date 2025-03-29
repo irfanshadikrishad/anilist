@@ -6,21 +6,16 @@ mutation($mediaId: Int, $status: MediaListStatus) {
 const addMangaToListMutation = `
   mutation($mediaId: Int, $status: MediaListStatus) {
     SaveMediaListEntry(mediaId: $mediaId, status: $status) {
-      id
-      status
-      media { id title { romaji english } }
+      id status media { id title { romaji english } }
     }
   }
 `
 const deleteActivityMutation = `
-mutation($id: Int!) {
-  DeleteActivity(id: $id) { deleted }
-}
+mutation($id: Int!) { DeleteActivity(id: $id) { deleted } }
 `
+
 const saveTextActivityMutation = `
-mutation SaveTextActivity($status: String!) {
-  SaveTextActivity(text: $status) { id text userId createdAt }
-}
+mutation SaveTextActivity($status: String!) { SaveTextActivity(text: $status) { id text userId createdAt } }
 `
 const saveAnimeWithProgressMutation = `
 mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromStatusLists: Boolean) {
@@ -29,6 +24,7 @@ mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromSt
   }
 }
 `
+
 const saveMangaWithProgressMutation = `
 mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromStatusLists: Boolean, $private: Boolean) {
   SaveMediaListEntry( mediaId: $mediaId, progress: $progress, status: $status, hiddenFromStatusLists: $hiddenFromStatusLists, private: $private
@@ -36,11 +32,22 @@ mutation ($mediaId: Int, $progress: Int, $status: MediaListStatus, $hiddenFromSt
 }
 `
 
+const toggleFollowMutation = `mutation ($userId: Int!) { ToggleFollow(userId: $userId) { id name isFollower isFollowing } }`
+
+const deleteMediaEntryMutation = `mutation($id: Int!) { DeleteMediaListEntry(id: $id) { deleted } }`
+
+const deleteMangaEntryMutation = `mutation($id: Int) {
+  DeleteMediaListEntry(id: $id) { deleted }
+}`
+
 export {
   addAnimeToListMutation,
   addMangaToListMutation,
   deleteActivityMutation,
+  deleteMangaEntryMutation,
+  deleteMediaEntryMutation,
   saveAnimeWithProgressMutation,
   saveMangaWithProgressMutation,
   saveTextActivityMutation,
+  toggleFollowMutation,
 }
