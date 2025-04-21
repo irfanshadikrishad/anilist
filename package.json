@@ -1,0 +1,86 @@
+{
+  "name": "@irfanshadikrishad/anilist",
+  "description": "Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts",
+  "author": "Irfan Shadik Rishad",
+  "version": "1.4.11",
+  "main": "./bin/index.js",
+  "type": "module",
+  "types": "./bin/index.d.ts",
+  "bin": {
+    "anilist": "./bin/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf ./bin && tsc",
+    "build:watch": "rm -rf ./bin && tsc -w",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint ./dist",
+    "lint:fix": "eslint ./dist --fix",
+    "all": "npm run build && npm run lint && npm run lint:fix && npm run format && npm test",
+    "test": "jest ./tests"
+  },
+  "keywords": [
+    "anilist",
+    "CLI",
+    "anime",
+    "manga",
+    "anime list",
+    "manga list",
+    "anime tracker",
+    "manga tracker",
+    "anilist API",
+    "anime progress",
+    "manga progress",
+    "media list",
+    "export anime",
+    "import anime",
+    "export manga",
+    "import manga",
+    "status tracker",
+    "watchlist",
+    "reading list",
+    "graphql"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irfanshadikrishad/anilist"
+  },
+  "homepage": "https://github.com/irfanshadikrishad/anilist",
+  "bugs": {
+    "url": "https://github.com/irfanshadikrishad/anilist/issues"
+  },
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "@babel/preset-env": "^7.26.9",
+    "@eslint/js": "^9.25.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.14.1",
+    "@types/papaparse": "^5.3.15",
+    "@types/xml2js": "^0.4.14",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "eslint": "^9.25.1",
+    "globals": "^16.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.3",
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "ts-jest": "^29.3.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@irfanshadikrishad/cipher": "^1.0.9",
+    "cli-truncate": "^4.0.0",
+    "commander": "^13.1.0",
+    "fast-xml-parser": "^5.2.0",
+    "inquirer": "^12.5.2",
+    "jsonrepair": "^3.12.0",
+    "node-fetch": "^3.3.2",
+    "open": "^10.1.1",
+    "papaparse": "^5.5.2",
+    "tiny-spinner": "^2.0.5",
+    "xml2js": "^0.6.2"
+  }
+}
