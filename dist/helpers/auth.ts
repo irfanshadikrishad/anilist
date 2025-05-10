@@ -792,6 +792,14 @@ Statistics (Manga):
         },
       ])
 
+      const { toLikeAmount } = await inquirer.prompt([
+        {
+          type: "number",
+          name: "toLikeAmount",
+          message: "Likes to give:",
+        },
+      ])
+
       const userDetails: {
         data?: { User: { id: number } }
         errors?: { message: string }[]
@@ -802,59 +810,57 @@ Statistics (Manga):
       if (userDetails?.data?.User?.id) {
         let page = 1
         const perPage = 50
-        const userId = userDetails?.data?.User?.id
+        const userId = userDetails.data.User.id
         let likedCount = 0
 
-        if (userId) {
-          while (true) {
-            const activities: SpecificUserActivitiesResponse = await fetcher(
-              specificUserActivitiesQuery,
-              {
-                page,
-                perPage,
-                userId,
-              }
-            )
-            const activiti = activities?.data?.Page?.activities
-
-            // Break the loop if no more activities are found
-            if (!activiti || activiti.length === 0) {
-              spinner.error("No more activities found.")
-              break
+        while (likedCount < toLikeAmount) {
+          const activities: SpecificUserActivitiesResponse = await fetcher(
+            specificUserActivitiesQuery,
+            {
+              page,
+              perPage,
+              userId,
             }
-            spinner.success(`Got ${activiti.length} activities...`)
+          )
+          const activiti = activities?.data?.Page?.activities
 
-            for (let activ of activiti) {
-              if (!activ.isLiked && activ.id) {
-                try {
-                  const like: LikeActivityResponse = await fetcher(
-                    likeActivityMutation,
-                    {
-                      activityId: activ.id,
-                    }
-                  )
-                  likedCount++
-                  responsiveOutput(
-                    `${like?.data ? "✅" : "❌"} ${activityBy(activ, likedCount)}`
-                  )
-                } catch (error) {
-                  console.error(
-                    `Activity possibly deleted. ${(error as Error).message}`
-                  )
-                }
-              } else {
-                responsiveOutput(`🔵 ${activityBy(activ, likedCount)}`)
-              }
-
-              // Avoiding rate limit
-              await new Promise((resolve) => {
-                setTimeout(resolve, 1500)
-              })
-            }
-
-            // Go to the next page
-            page += 1
+          if (!activiti || activiti.length === 0) {
+            spinner.error("No more activities found.")
+            break
           }
+
+          spinner.success(`Got ${activiti.length} activities...`)
+
+          for (let activ of activiti) {
+            if (!activ.isLiked && activ.id) {
+              try {
+                const like: LikeActivityResponse = await fetcher(
+                  likeActivityMutation,
+                  {
+                    activityId: activ.id,
+                  }
+                )
+                likedCount++
+                responsiveOutput(
+                  `${like?.data ? "✅" : "❌"} ${activityBy(activ, likedCount)}`
+                )
+
+                if (likedCount >= toLikeAmount) {
+                  spinner.success(
+                    `Finished liking ${likedCount} activities of ${username}.`
+                  )
+                  return
+                }
+              } catch (error) {
+                console.error(
+                  `Activity possibly deleted. ${(error as Error).message}`
+                )
+              }
+            } else {
+              responsiveOutput(`🔵 ${activityBy(activ, likedCount)}`)
+            }
+          }
+          page += 1
         }
       } else {
         spinner.error(`User ${username} does not exist.`)
