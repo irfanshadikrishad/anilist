@@ -12,7 +12,7 @@ test("[API] User", async () => {
     },
     body: JSON.stringify({
       query: userQuery,
-      variables: { username: "zeitu" },
+      variables: { username: "cobolobosos" },
     }),
   })
   expect(request.status).toBe(200)
