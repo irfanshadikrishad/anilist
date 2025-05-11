@@ -74,7 +74,7 @@
     "@irfanshadikrishad/cipher": "^1.0.9",
     "cli-truncate": "^4.0.0",
     "commander": "^13.1.0",
-    "fast-xml-parser": "^5.2.0",
+    "fast-xml-parser": "^5.2.2",
     "inquirer": "^12.5.2",
     "jsonrepair": "^3.12.0",
     "node-fetch": "^3.3.2",
