@@ -30,7 +30,7 @@ test("[API] Followers", async () => {
     }),
   })
   expect(request.status).toBe(200)
-})
+}, 8000)
 
 test("[API] Following", async () => {
   const request = await fetch(`https://graphql.anilist.co`, {
@@ -44,4 +44,4 @@ test("[API] Following", async () => {
     }),
   })
   expect(request.status).toBe(200)
-})
+}, 8000)

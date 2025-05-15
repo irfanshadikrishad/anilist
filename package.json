@@ -55,7 +55,7 @@
   "license": "MPL-2.0",
   "devDependencies": {
     "@babel/preset-env": "^7.27.2",
-    "@eslint/js": "^9.25.1",
+    "@eslint/js": "^9.26.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.18",
     "@types/papaparse": "^5.3.16",
@@ -71,7 +71,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@irfanshadikrishad/cipher": "^1.0.9",
+    "@irfanshadikrishad/cipher": "^1.1.0",
     "cli-truncate": "^4.0.0",
     "commander": "^13.1.0",
     "fast-xml-parser": "^5.2.3",
