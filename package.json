@@ -73,7 +73,7 @@
   "dependencies": {
     "@irfanshadikrishad/cipher": "^1.0.9",
     "cli-truncate": "^4.0.0",
-    "commander": "^13.1.0",
+    "commander": "^14.0.0",
     "fast-xml-parser": "^5.2.3",
     "inquirer": "^12.6.1",
     "jsonrepair": "^3.12.0",
