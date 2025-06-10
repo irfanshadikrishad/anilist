@@ -22,7 +22,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ["18", "20"]
+          node-version: "20"
       - name: Install dependencies
         run: npm install
       - name: Run ESLint with fix
@@ -34,7 +34,7 @@ jobs:
           git config --global user.name 'Irfan Shadik Rishad'
           git config --global user.email '77362427+irfanshadikrishad@users.noreply.github.com'
           git add .
-          git diff --quiet || git commit -m "chore: apply linting fixes"
+          git diff --cached --quiet || git commit -m "chore: apply linting fixes"
           git push origin HEAD:${{ github.head_ref }}
-      - name: Run EsLint without fix
+      - name: Run ESLint without fix
         run: npm run lint
