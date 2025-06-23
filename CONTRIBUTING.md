@@ -16,7 +16,6 @@ Thank you for considering contributing to **@irfanshadikrishad/anilist**! We wel
     cd anilist
     ```
 4.  Set Up the Development Environment
-
     1. Install the required dependencies:
 
     ```bash
