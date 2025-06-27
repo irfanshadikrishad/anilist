@@ -47,7 +47,7 @@ async function fetcher(
       return null
     }
   } catch (error) {
-    console.error(`\nSomething went wrong. ${error.message}.`)
+    console.error(`\nSomething went wrong. ${(error as Error).message}.`)
     return null
   }
 }
