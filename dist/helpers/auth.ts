@@ -365,7 +365,7 @@ Statistics (Manga):
 
                 console.log(
                   `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
-                    isDeleted ? "✅" : "❌"
+                    isDeleted ? "✔" : "✘"
                   }`
                 )
 
@@ -447,7 +447,7 @@ Statistics (Manga):
       if (response?.data) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
         console.log(
-          `del ${title ? getTitle(title) : ""} ${deleted ? "✅" : "❌"}`
+          `del ${title ? getTitle(title) : ""} ${deleted ? "✔" : "✘"}`
         )
       } else {
         console.log(`\nError deleting anime. ${response?.errors[0]?.message}`)
@@ -525,7 +525,7 @@ Statistics (Manga):
 
       if (response?.data) {
         const deleted: boolean = response?.data?.DeleteMediaListEntry?.deleted
-        console.log(`del ${statusMessage} ${deleted ? "✅" : "❌"}`)
+        console.log(`del ${statusMessage} ${deleted ? "✔" : "✘"}`)
       } else {
         console.error(`Error deleting manga. ${response?.errors?.[0]?.message}`)
       }
@@ -637,7 +637,7 @@ class Social {
     try {
       let pager = 1
       let hasNextPage = true
-      let allFollowerUsers: User[] = []
+      const allFollowerUsers: User[] = []
       let followedBack = 0
       spinner.start("Fetching all the followers...")
       while (hasNextPage) {
@@ -684,7 +684,7 @@ class Social {
           console.log(
             `${String(`[${nf.id}]`).padEnd(maxIdLength)}` +
               `\t${String(`[${follow?.data?.ToggleFollow?.name}]`).padEnd(maxNameLength)}` +
-              `\t${follow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+              `\t${follow?.data?.ToggleFollow?.id ? "✔" : "✘"}`
           )
           // Count the followed back users
           if (follow?.data?.ToggleFollow?.id) {
@@ -696,7 +696,7 @@ class Social {
           )
         }
       }
-      console.log(`\n✅ Followed back ${followedBack} users.`)
+      console.log(`\n✔ Followed back ${followedBack} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
@@ -708,7 +708,7 @@ class Social {
     try {
       let pager = 1
       let hasNextPage = true
-      let allFollowingUsers: User[] = []
+      const allFollowingUsers: User[] = []
       let unfollowedUsers = 0
       spinner.start("Fetching all following users...")
       while (hasNextPage) {
@@ -744,7 +744,7 @@ class Social {
       )
       let nfmCount = 0
       console.log(`\n`)
-      for (let nfm of notFollowingMe) {
+      for (const nfm of notFollowingMe) {
         nfmCount++
         try {
           const unfollow: ToggleFollowResponse = await fetcher(
@@ -754,7 +754,7 @@ class Social {
             }
           )
           console.log(
-            `[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? "✅" : "🈵"}`
+            `[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? "✔" : "✘"}`
           )
           // Count the unfollowed users
           if (unfollow?.data?.ToggleFollow?.id) {

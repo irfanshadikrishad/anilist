@@ -110,7 +110,7 @@ class AniList {
                 if (save) {
                   const id = save?.data?.SaveMediaListEntry?.id
                   count++
-                  console.log(`[${count}]\t${id}\t${anime?.id} ✅`)
+                  console.log(`[${count}]\t${id}\t${anime?.id} ✔`)
                 } else {
                   console.error(`\nError saving ${anime?.id}`)
                 }
@@ -1066,7 +1066,7 @@ class MyAnimeList {
 
                 if (entryId) {
                   count++
-                  console.log(`[${count}] ${entryId} ✅`)
+                  console.log(`[${count}] ${entryId} ✔`)
                 }
               } else {
                 console.error(
@@ -1147,7 +1147,7 @@ class MyAnimeList {
 
                 if (entryId) {
                   count++
-                  console.log(`[${count}] ${entryId} ✅`)
+                  console.log(`[${count}] ${entryId} ✔`)
                 } else {
                   console.error(`Failed to save entry for ${malId}`)
                 }
@@ -1242,6 +1242,15 @@ class MyAnimeList {
 
 class AniDB {
   static async importAnime() {
+    function getStatus(anidbStatus: string, episodesSeen: string) {
+      if (anidbStatus === "complete") {
+        return AniListMediaStatus.COMPLETED
+      } else if (anidbStatus === "incomplete" && Number(episodesSeen) > 0) {
+        return AniListMediaStatus.CURRENT
+      } else {
+        return AniListMediaStatus.PLANNING
+      }
+    }
     try {
       const filename: string = await selectFile(".json")
       if (!filename) {
@@ -1279,20 +1288,7 @@ class AniDB {
             const romanjiName = anime.romanjiName
             const englishName = anime.englishName
 
-            function getStatus(anidbStatus: string, episodesSeen: string) {
-              if (anidbStatus === "complete") {
-                return AniListMediaStatus.COMPLETED
-              } else if (
-                anidbStatus === "incomplete" &&
-                Number(episodesSeen) > 0
-              ) {
-                return AniListMediaStatus.CURRENT
-              } else {
-                return AniListMediaStatus.PLANNING
-              }
-            }
-
-            let anilistId = await anidbToanilistMapper(
+            const anilistId = await anidbToanilistMapper(
               romanjiName,
               Number(released.split(".")[2]),
               englishName
@@ -1315,7 +1311,7 @@ class AniDB {
                 if (entryId) {
                   count++
                   responsiveOutput(
-                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
+                    `[${count}]\t${entryId} ✔\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
                   )
                 }
               } catch (error) {
@@ -1402,7 +1398,7 @@ class MoveTo {
           if (response?.data) {
             const moved = response?.data?.SaveMediaListEntry
             console.log(
-              `✅ Entry ${moved?.id}. Moved from ${selectedList} to ${toMoveList}.`
+              `✔ Entry ${moved?.id}. Moved from ${selectedList} to ${toMoveList}.`
             )
           } else {
             console.error(

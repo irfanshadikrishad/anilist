@@ -1,16 +1,11 @@
 name: Linter
-
 on:
   pull_request:
-    branches:
-      - master
-      - forbidden
-
+    branches: [master, forbidden]
 permissions:
   actions: write
   contents: write
   pull-requests: write
-
 jobs:
   eslint:
     runs-on: ubuntu-latest
