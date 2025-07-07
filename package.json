@@ -63,6 +63,7 @@
 		"@types/papaparse": "^5.3.16",
 		"@types/xml2js": "^0.4.14",
 		"@typescript-eslint/eslint-plugin": "^8.35.1",
+		"@typescript-eslint/parser": "^8.35.1",
 		"eslint": "^9.30.1",
 		"globals": "^16.3.0",
 		"jest": "^30.0.4",
@@ -74,6 +75,7 @@
 	},
 	"dependencies": {
 		"@irfanshadikrishad/cipher": "^1.2.1",
+		"chalk": "^5.4.1",
 		"cli-truncate": "^4.0.0",
 		"commander": "^14.0.0",
 		"fast-xml-parser": "^5.2.5",

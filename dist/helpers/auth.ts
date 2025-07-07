@@ -6,6 +6,7 @@ import open from 'open'
 import os from 'os'
 import path from 'path'
 import Spinner from 'tiny-spinner'
+import { colorize } from '../lib/colorize.js'
 import { fetcher } from './fetcher.js'
 import { AniDB, AniList, MyAnimeList } from './lists.js'
 import {
@@ -675,7 +676,7 @@ class Social {
 				...notFollowing.map(({ name }) => name.length)
 			)
 
-			for (let nf of notFollowing) {
+			for (const nf of notFollowing) {
 				try {
 					const follow: ToggleFollowResponse = await fetcher(
 						toggleFollowMutation,
@@ -684,7 +685,7 @@ class Social {
 					console.log(
 						`${String(`[${nf.id}]`).padEnd(maxIdLength)}` +
 							`\t${String(`[${follow?.data?.ToggleFollow?.name}]`).padEnd(maxNameLength)}` +
-							`\t${follow?.data?.ToggleFollow?.id ? '✔' : '✘'}`
+							`\t${follow?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
 					)
 					// Count the followed back users
 					if (follow?.data?.ToggleFollow?.id) {
@@ -696,7 +697,9 @@ class Social {
 					)
 				}
 			}
-			console.log(`\n✔ Followed back ${followedBack} users.`)
+			console.log(
+				`\n${colorize.Green('✔')} Followed back ${followedBack} users.`
+			)
 		} catch (error) {
 			console.log(`\nautomate_follow ${(error as Error).message}`)
 		}
@@ -729,7 +732,7 @@ class Social {
 				pager++
 			}
 			spinner.update(
-				`Fetching complete. Total got ${allFollowingUsers.length} users.`
+				`${colorize.Green('✔')} Fetching complete. Total got ${allFollowingUsers.length} users.`
 			)
 			// Filter users that do no follow me
 			const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
@@ -754,7 +757,7 @@ class Social {
 						}
 					)
 					console.log(
-						`[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? '✔' : '✘'}`
+						`[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
 					)
 					// Count the unfollowed users
 					if (unfollow?.data?.ToggleFollow?.id) {
