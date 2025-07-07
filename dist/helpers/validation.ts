@@ -16,8 +16,8 @@ class Validate {
 	}
 	/**
 	 * Validate if MyAnimeList Anime XML file is valid or not
-	 * @param xmlData string
-	 * @returns boolean
+	 * @param {string} xmlData
+	 * @returns {Promise<boolean>}
 	 */
 	static async Import_AnimeXML(xmlData: string): Promise<boolean> {
 		try {
@@ -99,7 +99,7 @@ class Validate {
 				console.error('File content is empty or invalid.')
 				return false
 			}
-			const obj3ct = JSON.parse(file)
+			const obj3ct = await JSON.parse(file)
 			if (!obj3ct || !Array.isArray(obj3ct.anime)) {
 				console.error(
 					"Invalid JSON structure: Missing or malformed 'anime' array."

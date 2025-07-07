@@ -74,6 +74,7 @@
 	},
 	"dependencies": {
 		"@irfanshadikrishad/cipher": "^1.2.1",
+		"chalk": "^5.4.1",
 		"cli-truncate": "^4.0.0",
 		"commander": "^14.0.0",
 		"fast-xml-parser": "^5.2.5",
