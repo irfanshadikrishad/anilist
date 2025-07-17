@@ -47,14 +47,14 @@ const deleteMangaEntryMutation = `mutation($id: Int) {
 }`
 
 export {
-  addAnimeToListMutation,
-  addMangaToListMutation,
-  deleteActivityMutation,
-  deleteMangaEntryMutation,
-  deleteMediaEntryMutation,
-  likeActivityMutation,
-  saveAnimeWithProgressMutation,
-  saveMangaWithProgressMutation,
-  saveTextActivityMutation,
-  toggleFollowMutation,
+	addAnimeToListMutation,
+	addMangaToListMutation,
+	deleteActivityMutation,
+	deleteMangaEntryMutation,
+	deleteMediaEntryMutation,
+	likeActivityMutation,
+	saveAnimeWithProgressMutation,
+	saveMangaWithProgressMutation,
+	saveTextActivityMutation,
+	toggleFollowMutation,
 }

@@ -1,6 +1,6 @@
-import fetch from "node-fetch"
-import { Auth } from "./auth.js"
-import { aniListEndpoint, handleRateLimitRetry } from "./workers.js"
+import fetch from 'node-fetch'
+import { Auth } from './auth.js'
+import { aniListEndpoint, handleRateLimitRetry } from './workers.js'
 
 /**
  * Sends a GraphQL request to the AniList API.
@@ -14,42 +14,42 @@ import { aniListEndpoint, handleRateLimitRetry } from "./workers.js"
  * @returns {Promise<object|null>} The response from the API as a JSON object if successful; otherwise, null.
  */
 async function fetcher(
-  query: string,
-  variables: object
+	query: string,
+	variables: object
 ): Promise<object | null> {
-  try {
-    const headers: Record<string, string> = {
-      "content-type": "application/json",
-    }
+	try {
+		const headers: Record<string, string> = {
+			'content-type': 'application/json',
+		}
 
-    const token = (await Auth.isLoggedIn())
-      ? await Auth.RetriveAccessToken()
-      : null
-    if (token) headers["Authorization"] = `Bearer ${token}`
+		const token = (await Auth.isLoggedIn())
+			? await Auth.RetriveAccessToken()
+			: null
+		if (token) headers['Authorization'] = `Bearer ${token}`
 
-    const request = await fetch(aniListEndpoint, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify({ query, variables }),
-    })
+		const request = await fetch(aniListEndpoint, {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify({ query, variables }),
+		})
 
-    const response: { errors?: { message: string }[] } = await request.json()
+		const response: { errors?: { message: string }[] } = await request.json()
 
-    if (request.status === 200) {
-      return response
-    } else if (request.status === 429) {
-      await handleRateLimitRetry(60)
-      return await fetcher(query, variables)
-    } else {
-      console.error(
-        `\n${request.status} ${response?.errors?.[0]?.message || "Unknown error"}.`
-      )
-      return null
-    }
-  } catch (error) {
-    console.error(`\nSomething went wrong. ${error.message}.`)
-    return null
-  }
+		if (request.status === 200) {
+			return response
+		} else if (request.status === 429) {
+			await handleRateLimitRetry(60)
+			return await fetcher(query, variables)
+		} else {
+			console.error(
+				`\n${request.status} ${response?.errors?.[0]?.message || 'Unknown error'}.`
+			)
+			return null
+		}
+	} catch (error) {
+		console.error(`\nSomething went wrong. ${error.message}.`)
+		return null
+	}
 }
 
 export { fetcher }
