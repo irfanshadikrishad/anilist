@@ -79,7 +79,7 @@
     "cli-truncate": "^4.0.0",
     "commander": "^14.0.0",
     "fast-xml-parser": "^5.2.5",
-    "inquirer": "^12.8.0",
+    "inquirer": "^12.8.1",
     "jsonrepair": "^3.13.0",
     "node-fetch": "^3.3.2",
     "open": "^10.2.0",
