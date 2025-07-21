@@ -50,14 +50,14 @@ const moveListMutation = `mutation ($mediaId: Int, $status: MediaListStatus, $cu
 }`
 
 export {
-	addAnimeToListMutation,
-	addMangaToListMutation,
-	deleteActivityMutation,
-	deleteMangaEntryMutation,
-	deleteMediaEntryMutation,
-	moveListMutation,
-	saveAnimeWithProgressMutation,
-	saveMangaWithProgressMutation,
-	saveTextActivityMutation,
-	toggleFollowMutation,
+  addAnimeToListMutation,
+  addMangaToListMutation,
+  deleteActivityMutation,
+  deleteMangaEntryMutation,
+  deleteMediaEntryMutation,
+  moveListMutation,
+  saveAnimeWithProgressMutation,
+  saveMangaWithProgressMutation,
+  saveTextActivityMutation,
+  toggleFollowMutation,
 }
