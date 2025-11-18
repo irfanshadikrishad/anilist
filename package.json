@@ -60,7 +60,7 @@
     "inquirer": "^12.10.0",
     "jsonrepair": "^3.13.1",
     "node-fetch": "^3.3.2",
-    "open": "^10.2.0",
+    "open": "^11.0.0",
     "papaparse": "^5.5.3",
     "tiny-spinner": "^2.0.5",
     "xml2js": "^0.6.2"
