@@ -58,7 +58,7 @@
     "commander": "^14.0.2",
     "fast-xml-parser": "^5.3.3",
     "inquirer": "^13.2.0",
-    "jsonrepair": "^3.13.1",
+    "jsonrepair": "^3.13.2",
     "node-fetch": "^3.3.2",
     "open": "^11.0.0",
     "papaparse": "^5.5.3",
