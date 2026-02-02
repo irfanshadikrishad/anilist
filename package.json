@@ -57,7 +57,7 @@
     "cli-truncate": "^5.1.1",
     "commander": "^14.0.3",
     "fast-xml-parser": "^5.3.4",
-    "inquirer": "^12.11.1",
+    "inquirer": "^13.2.2",
     "jsonrepair": "^3.13.2",
     "node-fetch": "^3.3.2",
     "open": "^11.0.0",
