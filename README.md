@@ -264,4 +264,6 @@ Since you are creating your own API client for login no else else can get your c
 
 Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
 
+#### Crafted without AI.
+
 #### _Thanks for visiting 💙_
