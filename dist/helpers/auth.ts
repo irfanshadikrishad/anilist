@@ -406,7 +406,7 @@ Statistics (Manga):
         const { selectedList }: { selectedList: string } =
           await inquirer.prompt([
             {
-              type: 'list',
+              type: 'select',
               name: 'selectedList',
               message: 'Select an anime list:',
               choices: lists.map((list: MediaList) => list.name),
@@ -481,7 +481,7 @@ Statistics (Manga):
         const { selectedList }: { selectedList: string } =
           await inquirer.prompt([
             {
-              type: 'list',
+              type: 'select',
               name: 'selectedList',
               message: 'Select a manga list:',
               choices: lists.map((list: MediaList) => list.name),
@@ -570,7 +570,7 @@ Statistics (Manga):
     try {
       const { source }: { source: number } = await inquirer.prompt([
         {
-          type: 'list',
+          type: 'select',
           name: 'source',
           message: 'Select a source:',
           choices: [
@@ -603,7 +603,7 @@ Statistics (Manga):
     try {
       const { source }: { source: number } = await inquirer.prompt([
         {
-          type: 'list',
+          type: 'select',
           name: 'source',
           message: 'Select a source:',
           choices: [

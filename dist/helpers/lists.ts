@@ -199,7 +199,7 @@ class AniList {
     }
     const { exportType }: { exportType: number } = await inquirer.prompt([
       {
-        type: 'list',
+        type: 'select',
         name: 'exportType',
         message: 'Choose export type:',
         choices: [
@@ -267,7 +267,7 @@ class AniList {
     if (lists.length > 0) {
       const { exportType }: { exportType: number } = await inquirer.prompt([
         {
-          type: 'list',
+          type: 'select',
           name: 'exportType',
           message: 'Choose export type:',
           choices: [
@@ -357,7 +357,7 @@ class AniList {
       const { selectedAnime }: { selectedAnime: number } =
         await inquirer.prompt([
           {
-            type: 'list',
+            type: 'select',
             name: 'selectedAnime',
             message: 'Select anime to add to the list:',
             choices: selectedEntries.entries.map(
@@ -453,7 +453,7 @@ class AniList {
       const { selectedManga }: { selectedManga: number } =
         await inquirer.prompt([
           {
-            type: 'list',
+            type: 'select',
             name: 'selectedManga',
             message: 'Select a manga to add to the list:',
             choices: selectedEntries.entries.map(
@@ -537,7 +537,7 @@ class AniList {
 
         const { selectedAnime } = await inquirer.prompt([
           {
-            type: 'list',
+            type: 'select',
             name: 'selectedAnime',
             message: 'Select anime to add to the list:',
             choices,
@@ -624,7 +624,7 @@ class AniList {
 
         const { selectedAnime } = await inquirer.prompt([
           {
-            type: 'list',
+            type: 'select',
             name: 'selectedAnime',
             message: 'Select anime to add to the list:',
             choices,
@@ -718,7 +718,7 @@ class AniList {
 
         const { selectedAnime } = await inquirer.prompt([
           {
-            type: 'list',
+            type: 'select',
             name: 'selectedAnime',
             message: 'Select anime to add to the list:',
             choices,
@@ -893,7 +893,7 @@ class AniList {
         const { selectedAnime }: { selectedAnime: number } =
           await inquirer.prompt([
             {
-              type: 'list',
+              type: 'select',
               name: 'selectedAnime',
               message: 'Select anime to add to your list:',
               choices: results.map((res, idx: number) => ({
@@ -959,7 +959,7 @@ class AniList {
       // List of manga search results
       const { selectedMangaId } = await inquirer.prompt([
         {
-          type: 'list',
+          type: 'select',
           name: 'selectedMangaId',
           message: 'Select manga to add to your list:',
           choices: results.map((res, idx: number) => ({
