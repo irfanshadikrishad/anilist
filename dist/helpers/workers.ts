@@ -171,11 +171,10 @@ async function listFilesInDownloadFolder(): Promise<string[]> {
 async function selectFile(fileType: string): Promise<string> {
   try {
     const files = await listFilesInDownloadFolder()
-    console.log(getDownloadFolderPath())
 
     // Filter to include only files, not directories, with the specified extension
     const onlyFiles = files.filter((file) => {
-      const filePath = `${getDownloadFolderPath()}/${file}` // Adjust this to the correct path
+      const filePath = `${getDownloadFolderPath()}/${file}`
       const isFile = fs.lstatSync(filePath).isFile() // Check if it's a file
       return isFile && file.endsWith(fileType)
     })
@@ -183,7 +182,7 @@ async function selectFile(fileType: string): Promise<string> {
     if (onlyFiles.length > 0) {
       const answers = await inquirer.prompt([
         {
-          type: 'list',
+          type: 'select',
           name: 'fileName',
           message: 'Select a file to import:',
           choices: onlyFiles,
