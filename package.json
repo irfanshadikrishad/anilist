@@ -84,6 +84,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=10.0.0"
+  },
   "publishConfig": {
     "access": "public"
   }
