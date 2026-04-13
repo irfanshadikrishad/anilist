@@ -56,7 +56,7 @@
     "chalk": "^5.6.2",
     "cli-truncate": "^6.0.0",
     "commander": "^14.0.3",
-    "fast-xml-parser": "^5.5.11",
+    "fast-xml-parser": "^5.5.12",
     "inquirer": "^13.4.1",
     "jsonrepair": "^3.13.3",
     "node-fetch": "^3.3.2",
