@@ -12,12 +12,12 @@ cli
   .description(
     'Minimalist unofficial AniList CLI for Anime and Manga Enthusiasts.'
   )
-  .version(getCurrentPackageVersion())
+  .version(getCurrentPackageVersion() ?? '')
 cli
   .command('login')
   .description('Login with AniList')
-  .requiredOption('-i, --id <number>', null)
-  .requiredOption('-s, --secret <string>', null)
+  .requiredOption('-i, --id <number>', '')
+  .requiredOption('-s, --secret <string>', '')
   .action(async ({ id, secret }) => {
     if (id && secret) {
       await Auth.Login(id, secret)
@@ -126,7 +126,6 @@ cli
 cli
   .command('manga <id>')
   .description('Get manga details by their ID')
-  .option('-c, --count <number>', 'Number of items to get', '10')
   .action(async (id) => {
     await AniList.getMangaDetailsByID(id)
   })

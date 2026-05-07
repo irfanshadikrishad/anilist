@@ -1,7 +1,6 @@
 import { Cipher } from '@irfanshadikrishad/cipher'
 import fs from 'fs'
 import inquirer from 'inquirer'
-import fetch from 'node-fetch'
 import open from 'open'
 import os from 'os'
 import path from 'path'
@@ -92,7 +91,7 @@ class Auth {
       console.error(`\nError storing access token: ${(error as Error).message}`)
     }
   }
-  static async RetriveAccessToken(): Promise<string | null> {
+  static async RetrieveAccessToken(): Promise<string | null> {
     try {
       if (fs.existsSync(save_path)) {
         return vigenere.decrypt(
@@ -103,7 +102,7 @@ class Auth {
       }
     } catch (error) {
       console.error(
-        `\nError retriving acess-token. ${(error as Error).message}`
+        `\nError retrieving access token. ${(error as Error).message}`
       )
       return null
     }
@@ -115,7 +114,7 @@ class Auth {
       console.log('Opening browser for AniList login...')
       open(authUrl)
 
-      const authCode: string = await Auth.GetAccessToken()
+      const authCode: string | null = await Auth.GetAccessToken()
 
       const tokenResponse = await fetch(
         'https://anilist.co/api/v2/oauth/token',
@@ -156,7 +155,7 @@ class Auth {
       if (await Auth.isLoggedIn()) {
         const headers = {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await Auth.RetriveAccessToken()}`,
+          'Authorization': `Bearer ${await Auth.RetrieveAccessToken()}`,
         }
         const request = await fetch(aniListEndpoint, {
           method: 'POST',
@@ -167,7 +166,7 @@ class Auth {
 
         if (request.status === 200) {
           const user = data?.Viewer
-          const activiResponse: UserActivitiesResponse = await fetcher(
+          const activiResponse = await fetcher<UserActivitiesResponse>(
             userActivityQuery,
             {
               id: user?.id,
@@ -177,13 +176,13 @@ class Auth {
           )
           const activities = activiResponse?.data?.Page?.activities
           // Get follower/following information
-          const req_followers: UserFollower = await fetcher(
+          const req_followers = await fetcher<UserFollower>(
             userFollowersQuery,
             {
               userId: user?.id,
             }
           )
-          const req_following: UserFollowing = await fetcher(
+          const req_following = await fetcher<UserFollowing>(
             userFollowingQuery,
             {
               userId: user?.id,
@@ -202,8 +201,8 @@ activityMergeTime:      ${user?.options?.activityMergeTime}
 donatorTier:            ${user?.donatorTier}
 donatorBadge:           ${user?.donatorBadge}
 unreadNotificationCount:${user?.unreadNotificationCount}
-Account Created:        ${new Date(user?.createdAt * 1000).toUTCString()}
-Account Updated:        ${new Date(user?.updatedAt * 1000).toUTCString()}
+Account Created:        ${new Date((user?.createdAt ?? 0) * 1000).toUTCString()}
+Account Updated:        ${new Date((user?.updatedAt ?? 0) * 1000).toUTCString()}
 
 Followers:              ${followersCount}
 Following:              ${followingCount}
@@ -222,8 +221,8 @@ Statistics (Manga):
 `)
 
           console.log(`\nRecent Activities:`)
-          if (activities.length > 0) {
-            activities.map(({ status, progress, media, createdAt }) => {
+          if (activities?.length) {
+            activities?.map(({ status, progress, media, createdAt }) => {
               responsiveOutput(
                 `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ''}${getTitle(
                   media?.title
@@ -235,7 +234,7 @@ Statistics (Manga):
           return user
         } else {
           console.error(
-            `\nSomething went wrong. Please log in again. ${errors[0].message}`
+            `\nSomething went wrong. Please log in again. ${errors?.[0]?.message}`
           )
           return null
         }
@@ -249,7 +248,7 @@ Statistics (Manga):
   }
   static async isLoggedIn(): Promise<boolean> {
     try {
-      const token = await Auth.RetriveAccessToken()
+      const token = await Auth.RetrieveAccessToken()
       return token !== null
     } catch (error) {
       console.error(`Error checking login status: ${(error as Error).message}`)
@@ -287,9 +286,9 @@ Statistics (Manga):
       return null
     }
 
-    const { data }: Myself = await fetcher(currentUserQuery, {})
+    const response = await fetcher<Myself>(currentUserQuery, {})
 
-    return data?.Viewer?.id ?? null
+    return response?.data?.Viewer?.id ?? null
   }
   static async MyUserName() {
     if (!(await Auth.isLoggedIn())) {
@@ -297,9 +296,9 @@ Statistics (Manga):
       return null
     }
 
-    const { data }: Myself = await fetcher(currentUserQuery, {})
+    const response = await fetcher<Myself>(currentUserQuery, {})
 
-    return data?.Viewer?.name ?? null
+    return response?.data?.Viewer?.name ?? null
   }
   static async DeleteMyActivities() {
     try {
@@ -323,6 +322,19 @@ Statistics (Manga):
         },
       ])
 
+      const { confirmed }: { confirmed: boolean } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: `Delete all activities of this type? This cannot be undone.`,
+          default: false,
+        },
+      ])
+      if (!confirmed) {
+        console.log(`\nAborted.`)
+        return
+      }
+
       const queryMap = {
         0: activityAllQuery,
         1: activityTextQuery,
@@ -331,13 +343,13 @@ Statistics (Manga):
         4: activityMangaListQuery,
         5: activityMessageQuery,
       }
-      const query: string = queryMap[activityType]
+      const query: string = queryMap[activityType as keyof typeof queryMap]
 
       let hasMoreActivities: boolean = true
       let totalCount = 0
 
       while (hasMoreActivities) {
-        const response: UserActivitiesResponse = await fetcher(query, {
+        const response = await fetcher<UserActivitiesResponse>(query, {
           page: 1,
           perPage: 50,
           userId: await Auth.MyUserId(),
@@ -354,10 +366,10 @@ Statistics (Manga):
           } else {
             for (const act of activities) {
               if (act?.id) {
-                const deleteResponse: {
+                const deleteResponse = await fetcher<{
                   data?: { DeleteActivity: { deleted: boolean } }
                   errors?: { message: string }[]
-                } = await fetcher(deleteActivityMutation, {
+                }>(deleteActivityMutation, {
                   id: act?.id,
                 })
                 const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted
@@ -390,17 +402,18 @@ Statistics (Manga):
       console.error(`\nPlease log in first to delete your lists.`)
       return
     }
-    if (!(await Auth.MyUserId())) {
+    const userId = await Auth.MyUserId()
+    if (!userId) {
       console.log(`\nFailed getting current user Id.`)
       return
     }
-    const response: MediaListCollectionResponse = await fetcher(
+    const response = await fetcher<MediaListCollectionResponse>(
       currentUserAnimeList,
-      { id: await Auth.MyUserId() }
+      { id: userId }
     )
 
     if (response !== null) {
-      const lists: MediaList[] = response?.data?.MediaListCollection?.lists
+      const lists: MediaList[] = response?.data?.MediaListCollection?.lists ?? []
 
       if (lists.length > 0) {
         const { selectedList }: { selectedList: string } =
@@ -413,10 +426,23 @@ Statistics (Manga):
               pageSize: 10,
             },
           ])
-        const selectedEntries: MediaList = lists.find(
+        const selectedEntries = lists.find(
           (list: MediaList) => list.name === selectedList
         )
         if (selectedEntries) {
+          const { confirmed }: { confirmed: boolean } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'confirmed',
+              message: `Delete all ${selectedEntries.entries.length} entries from '${selectedEntries.name}'? This cannot be undone.`,
+              default: false,
+            },
+          ])
+          if (!confirmed) {
+            console.log(`\nAborted.`)
+            return
+          }
+
           console.log(`\nDeleting entries of '${selectedEntries.name}':`)
 
           for (const [, entry] of selectedEntries.entries.entries()) {
@@ -435,12 +461,12 @@ Statistics (Manga):
         console.log(`\nNo anime(s) found in any list.`)
       }
     } else {
-      console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+      console.log(`\nSomething went wrong fetching anime list.`)
     }
   }
   static async DeleteAnimeById(id: number, title?: MediaTitle) {
     try {
-      const response: DeleteMediaListResponse = await fetcher(
+      const response = await fetcher<DeleteMediaListResponse>(
         deleteMediaEntryMutation,
         { id: id }
       )
@@ -451,7 +477,7 @@ Statistics (Manga):
           `del ${title ? getTitle(title) : ''} ${deleted ? '✔' : '✘'}`
         )
       } else {
-        console.log(`\nError deleting anime. ${response?.errors[0]?.message}`)
+        console.log(`\nError deleting anime. ${response?.errors?.[0]?.message}`)
         console.log(response)
       }
     } catch (error) {
@@ -464,19 +490,20 @@ Statistics (Manga):
         console.error(`\nPlease log in first to delete your lists.`)
         return
       }
-      if (!(await Auth.MyUserId())) {
+      const userId = await Auth.MyUserId()
+      if (!userId) {
         console.error(`\nFailed getting current user Id.`)
         return
       }
-      const response: MediaListCollectionResponse = await fetcher(
+      const response = await fetcher<MediaListCollectionResponse>(
         currentUserMangaList,
-        { id: await Auth.MyUserId() }
+        { id: userId }
       )
       if (!response?.data) {
-        console.error(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+        console.error(`\nSomething went wrong. ${response?.errors?.[0]?.message}`)
         return
       }
-      const lists: MediaList[] = response?.data?.MediaListCollection?.lists
+      const lists: MediaList[] = response?.data?.MediaListCollection?.lists ?? []
       if (lists.length > 0) {
         const { selectedList }: { selectedList: string } =
           await inquirer.prompt([
@@ -489,11 +516,24 @@ Statistics (Manga):
             },
           ])
 
-        const selectedEntries: MediaList = lists.find(
+        const selectedEntries = lists.find(
           (list: MediaList) => list.name === selectedList
         )
 
         if (selectedEntries) {
+          const { confirmed }: { confirmed: boolean } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'confirmed',
+              message: `Delete all ${selectedEntries.entries.length} entries from '${selectedEntries.name}'? This cannot be undone.`,
+              default: false,
+            },
+          ])
+          if (!confirmed) {
+            console.log(`\nAborted.`)
+            return
+          }
+
           console.log(`\nDeleting entries of '${selectedEntries.name}':`)
 
           for (const [, entry] of selectedEntries.entries.entries()) {
@@ -517,7 +557,7 @@ Statistics (Manga):
   }
   static async DeleteMangaById(id: number, title?: MediaTitle) {
     try {
-      const response: DeleteMediaListResponse = await fetcher(
+      const response = await fetcher<DeleteMediaListResponse>(
         deleteMangaEntryMutation,
         { id }
       )
@@ -545,21 +585,21 @@ Statistics (Manga):
         return
       }
 
-      const { data }: SaveTextActivityResponse = await fetcher(
+      const response = await fetcher<SaveTextActivityResponse>(
         saveTextActivityMutation,
         {
           status: status,
         }
       )
 
-      if (!data) {
-        console.error(`\nSomething went wrong. ${data}.`)
+      if (!response?.data) {
+        console.error(`\nSomething went wrong.`)
         return
       }
 
-      if (data.SaveTextActivity.id) {
+      if (response.data.SaveTextActivity.id) {
         console.log(
-          `\n[${data.SaveTextActivity.id}] status saved successfully!`
+          `\n[${response.data.SaveTextActivity.id}] status saved successfully!`
         )
       }
     } catch (error) {
@@ -642,7 +682,7 @@ class Social {
       let followedBack = 0
       spinner.start('Fetching all the followers...')
       while (hasNextPage) {
-        const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
+        const followerUsers = await fetcher<UserFollower>(userFollowersQuery, {
           userId: await Auth.MyUserId(),
           page: pager,
         })
@@ -659,7 +699,7 @@ class Social {
       // Filter users that do no follow me
       const notFollowing: { id: number; name: string }[] = allFollowerUsers
         .filter(({ isFollowing }) => !isFollowing)
-        .map(({ id, name }) => ({ id: id, name: name }))
+        .map(({ id, name }) => ({ id: id, name: name ?? '' }))
 
       console.log(
         `\nTotal follower ${allFollowerUsers.length}.\nNot followed back ${notFollowing.length}\n`
@@ -678,7 +718,7 @@ class Social {
 
       for (const nf of notFollowing) {
         try {
-          const follow: ToggleFollowResponse = await fetcher(
+          const follow = await fetcher<ToggleFollowResponse>(
             toggleFollowMutation,
             { userId: nf.id }
           )
@@ -715,7 +755,7 @@ class Social {
       let unfollowedUsers = 0
       spinner.start('Fetching all following users...')
       while (hasNextPage) {
-        const followingUsers: UserFollowing = await fetcher(
+        const followingUsers = await fetcher<UserFollowing>(
           userFollowingQuery,
           {
             userId: await Auth.MyUserId(),
@@ -737,7 +777,7 @@ class Social {
       // Filter users that do no follow me
       const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
         .filter((user) => !user.isFollower)
-        .map((u3r) => ({ id: u3r.id, name: u3r.name }))
+        .map((u3r) => ({ id: u3r.id, name: u3r.name ?? '' }))
       if (notFollowingMe.length <= 0) {
         spinner.stop(`No users to unfollow. Exiting operation...`)
         return
@@ -750,7 +790,7 @@ class Social {
       for (const nfm of notFollowingMe) {
         nfmCount++
         try {
-          const unfollow: ToggleFollowResponse = await fetcher(
+          const unfollow = await fetcher<ToggleFollowResponse>(
             toggleFollowMutation,
             {
               userId: nfm.id,

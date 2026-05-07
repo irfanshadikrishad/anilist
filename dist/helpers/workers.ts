@@ -24,12 +24,12 @@ const aniListEndpoint = `https://graphql.anilist.co`
 const redirectUri = 'https://anilist.co/api/v2/oauth/pin'
 const spinner = new Spinner()
 
-function getTitle(title: { english?: string; romaji?: string }) {
+function getTitle(title?: { english?: string; romaji?: string }) {
   return title?.english || title?.romaji || '???'
 }
 
 function formatDateObject(
-  dateObj: { day?: number; month?: number; year?: number } | null
+  dateObj: { day?: number | null; month?: number | null; year?: number | null } | null
 ) {
   if (!dateObj) return 'null'
   return (
@@ -42,8 +42,8 @@ function getNextSeasonAndYear() {
   const currentMonth = new Date().getMonth() + 1
   const currentYear = new Date().getFullYear()
 
-  let nextSeason: string
-  let nextYear: number
+  let nextSeason = ''
+  let nextYear = 0
 
   // Determine the current season
   if (currentMonth >= 12 || currentMonth <= 2) {
@@ -168,7 +168,7 @@ async function listFilesInDownloadFolder(): Promise<string[]> {
   const files = await readdir(downloadFolderPath)
   return files
 }
-async function selectFile(fileType: string): Promise<string> {
+async function selectFile(fileType: string): Promise<string | null> {
   try {
     const files = await listFilesInDownloadFolder()
 
@@ -286,7 +286,7 @@ async function createAnimeListXML(
     const status = statusMap[anime.status as keyof typeof statusMap]
     const format = anime.format ? anime.format : ''
 
-    return createAnimeXML(malId, progress, status, episodes, title, format)
+    return createAnimeXML(malId ?? 0, progress, status, episodes ?? 0, title, format)
   })
 
   return `<myanimelist>
@@ -326,7 +326,7 @@ async function createMangaListXML(
     const title = getTitle(manga.title)
     const status = statusMap[manga.status as keyof typeof statusMap]
 
-    return createMangaXML(malId, progress, status, chapters, title)
+    return createMangaXML(malId ?? 0, progress, status, chapters ?? 0, title)
   })
 
   return `<myanimelist>
@@ -384,12 +384,12 @@ const anidbToanilistMapper = async (
 ): Promise<number | null> => {
   const fetchAnime = async (search: string) => {
     try {
-      const response: AnimeSearchResponse = await fetcher(animeSearchQuery, {
+      const response = await fetcher<AnimeSearchResponse>(animeSearchQuery, {
         search,
         perPage: 50,
       })
 
-      return response.data?.Page.media || []
+      return response?.data?.Page.media || []
     } catch (error) {
       console.error('Error fetching AniList data:', error)
       return []

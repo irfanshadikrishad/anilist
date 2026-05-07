@@ -59,11 +59,9 @@
     "fast-xml-parser": "^5.8.0",
     "inquirer": "^13.4.3",
     "jsonrepair": "^3.14.0",
-    "node-fetch": "^3.3.2",
     "open": "^11.0.0",
     "papaparse": "^5.5.3",
-    "tiny-spinner": "^2.0.5",
-    "xml2js": "^0.6.2"
+    "tiny-spinner": "^2.0.5"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.5",
@@ -72,7 +70,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.1",
     "@types/papaparse": "^5.5.2",
-    "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
     "eslint": "^10.4.0",

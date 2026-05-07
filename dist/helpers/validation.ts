@@ -1,4 +1,6 @@
-import { parseStringPromise } from 'xml2js'
+import { XMLParser } from 'fast-xml-parser'
+
+const parser = new XMLParser({ ignoreAttributes: false })
 
 class Validate {
   /**
@@ -14,15 +16,16 @@ class Validate {
       )
     )
   }
+
   /**
    * Validate if MyAnimeList Anime XML file is valid or not
    * @param {string} xmlData
-   * @returns {Promise<boolean>}
+   * @returns {boolean}
    */
-  static async Import_AnimeXML(xmlData: string): Promise<boolean> {
+  static Import_AnimeXML(xmlData: string): boolean {
     try {
-      const result = await parseStringPromise(xmlData, { explicitArray: false })
-      if (!result || !result.myanimelist) {
+      const result = parser.parse(xmlData)
+      if (!result?.myanimelist) {
         console.error(
           "Invalid XML structure: Missing 'myanimelist' root element."
         )
@@ -51,15 +54,16 @@ class Validate {
       return false
     }
   }
+
   /**
-   * Validate if MyAnimeList Anime XML file is valid or not
+   * Validate if MyAnimeList Manga XML file is valid or not
    * @param xmlData string
    * @returns boolean
    */
-  static async Import_MangaXML(xmlData: string): Promise<boolean> {
+  static Import_MangaXML(xmlData: string): boolean {
     try {
-      const result = await parseStringPromise(xmlData, { explicitArray: false })
-      if (!result || !result.myanimelist) {
+      const result = parser.parse(xmlData)
+      if (!result?.myanimelist) {
         console.error(
           "Invalid XML structure: Missing 'myanimelist' root element."
         )
@@ -88,6 +92,7 @@ class Validate {
       return false
     }
   }
+
   /**
    * Validate AniDB json-large file
    * @param file string of anidb json-large

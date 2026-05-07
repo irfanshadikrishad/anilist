@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import { Auth } from './auth.js'
 import { aniListEndpoint, handleRateLimitRetry } from './workers.js'
 
@@ -11,19 +10,20 @@ import { aniListEndpoint, handleRateLimitRetry } from './workers.js'
  *
  * @param {string} query - The AniList GraphQL query to be executed.
  * @param {object} variables - An object containing the variables for the query.
- * @returns {Promise<object|null>} The response from the API as a JSON object if successful; otherwise, null.
+ * @returns {Promise<T|null>} The response from the API as a JSON object if successful; otherwise, null.
  */
-async function fetcher(
+async function fetcher<T extends object = object>(
   query: string,
-  variables: object
-): Promise<object | null> {
+  variables: object,
+  retryCount = 0
+): Promise<T | null> {
   try {
     const headers: Record<string, string> = {
       'content-type': 'application/json',
     }
 
     const token = (await Auth.isLoggedIn())
-      ? await Auth.RetriveAccessToken()
+      ? await Auth.RetrieveAccessToken()
       : null
     if (token) headers['Authorization'] = `Bearer ${token}`
 
@@ -36,10 +36,10 @@ async function fetcher(
     const response: { errors?: { message: string }[] } = await request.json()
 
     if (request.status === 200) {
-      return response
+      return response as T
     } else if (request.status === 429) {
-      await handleRateLimitRetry(60)
-      return await fetcher(query, variables)
+      await handleRateLimitRetry(retryCount)
+      return await fetcher(query, variables, retryCount + 1)
     } else {
       console.error(
         `\n${request.status} ${response?.errors?.[0]?.message || 'Unknown error'}.`
