@@ -60,7 +60,7 @@ anilist login -i <client-id> -s <client-secret>
 | `anime`                                 | `<anime-id>`                                                            | Get anime details by Anime Id                                                              |
 | `manga`                                 | `<manga-id>`                                                            | Get manga details by Manga ID                                                              |
 | `search` <br> _(alias:`srch`/`find`)_   | `<query>` <br> `-a, --anime` <br> `-m, --manga` <br> `-c (default: 10)` | Get anime/manga search results                                                             |
-| `status` <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status... (text/markdown/html)                                                     |
+| `status` <br> _(alias: `write`/`post`)_ | `<status>`                                                              | Write a status (text/markdown/html)                                                        |
 | `export` <br> _(alias: `exp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Export anime or manga list in JSON, CSV or XML (MyAnimeList/AniDB)                         |
 | `import` <br> _(alias: `imp`)_          | `-a, --anime` <br> `-m, --manga`                                        | Import anime or manga list from exported JSON, MyAnimeList (XML) or AniDB (json-large)     |
 | `social` <br> _(alias: `sol`)_          | `-f, --follow` <br> `-u, --unfollow`                                    | Follow users who follows you or Unfollow who doesn't follow you back with a simple command |
@@ -165,14 +165,14 @@ anilist ls -a
 #### `delete` _(alias: `del`)_:
 
 ```bash
-anilist del -s,
+anilist del -s
 ```
 
 - Options:
   - `-a, --anime`: Delete your specific anime collection that you want.
   - `-m, --manga`: Delete your specific manga collection that you want.
-  - `-s,, --activity`: Delete all or any type of activities you want.
-- Description: Delete the entire anime or manga collection from the logged-in user's profile.
+  - `-s, --activity`: Delete all or any type of activities you want.
+- Description: Delete the entire anime or manga collection, or activities from the logged-in user's profile.
 
 #### `anime`
 
@@ -191,7 +191,7 @@ anilist manga <manga-id>
 ```
 
 - Options
-  - `<anime-id>` _(eg: 21)_ : Id of the manga you want to get details of.
+  - `<manga-id>` _(eg: 30013)_ : Id of the manga you want to get details of.
 - Description: Get manga details by manga Id.
 
 #### `search` _(alias: `srch`/`find`)_:
@@ -215,7 +215,7 @@ anilist write <status>
 
 - Options:
   - `<status>` : This is what you want to write, It can be HTML, Markdown and/or Text. But wrap it with quotation mark (") else it might get cut-off.
-- Description: Get anime/manga search results
+- Description: Write a status to your AniList activity feed.
 
 #### `export` _(alias: `exp`)_:
 
@@ -255,6 +255,17 @@ anilist sol -f
   - `-f, --follow`: To follow users who follows you automatically.
   - `-u, --unfollow`: To unfollow users who doesn't follow you back.
 - Description: It follows users who follows you or unfollow users who doesn't follow you back at ease.
+
+#### `move` _(alias: `mv`)_:
+
+```bash
+anilist mv -a
+```
+
+- Options:
+  - `-a, --anime`: To move anime entries between lists.
+  - `-m, --manga`: To move manga entries between lists.
+- Description: Move all entries from one list to another (e.g. from Watching to Completed).
 
 #### Security
 

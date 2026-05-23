@@ -12,7 +12,7 @@
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
     "lint:fix": "eslint ./dist --fix",
-    "test": "jest ./tests"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest ./tests"
   },
   "keywords": [
     "anilist",
