@@ -413,7 +413,8 @@ Statistics (Manga):
     )
 
     if (response !== null) {
-      const lists: MediaList[] = response?.data?.MediaListCollection?.lists ?? []
+      const lists: MediaList[] =
+        response?.data?.MediaListCollection?.lists ?? []
 
       if (lists.length > 0) {
         const { selectedList }: { selectedList: string } =
@@ -500,10 +501,13 @@ Statistics (Manga):
         { id: userId }
       )
       if (!response?.data) {
-        console.error(`\nSomething went wrong. ${response?.errors?.[0]?.message}`)
+        console.error(
+          `\nSomething went wrong. ${response?.errors?.[0]?.message}`
+        )
         return
       }
-      const lists: MediaList[] = response?.data?.MediaListCollection?.lists ?? []
+      const lists: MediaList[] =
+        response?.data?.MediaListCollection?.lists ?? []
       if (lists.length > 0) {
         const { selectedList }: { selectedList: string } =
           await inquirer.prompt([
