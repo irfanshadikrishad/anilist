@@ -29,7 +29,11 @@ function getTitle(title?: { english?: string; romaji?: string }) {
 }
 
 function formatDateObject(
-  dateObj: { day?: number | null; month?: number | null; year?: number | null } | null
+  dateObj: {
+    day?: number | null
+    month?: number | null
+    year?: number | null
+  } | null
 ) {
   if (!dateObj) return 'null'
   return (
@@ -286,7 +290,14 @@ async function createAnimeListXML(
     const status = statusMap[anime.status as keyof typeof statusMap]
     const format = anime.format ? anime.format : ''
 
-    return createAnimeXML(malId ?? 0, progress, status, episodes ?? 0, title, format)
+    return createAnimeXML(
+      malId ?? 0,
+      progress,
+      status,
+      episodes ?? 0,
+      title,
+      format
+    )
   })
 
   return `<myanimelist>

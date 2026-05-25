@@ -39,7 +39,11 @@ test('[Unit] Import_AnimeXML valid', () => {
 })
 
 test('[Unit] Import_AnimeXML invalid - missing root element', () => {
-  expect(Validate.Import_AnimeXML('<anime><series_animedb_id>1</series_animedb_id></anime>')).toBe(false)
+  expect(
+    Validate.Import_AnimeXML(
+      '<anime><series_animedb_id>1</series_animedb_id></anime>'
+    )
+  ).toBe(false)
 })
 
 test('[Unit] Import_AnimeXML invalid - missing anime elements', () => {
@@ -56,7 +60,11 @@ test('[Unit] Import_MangaXML valid', () => {
 })
 
 test('[Unit] Import_MangaXML invalid - missing root element', () => {
-  expect(Validate.Import_MangaXML('<manga><manga_mangadb_id>1</manga_mangadb_id></manga>')).toBe(false)
+  expect(
+    Validate.Import_MangaXML(
+      '<manga><manga_mangadb_id>1</manga_mangadb_id></manga>'
+    )
+  ).toBe(false)
 })
 
 test('[Unit] Import_MangaXML invalid - missing manga elements', () => {
@@ -77,5 +85,7 @@ test('[Unit] Import_AniDBJSONLarge invalid - empty string', async () => {
 })
 
 test('[Unit] Import_AniDBJSONLarge invalid - not an array', async () => {
-  expect(await Validate.Import_AniDBJSONLarge(JSON.stringify({ anime: 'not-array' }))).toBe(false)
+  expect(
+    await Validate.Import_AniDBJSONLarge(JSON.stringify({ anime: 'not-array' }))
+  ).toBe(false)
 })
