@@ -13,6 +13,7 @@
     "lint": "eslint ./dist",
     "lint:fix": "eslint ./dist --fix",
     "prepare": "husky",
+    "pretest": "npm run build",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest ./tests --runInBand"
   },
   "keywords": [
