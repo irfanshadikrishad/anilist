@@ -767,7 +767,9 @@ class AniList {
         }
       }
     } catch (error) {
-      console.error(`\nError getting upcoming animes. ${(error as Error).message}`)
+      console.error(
+        `\nError getting upcoming animes. ${(error as Error).message}`
+      )
     }
   }
   static async getUserByUsername(username: string) {
@@ -1042,7 +1044,8 @@ class MyAnimeList {
           for (const anime of animeList) {
             const malId: number = anime.series_animedb_id
             const progress: number = anime.my_watched_episodes
-            const status: string = statusMap[anime.my_status as keyof typeof statusMap]
+            const status: string =
+              statusMap[anime.my_status as keyof typeof statusMap]
 
             try {
               // Fetch AniList ID using MAL ID
@@ -1054,14 +1057,17 @@ class MyAnimeList {
 
               if (anilistId) {
                 // Save anime entry with progress
-                const saveResponse = await fetcher<saveAnimeWithProgressResponse>(
-                  saveAnimeWithProgressMutation, {
-                    mediaId: anilistId,
-                    progress,
-                    status,
-                    hiddenFromStatusLists: false,
-                    private: false,
-                  })
+                const saveResponse =
+                  await fetcher<saveAnimeWithProgressResponse>(
+                    saveAnimeWithProgressMutation,
+                    {
+                      mediaId: anilistId,
+                      progress,
+                      status,
+                      hiddenFromStatusLists: false,
+                      private: false,
+                    }
+                  )
                 const entryId = saveResponse?.data?.SaveMediaListEntry?.id
 
                 if (entryId) {
@@ -1122,7 +1128,8 @@ class MyAnimeList {
           for (const manga of mangas) {
             const malId: number = manga.manga_mangadb_id
             const progress: number = manga.my_read_chapters
-            const status: string = statusMap[manga.my_status as keyof typeof statusMap]
+            const status: string =
+              statusMap[manga.my_status as keyof typeof statusMap]
 
             try {
               // Fetch AniList ID using MAL ID
@@ -1134,16 +1141,18 @@ class MyAnimeList {
 
               if (anilistId) {
                 // Save manga entry with progress
-                const saveResponse = await fetcher<saveAnimeWithProgressResponse>(
-                  saveMangaWithProgressMutation, {
-                    mediaId: anilistId,
-                    progress,
-                    status,
-                    hiddenFromStatusLists: false,
-                    private: false,
-                  })
-                const entryId =
-                  saveResponse?.data?.SaveMediaListEntry?.id
+                const saveResponse =
+                  await fetcher<saveAnimeWithProgressResponse>(
+                    saveMangaWithProgressMutation,
+                    {
+                      mediaId: anilistId,
+                      progress,
+                      status,
+                      hiddenFromStatusLists: false,
+                      private: false,
+                    }
+                  )
+                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
 
                 if (entryId) {
                   count++

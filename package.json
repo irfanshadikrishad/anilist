@@ -12,6 +12,7 @@
     "format:check": "prettier . --check",
     "lint": "eslint ./dist",
     "lint:fix": "eslint ./dist --fix",
+    "prepare": "husky",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest ./tests --runInBand"
   },
   "keywords": [
@@ -74,6 +75,7 @@
     "@typescript-eslint/parser": "^8.60.0",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
     "jest": "^30.4.2",
     "prettier": "^3.8.3",
     "prettier-plugin-organize-imports": "^4.3.0",
