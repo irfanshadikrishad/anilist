@@ -1,4 +1,15 @@
+import { jest } from '@jest/globals'
 import { Validate } from '../bin/helpers/validation.js'
+
+let consoleErrorSpy
+
+beforeEach(() => {
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  consoleErrorSpy.mockRestore()
+})
 
 const VALID_ANIME_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <myanimelist>

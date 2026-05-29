@@ -37,7 +37,6 @@ import {
   AnimeList,
   MalIdToAnilistIdResponse,
   MangaDetails,
-  MediaEntry,
   MediaList,
   MediaListCollectionResponse,
   MediaListEntry,
