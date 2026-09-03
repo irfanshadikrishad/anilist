@@ -58,6 +58,7 @@ import {
 	aniListEndpoint,
 	getTitle,
 	redirectUri,
+	sleep,
 	timestampToTimeAgo,
 } from './workers.js'
 
@@ -381,7 +382,7 @@ Statistics (Manga):
 								)
 
 								// Avoiding rate-limit
-								await new Promise((resolve) => setTimeout(resolve, 1100))
+								await sleep(1100)
 							}
 						}
 					}
@@ -395,65 +396,13 @@ Statistics (Manga):
 			console.error(`\nSomething went wrong. ${(error as Error).message}`)
 		}
 	}
-	static async DeleteMyAnimeList() {
-		if (!(await Auth.isLoggedIn())) {
-			console.error(`\nPlease log in first to delete your lists.`)
-			return
-		}
-		if (!(await Auth.MyUserId())) {
-			console.log(`\nFailed getting current user Id.`)
-			return
-		}
-		const response: MediaListCollectionResponse = await fetcher(
-			currentUserAnimeList,
-			{ id: await Auth.MyUserId() }
-		)
-
-		if (response !== null) {
-			const lists: MediaList[] = response?.data?.MediaListCollection?.lists
-
-			if (lists.length > 0) {
-				const { selectedList }: { selectedList: string } =
-					await inquirer.prompt([
-						{
-							type: 'list',
-							name: 'selectedList',
-							message: 'Select an anime list:',
-							choices: lists.map((list: MediaList) => list.name),
-							pageSize: 10,
-						},
-					])
-				const selectedEntries: MediaList = lists.find(
-					(list: MediaList) => list.name === selectedList
-				)
-				if (selectedEntries) {
-					console.log(`\nDeleting entries of '${selectedEntries.name}':`)
-
-					for (const [, entry] of selectedEntries.entries.entries()) {
-						if (entry?.id) {
-							await Auth.DeleteAnimeById(entry?.id, entry?.media?.title)
-							await new Promise((resolve) => setTimeout(resolve, 1100))
-						} else {
-							console.log(`No id in entry.`)
-							console.log(entry)
-						}
-					}
-				} else {
-					console.log('No entries found.')
-				}
-			} else {
-				console.log(`\nNo anime(s) found in any list.`)
-			}
-		} else {
-			console.log(`\nSomething went wrong. ${response?.errors[0]?.message}`)
-		}
-	}
-	static async DeleteAnimeById(id: number, title?: MediaTitle) {
+	private static async DeleteMediaEntryById(
+		mutation: string,
+		id: number,
+		title?: MediaTitle
+	) {
 		try {
-			const response: DeleteMediaListResponse = await fetcher(
-				deleteMediaEntryMutation,
-				{ id: id }
-			)
+			const response: DeleteMediaListResponse = await fetcher(mutation, { id })
 
 			if (response?.data) {
 				const deleted = response?.data?.DeleteMediaListEntry?.deleted
@@ -461,14 +410,25 @@ Statistics (Manga):
 					`del ${title ? getTitle(title) : ''} ${deleted ? colorize.Green('✔') : colorize.Red('✘')}`
 				)
 			} else {
-				console.log(`\nError deleting anime. ${response?.errors[0]?.message}`)
-				console.log(response)
+				console.error(
+					`\nError deleting entry. ${response?.errors?.[0]?.message}`
+				)
 			}
 		} catch (error) {
-			console.log(`\nError deleting anime. ${id} ${(error as Error).message}`)
+			console.error(`\nError deleting entry. ${id} ${(error as Error).message}`)
 		}
 	}
-	static async DeleteMyMangaList() {
+	static async DeleteAnimeById(id: number, title?: MediaTitle) {
+		return Auth.DeleteMediaEntryById(deleteMediaEntryMutation, id, title)
+	}
+	static async DeleteMangaById(id: number, title?: MediaTitle) {
+		return Auth.DeleteMediaEntryById(deleteMangaEntryMutation, id, title)
+	}
+	private static async DeleteMyMediaList(
+		listQuery: string,
+		deleteByIdFn: (id: number, title?: MediaTitle) => Promise<void>,
+		mediaLabel: 'anime' | 'manga'
+	) {
 		try {
 			if (!(await Auth.isLoggedIn())) {
 				console.error(`\nPlease log in first to delete your lists.`)
@@ -478,77 +438,65 @@ Statistics (Manga):
 				console.error(`\nFailed getting current user Id.`)
 				return
 			}
-			const response: MediaListCollectionResponse = await fetcher(
-				currentUserMangaList,
-				{ id: await Auth.MyUserId() }
-			)
+			const response: MediaListCollectionResponse = await fetcher(listQuery, {
+				id: await Auth.MyUserId(),
+			})
 			if (!response?.data) {
-				console.error(`\nSomething went wrong. ${response?.errors[0]?.message}`)
+				console.error(
+					`\nSomething went wrong. ${response?.errors?.[0]?.message}`
+				)
 				return
 			}
 			const lists: MediaList[] = response?.data?.MediaListCollection?.lists
-			if (lists.length > 0) {
-				const { selectedList }: { selectedList: string } =
-					await inquirer.prompt([
-						{
-							type: 'list',
-							name: 'selectedList',
-							message: 'Select a manga list:',
-							choices: lists.map((list: MediaList) => list.name),
-							pageSize: 10,
-						},
-					])
-
-				const selectedEntries: MediaList = lists.find(
-					(list: MediaList) => list.name === selectedList
-				)
-
-				if (selectedEntries) {
-					console.log(`\nDeleting entries of '${selectedEntries.name}':`)
-
-					for (const [, entry] of selectedEntries.entries.entries()) {
-						if (entry?.id) {
-							await Auth.DeleteMangaById(entry?.id, entry?.media?.title)
-							await new Promise((resolve) => setTimeout(resolve, 1100))
-						} else {
-							console.log(`No id in entry.`)
-							console.log(entry)
-						}
-					}
-				} else {
-					console.error('\nNo entries found.')
-				}
-			} else {
-				console.error(`\nNo manga(s) found in any list.`)
+			if (!lists || lists.length === 0) {
+				console.error(`\nNo ${mediaLabel}(s) found in any list.`)
+				return
 			}
-		} catch (error) {
-			console.error(`\nError deleting manga. ${(error as Error).message}`)
-		}
-	}
-	static async DeleteMangaById(id: number, title?: MediaTitle) {
-		try {
-			const response: DeleteMediaListResponse = await fetcher(
-				deleteMangaEntryMutation,
-				{ id }
+			const { selectedList }: { selectedList: string } = await inquirer.prompt([
+				{
+					type: 'list',
+					name: 'selectedList',
+					message: `Select a${mediaLabel === 'anime' ? 'n' : ''} ${mediaLabel} list:`,
+					choices: lists.map((list: MediaList) => list.name),
+					pageSize: 10,
+				},
+			])
+			const selectedEntries: MediaList = lists.find(
+				(list: MediaList) => list.name === selectedList
 			)
-
-			const statusMessage: string = title ? getTitle(title) : ''
-
-			if (response?.data) {
-				const deleted: boolean = response?.data?.DeleteMediaListEntry?.deleted
-				console.log(
-					`del ${statusMessage} ${deleted ? colorize.Green('✔') : colorize.Red('✘')}`
-				)
-			} else {
-				console.error(`Error deleting manga. ${response?.errors?.[0]?.message}`)
+			if (!selectedEntries) {
+				console.error('\nNo entries found.')
+				return
+			}
+			console.log(`\nDeleting entries of '${selectedEntries.name}':`)
+			for (const [, entry] of selectedEntries.entries.entries()) {
+				if (entry?.id) {
+					await deleteByIdFn(entry?.id, entry?.media?.title)
+					await sleep(1100)
+				} else {
+					console.log(`No id in entry.`)
+					console.log(entry)
+				}
 			}
 		} catch (error) {
 			console.error(
-				`Error deleting manga. ${id} ${
-					error instanceof Error ? error.message : error
-				}`
+				`\nError deleting ${mediaLabel}. ${(error as Error).message}`
 			)
 		}
+	}
+	static async DeleteMyAnimeList() {
+		return Auth.DeleteMyMediaList(
+			currentUserAnimeList,
+			Auth.DeleteAnimeById,
+			'anime'
+		)
+	}
+	static async DeleteMyMangaList() {
+		return Auth.DeleteMyMediaList(
+			currentUserMangaList,
+			Auth.DeleteMangaById,
+			'manga'
+		)
 	}
 	static async Write(status: string) {
 		try {
@@ -640,6 +588,26 @@ Statistics (Manga):
 			console.error(`\n${(error as Error).message}`)
 		}
 	}
+	/**
+	 * Attempt to like a single activity, respecting activities that are already liked.
+	 * Printing/counting is left to the caller since labeling conventions differ per flow.
+	 */
+	private static async attemptLikeActivity(
+		activ: TheActivity
+	): Promise<'liked' | 'failed' | 'skipped' | 'error'> {
+		if (activ.isLiked || !activ.id) {
+			return 'skipped'
+		}
+		try {
+			const like: LikeActivityResponse = await fetcher(likeActivityMutation, {
+				activityId: activ.id,
+			})
+			return like?.data ? 'liked' : 'failed'
+		} catch (error) {
+			console.error(`Activity possibly deleted. ${(error as Error).message}`)
+			return 'error'
+		}
+	}
 	private static async LikeFollowing() {
 		try {
 			let page: number = 1
@@ -669,34 +637,21 @@ Statistics (Manga):
 					const activiti = activities?.data?.Page?.activities
 
 					for (let activ of activiti) {
-						if (!activ.isLiked && activ.id) {
-							try {
-								const like: LikeActivityResponse = await fetcher(
-									likeActivityMutation,
-									{
-										activityId: activ.id,
-									}
-								)
-								if (like?.data) {
-									likedCount++
-								}
-								responsiveOutput(
-									`${like?.data ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
-								)
-							} catch (error) {
-								console.error(
-									`Activity possibly deleted. ${(error as Error).message}`
-								)
-							}
-						} else {
+						const result = await Auth.attemptLikeActivity(activ)
+						if (result === 'liked') {
+							likedCount++
+						}
+						if (result === 'liked' || result === 'failed') {
+							responsiveOutput(
+								`${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+							)
+						} else if (result === 'skipped') {
 							responsiveOutput(
 								`${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
 							)
 						}
 						// avoiding rate-limit
-						await new Promise((resolve) => {
-							setTimeout(resolve, 2000)
-						})
+						await sleep(2000)
 					}
 
 					page++
@@ -707,7 +662,7 @@ Statistics (Manga):
 						spinner.update(
 							`Empty activities returned. Retrying... (${retryCount}/${maxRetries})`
 						)
-						await new Promise((resolve) => setTimeout(resolve, 2000))
+						await sleep(2000)
 					} else {
 						spinner.error(
 							`Probably the end of activities after ${maxRetries} retries.`
@@ -746,33 +701,19 @@ Statistics (Manga):
 					spinner.success(`Got ${activiti.length} activities...`)
 
 					for (let activ of activiti) {
-						if (!activ.isLiked && activ.id) {
-							try {
-								const like: LikeActivityResponse = await fetcher(
-									likeActivityMutation,
-									{
-										activityId: activ.id,
-									}
-								)
-								// const ToggleLike = like?.data?.ToggleLike
-								likedCount++
-								responsiveOutput(
-									`${like?.data ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
-								)
-							} catch (error) {
-								console.error(
-									`Activity possibly deleted. ${(error as Error).message}`
-								)
-							}
-						} else {
+						const result = await Auth.attemptLikeActivity(activ)
+						if (result === 'liked' || result === 'failed') {
+							likedCount++
+							responsiveOutput(
+								`${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+							)
+						} else if (result === 'skipped') {
 							responsiveOutput(
 								`${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
 							)
 						}
 						// avoiding rate-limit
-						await new Promise((resolve) => {
-							setTimeout(resolve, 1500)
-						})
+						await sleep(1500)
 					}
 
 					page++
@@ -839,31 +780,20 @@ Statistics (Manga):
 					spinner.success(`Got ${activiti.length} activities...`)
 
 					for (let activ of activiti) {
-						if (!activ.isLiked && activ.id) {
-							try {
-								const like: LikeActivityResponse = await fetcher(
-									likeActivityMutation,
-									{
-										activityId: activ.id,
-									}
-								)
-								likedCount++
-								responsiveOutput(
-									`${like?.data ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
-								)
+						const result = await Auth.attemptLikeActivity(activ)
+						if (result === 'liked' || result === 'failed') {
+							likedCount++
+							responsiveOutput(
+								`${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+							)
 
-								if (likedCount >= toLikeAmount) {
-									spinner.success(
-										`Finished liking ${likedCount} activities of ${username}.`
-									)
-									return
-								}
-							} catch (error) {
-								console.error(
-									`Activity possibly deleted. ${(error as Error).message}`
+							if (likedCount >= toLikeAmount) {
+								spinner.success(
+									`Finished liking ${likedCount} activities of ${username}.`
 								)
+								return
 							}
-						} else {
+						} else if (result === 'skipped') {
 							responsiveOutput(
 								`${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
 							)
@@ -979,33 +909,22 @@ Statistics (Manga):
 
 				for (let i = 0; i < activiti.length; i++) {
 					const activ = activiti[i]
-					if (!activ.isLiked && activ.id) {
-						try {
-							const like: LikeActivityResponse = await fetcher(
-								likeActivityMutation,
-								{
-									activityId: activ.id,
-								}
-							)
-							responsiveOutput(
-								`${like?.data ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, i + 1)}`
-							)
-							if (like?.data) {
-								liked++
-							}
-						} catch (error) {
-							console.error(
-								`Activity possibly deleted. ${(error as Error).message}`
-							)
+					const result = await Auth.attemptLikeActivity(activ)
+					if (result === 'liked' || result === 'failed') {
+						responsiveOutput(
+							`${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, i + 1)}`
+						)
+						if (result === 'liked') {
+							liked++
 						}
-					} else {
+					} else if (result === 'skipped') {
 						responsiveOutput(
 							`${colorize.Yellow('⚉')} ${activityBy(activ, i + 1)}`
 						)
 					}
 
 					// Avoid rate-limiting
-					await new Promise((resolve) => setTimeout(resolve, 1200))
+					await sleep(1200)
 				}
 			}
 			console.log(
@@ -1070,34 +989,84 @@ Statistics (Manga):
 
 class Social {
 	/**
+	 * Fetch every page of a followers/following listing for the current user.
+	 */
+	private static async fetchAllUsers(
+		query: string,
+		extractPage: (response: UserFollower | UserFollowing) => {
+			list: User[]
+			hasNextPage: boolean
+			lastPage: number
+		}
+	): Promise<User[]> {
+		let pager = 1
+		let hasNextPage = true
+		const allUsers: User[] = []
+		const userId = await Auth.MyUserId()
+		while (hasNextPage) {
+			const response: UserFollower | UserFollowing = await fetcher(query, {
+				userId,
+				page: pager,
+			})
+			const page = extractPage(response)
+			spinner.update(`Fetched page ${pager} of ${page.lastPage}...`)
+			allUsers.push(...page.list)
+			hasNextPage = page.hasNextPage
+			pager++
+		}
+		return allUsers
+	}
+	/**
+	 * Toggle-follow a batch of users, logging the outcome of each.
+	 */
+	private static async toggleFollowBatch(
+		users: { id: number; name: string }[]
+	): Promise<number> {
+		let toggled = 0
+		const maxIdLength = Math.max(...users.map(({ id }) => String(id).length))
+		const maxNameLength = Math.max(...users.map(({ name }) => name.length))
+
+		for (const user of users) {
+			try {
+				const response: ToggleFollowResponse = await fetcher(
+					toggleFollowMutation,
+					{ userId: user.id }
+				)
+				console.log(
+					`${String(`[${user.id}]`).padEnd(maxIdLength)}\t${String(
+						`[${response?.data?.ToggleFollow?.name}]`
+					).padEnd(
+						maxNameLength
+					)}\t${response?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
+				)
+				if (response?.data?.ToggleFollow?.id) {
+					toggled++
+				}
+			} catch (error) {
+				console.log(`toggle_follow: ${(error as Error).message}`)
+			}
+		}
+		return toggled
+	}
+	/**
 	 * Follow the users that follows you
 	 */
 	static async follow() {
 		try {
-			let pager = 1
-			let hasNextPage = true
-			let allFollowerUsers: User[] = []
-			let followedBack = 0
 			spinner.start('Fetching all the followers...')
-			while (hasNextPage) {
-				const followerUsers: UserFollower = await fetcher(userFollowersQuery, {
-					userId: await Auth.MyUserId(),
-					page: pager,
+			const allFollowerUsers = await Social.fetchAllUsers(
+				userFollowersQuery,
+				(response: UserFollower) => ({
+					list: response?.data?.Page?.followers || [],
+					hasNextPage: response?.data?.Page?.pageInfo?.hasNextPage ?? false,
+					lastPage: response?.data?.Page?.pageInfo?.lastPage,
 				})
-				spinner.update(
-					`Fetched page ${pager} of ${followerUsers?.data?.Page?.pageInfo?.lastPage}...`
-				)
-				if (!followerUsers?.data?.Page?.pageInfo?.hasNextPage) {
-					hasNextPage = false
-				}
-				allFollowerUsers.push(...(followerUsers?.data?.Page?.followers || []))
-				pager++
-			}
+			)
 			spinner.stop('Fetched all the followers. Starting follow back.')
 			// Filter users that do no follow me
 			const notFollowing: { id: number; name: string }[] = allFollowerUsers
 				.filter(({ isFollowing }) => !isFollowing)
-				.map(({ id, name }) => ({ id: id, name: name }))
+				.map(({ id, name }) => ({ id, name }))
 
 			console.log(
 				`\nTotal follower ${allFollowerUsers.length}.\nNot followed back ${notFollowing.length}\n`
@@ -1106,36 +1075,7 @@ class Social {
 				console.log(`Probably followed back all the users.`)
 				return
 			}
-			// Traverse and follow back
-			const maxIdLength = Math.max(
-				...notFollowing.map(({ id }) => String(id).length)
-			)
-			const maxNameLength = Math.max(
-				...notFollowing.map(({ name }) => name.length)
-			)
-
-			for (let nf of notFollowing) {
-				try {
-					const follow: ToggleFollowResponse = await fetcher(
-						toggleFollowMutation,
-						{ userId: nf.id }
-					)
-					console.log(
-						`${String(`[${nf.id}]`).padEnd(maxIdLength)}\t${String(
-							`[${follow?.data?.ToggleFollow?.name}]`
-						).padEnd(
-							maxNameLength
-						)}\t${follow?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
-					) // Count the followed back users
-					if (follow?.data?.ToggleFollow?.id) {
-						followedBack++
-					}
-				} catch (error) {
-					console.log(
-						`automate_follow_toggle_follow: ${(error as Error).message}`
-					)
-				}
-			}
+			const followedBack = await Social.toggleFollowBatch(notFollowing)
 			console.log(
 				`\n${colorize.Green('✔')} Followed back ${followedBack} users.`
 			)
@@ -1148,35 +1088,22 @@ class Social {
 	 */
 	static async unfollow() {
 		try {
-			let pager = 1
-			let hasNextPage = true
-			let allFollowingUsers: User[] = []
-			let unfollowedUsers = 0
 			spinner.start('Fetching all following users...')
-			while (hasNextPage) {
-				const followingUsers: UserFollowing = await fetcher(
-					userFollowingQuery,
-					{
-						userId: await Auth.MyUserId(),
-						page: pager,
-					}
-				)
-				spinner.update(
-					`Fetched page ${pager} of ${followingUsers?.data?.Page?.pageInfo?.lastPage}...`
-				)
-				if (!followingUsers?.data?.Page?.pageInfo?.hasNextPage) {
-					hasNextPage = false
-				}
-				allFollowingUsers.push(...(followingUsers?.data?.Page?.following || []))
-				pager++
-			}
+			const allFollowingUsers = await Social.fetchAllUsers(
+				userFollowingQuery,
+				(response: UserFollowing) => ({
+					list: response?.data?.Page?.following || [],
+					hasNextPage: response?.data?.Page?.pageInfo?.hasNextPage ?? false,
+					lastPage: response?.data?.Page?.pageInfo?.lastPage,
+				})
+			)
 			spinner.update(
 				`Fetching complete. Total got ${allFollowingUsers.length} users.`
 			)
 			// Filter users that do no follow me
 			const notFollowingMe: { id: number; name: string }[] = allFollowingUsers
 				.filter((user) => !user.isFollower)
-				.map((u3r) => ({ id: u3r.id, name: u3r.name }))
+				.map(({ id, name }) => ({ id, name }))
 			if (notFollowingMe.length <= 0) {
 				spinner.stop(`No users to unfollow. Exiting operation...`)
 				return
@@ -1184,30 +1111,10 @@ class Social {
 			spinner.stop(
 				`Unfollow process activated with ${notFollowingMe.length} users.`
 			)
-			let nfmCount = 0
 			console.log(`\n`)
-			for (let nfm of notFollowingMe) {
-				nfmCount++
-				try {
-					const unfollow: ToggleFollowResponse = await fetcher(
-						toggleFollowMutation,
-						{
-							userId: nfm.id,
-						}
-					)
-					console.log(
-						`[${nfm.id}]\t[${unfollow?.data?.ToggleFollow?.name}]\t${unfollow?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
-					)
-					// Count the unfollowed users
-					if (unfollow?.data?.ToggleFollow?.id) {
-						unfollowedUsers++
-					}
-				} catch (error) {
-					console.log(`unfollow_toggle_follow. ${(error as Error).message}`)
-				}
-			}
+			const unfollowedUsers = await Social.toggleFollowBatch(notFollowingMe)
 			console.log(
-				`\n${colorize.Green('✔')} Total Unfollowed: ${unfollowedUsers} of ${nfmCount} users.`
+				`\n${colorize.Green('✔')} Total Unfollowed: ${unfollowedUsers} of ${notFollowingMe.length} users.`
 			)
 		} catch (error) {
 			console.error(`\nautomate_unfollow: ${(error as Error).message}`)

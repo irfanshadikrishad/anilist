@@ -15,11 +15,19 @@ class Validate {
 		)
 	}
 	/**
-	 * Validate if MyAnimeList Anime XML file is valid or not
+	 * Validate if a MyAnimeList anime/manga export XML file is valid or not
 	 * @param xmlData string
+	 * @param listKey 'anime' | 'manga'
+	 * @param idField the MAL id field name for the list item (eg: series_animedb_id)
+	 * @param titleField the title field name for the list item (eg: series_title)
 	 * @returns boolean
 	 */
-	static async Import_AnimeXML(xmlData: string): Promise<boolean> {
+	private static async Import_MALXML(
+		xmlData: string,
+		listKey: 'anime' | 'manga',
+		idField: string,
+		titleField: string
+	): Promise<boolean> {
 		try {
 			const result = await parseStringPromise(xmlData, { explicitArray: false })
 			if (!result || !result.myanimelist) {
@@ -28,21 +36,20 @@ class Validate {
 				)
 				return false
 			}
-			const animeList = result.myanimelist.anime
-			if (!animeList) {
-				console.error("Invalid XML structure: Missing 'anime' elements.")
+			const list = result.myanimelist[listKey]
+			if (!list) {
+				console.error(`Invalid XML structure: Missing '${listKey}' elements.`)
 				return false
 			}
-			const animeArray = Array.isArray(animeList) ? animeList : [animeList]
-			const isValid = animeArray.every((anime) => {
-				const isValidId =
-					anime.series_animedb_id && !isNaN(Number(anime.series_animedb_id))
-				const hasRequiredFields = anime.series_title && anime.my_status
+			const array = Array.isArray(list) ? list : [list]
+			const isValid = array.every((item) => {
+				const isValidId = item[idField] && !isNaN(Number(item[idField]))
+				const hasRequiredFields = item[titleField] && item.my_status
 				return isValidId && hasRequiredFields
 			})
 			if (!isValid) {
 				console.error(
-					'Validation failed: Some anime entries are missing required fields or have invalid IDs.'
+					`Validation failed: Some ${listKey} entries are missing required fields or have invalid IDs.`
 				)
 			}
 			return isValid
@@ -56,37 +63,26 @@ class Validate {
 	 * @param xmlData string
 	 * @returns boolean
 	 */
+	static async Import_AnimeXML(xmlData: string): Promise<boolean> {
+		return Validate.Import_MALXML(
+			xmlData,
+			'anime',
+			'series_animedb_id',
+			'series_title'
+		)
+	}
+	/**
+	 * Validate if MyAnimeList Manga XML file is valid or not
+	 * @param xmlData string
+	 * @returns boolean
+	 */
 	static async Import_MangaXML(xmlData: string): Promise<boolean> {
-		try {
-			const result = await parseStringPromise(xmlData, { explicitArray: false })
-			if (!result || !result.myanimelist) {
-				console.error(
-					"Invalid XML structure: Missing 'myanimelist' root element."
-				)
-				return false
-			}
-			const mangaList = result.myanimelist.manga
-			if (!mangaList) {
-				console.error("Invalid XML structure: Missing 'manga' elements.")
-				return false
-			}
-			const mangaArray = Array.isArray(mangaList) ? mangaList : [mangaList]
-			const isValid = mangaArray.every((manga) => {
-				const isValidId =
-					manga.manga_mangadb_id && !isNaN(Number(manga.manga_mangadb_id))
-				const hasRequiredFields = manga.manga_title && manga.my_status
-				return isValidId && hasRequiredFields
-			})
-			if (!isValid) {
-				console.error(
-					'Validation failed: Some manga entries are missing required fields or have invalid IDs.'
-				)
-			}
-			return isValid
-		} catch (error) {
-			console.error('Error parsing or validating XML:', error)
-			return false
-		}
+		return Validate.Import_MALXML(
+			xmlData,
+			'manga',
+			'manga_mangadb_id',
+			'manga_title'
+		)
 	}
 	/**
 	 * Validate AniDB json-large file

@@ -7,6 +7,31 @@ import { getCurrentPackageVersion } from './helpers/workers.js'
 
 const cli = new Command()
 
+/**
+ * Dispatch to one of two handlers based on a mutually-exclusive pair of boolean
+ * flags (eg: --anime/--manga, --follow/--unfollow), optionally requiring login.
+ */
+async function dispatchBinaryOption(
+	flagA: boolean,
+	flagB: boolean,
+	optionNames: [string, string],
+	handlerA: () => Promise<unknown>,
+	handlerB: () => Promise<unknown>,
+	{ requireLogin = false }: { requireLogin?: boolean } = {}
+) {
+	if ((!flagA && !flagB) || (flagA && flagB)) {
+		console.error(
+			`\nMust select an option, either --${optionNames[0]} or --${optionNames[1]}`
+		)
+		return
+	}
+	if (requireLogin && !(await Auth.isLoggedIn())) {
+		console.error(`\nPlease login to use this feature.`)
+		return
+	}
+	await (flagA ? handlerA() : handlerB())
+}
+
 cli
 	.name('anilist')
 	.description(
@@ -65,15 +90,15 @@ cli
 	.description('Get anime or manga list of authenticated user.')
 	.option('-a, --anime', 'For anime list of authenticated user', false)
 	.option('-m, --manga', 'For manga list of authenticated user', false)
-	.action(async ({ anime, manga }) => {
-		if ((!anime && !manga) || (anime && manga)) {
-			console.error(`\nMust select an option, either --anime or --manga`)
-		} else if (anime) {
-			await AniList.MyAnime()
-		} else if (manga) {
-			await AniList.MyManga()
-		}
-	})
+	.action(async ({ anime, manga }) =>
+		dispatchBinaryOption(
+			anime,
+			manga,
+			['anime', 'manga'],
+			AniList.MyAnime,
+			AniList.MyManga
+		)
+	)
 cli
 	.command('delete')
 	.alias('del')
@@ -138,19 +163,15 @@ cli
 	.option('-a, --anime', 'To get the anime search results.', false)
 	.option('-m, --manga', 'To get the manga search results.', false)
 	.option('-c, --count <number>', 'Number of search results to show.', '10')
-	.action(async (query, { anime, manga, count }) => {
-		if ((!anime && !manga) || (anime && manga)) {
-			console.error(`\nMust select an option, either --anime or --manga`)
-		} else {
-			if (anime) {
-				await AniList.searchAnime(query, Number(count))
-			} else if (manga) {
-				await AniList.searchManga(query, Number(count))
-			} else {
-				console.error(`\nMust select an option, either --anime or --manga`)
-			}
-		}
-	})
+	.action(async (query, { anime, manga, count }) =>
+		dispatchBinaryOption(
+			anime,
+			manga,
+			['anime', 'manga'],
+			() => AniList.searchAnime(query, Number(count)),
+			() => AniList.searchManga(query, Number(count))
+		)
+	)
 cli
 	.command('status <status>')
 	.alias('post')
@@ -165,38 +186,31 @@ cli
 	.description('Export your anime or manga list.')
 	.option('-a, --anime', 'To get the anime search results.', false)
 	.option('-m, --manga', 'To get the manga search results.', false)
-	.action(async ({ anime, manga }) => {
-		if ((!anime && !manga) || (anime && manga)) {
-			console.error(`\nMust select an option, either --anime or --manga`)
-		} else {
-			if (anime) {
-				await AniList.exportAnime()
-			} else if (manga) {
-				await AniList.exportManga()
-			}
-		}
-	})
+	.action(async ({ anime, manga }) =>
+		dispatchBinaryOption(
+			anime,
+			manga,
+			['anime', 'manga'],
+			AniList.exportAnime,
+			AniList.exportManga
+		)
+	)
 cli
 	.command('import')
 	.alias('imp')
 	.description('Import your anime or manga from anilist or other sources.')
 	.option('-a, --anime', 'To get the anime search results.', false)
 	.option('-m, --manga', 'To get the manga search results.', false)
-	.action(async ({ anime, manga }) => {
-		if ((!anime && !manga) || (anime && manga)) {
-			console.error(`\nMust select an option, either --anime or --manga`)
-		} else {
-			if (await Auth.isLoggedIn()) {
-				if (anime) {
-					await Auth.callAnimeImporter()
-				} else if (manga) {
-					await Auth.callMangaImporter()
-				}
-			} else {
-				console.error(`\nPlease login to use this feature.`)
-			}
-		}
-	})
+	.action(async ({ anime, manga }) =>
+		dispatchBinaryOption(
+			anime,
+			manga,
+			['anime', 'manga'],
+			Auth.callAnimeImporter,
+			Auth.callMangaImporter,
+			{ requireLogin: true }
+		)
+	)
 cli
 	.command('autolike')
 	.alias('al')
@@ -210,20 +224,15 @@ cli
 	.description('Automate your process')
 	.option('-f, --follow', 'Follow the user whos following you.', false)
 	.option('-u, --unfollow', 'Unfollow the user whos not following you.', false)
-	.action(async ({ follow, unfollow }) => {
-		if (!follow && !unfollow) {
-			console.error(`\nMust select an option, either --follow or --unfollow`)
-		} else {
-			if (await Auth.isLoggedIn()) {
-				if (follow) {
-					await Social.follow()
-				} else if (unfollow) {
-					await Social.unfollow()
-				}
-			} else {
-				console.error(`\nPlease login to use this feature.`)
-			}
-		}
-	})
+	.action(async ({ follow, unfollow }) =>
+		dispatchBinaryOption(
+			follow,
+			unfollow,
+			['follow', 'unfollow'],
+			Social.follow,
+			Social.unfollow,
+			{ requireLogin: true }
+		)
+	)
 
 cli.parse(process.argv)

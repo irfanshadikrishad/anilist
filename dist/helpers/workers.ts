@@ -451,6 +451,10 @@ function simpleDateFormat(date: DateMonthYear) {
 	return `${date?.day}/${date?.month}/${date?.year}`
 }
 
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function handleRateLimitRetry(retryCount: number): Promise<void> {
 	let seconds = 2 ** retryCount * 1000
 	const maxWait = 60 * 1000
@@ -465,7 +469,7 @@ async function handleRateLimitRetry(retryCount: number): Promise<void> {
 		if (remainingTime <= 0) clearInterval(interval)
 	}, 1000)
 
-	await new Promise((resolve) => setTimeout(resolve, seconds))
+	await sleep(seconds)
 	clearInterval(interval)
 	spinner.stop()
 }
@@ -536,5 +540,6 @@ export {
 	saveToPath,
 	selectFile,
 	simpleDateFormat,
+	sleep,
 	timestampToTimeAgo,
 }
