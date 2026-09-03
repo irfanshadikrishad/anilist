@@ -20,7 +20,8 @@
 		"lint": "eslint ./dist",
 		"lint:fix": "eslint ./dist --fix",
 		"all": "npm run build && npm run lint && npm run lint:fix && npm run format && npm test",
-		"test": "jest ./tests"
+		"test": "jest ./tests",
+		"prepare": "husky"
 	},
 	"keywords": [
 		"anilist",
@@ -65,6 +66,7 @@
 		"@typescript-eslint/eslint-plugin": "^8.37.0",
 		"eslint": "^9.31.0",
 		"globals": "^16.3.0",
+		"husky": "^9.1.7",
 		"jest": "^30.0.4",
 		"prettier": "^3.6.2",
 		"prettier-plugin-organize-imports": "^4.1.0",
