@@ -1144,8 +1144,19 @@ class Social {
 				`Fetched ${allFollowingUsers.length} following user(s). Checking their last activity...`
 			)
 
-			const cutoff = Math.floor(Date.now() / 1000) - months * 30 * 24 * 60 * 60
+			const inactivityWindow = months * 30 * 24 * 60 * 60
+			const cutoff = Math.floor(Date.now() / 1000) - inactivityWindow
+			// Users active within this many seconds *after* the cutoff are "almost"
+			// stale (within 20% of the inactivity window) and get a soft warning.
+			const nearCutoff = cutoff + inactivityWindow * 0.2
 			const staleUsers: { id: number; name: string }[] = []
+
+			// Fixed-width columns so rows line up regardless of name/index length
+			const maxIndexLength =
+				`[${allFollowingUsers.length}/${allFollowingUsers.length}]`.length
+			const maxNameLength = Math.max(
+				...allFollowingUsers.map(({ name }) => name.length)
+			)
 
 			let checked = 0
 			for (const user of allFollowingUsers) {
@@ -1156,16 +1167,24 @@ class Social {
 				)
 				const lastActiveAt =
 					activityResponse?.data?.Page?.activities?.[0]?.createdAt
+				const isStale = !lastActiveAt || lastActiveAt < cutoff
+				const isNearStale = !isStale && lastActiveAt < nearCutoff
+				const activityLabel = lastActiveAt
+					? timestampToTimeAgo(lastActiveAt)
+					: 'no activity found'
+				const coloredActivityLabel = isStale
+					? colorize.Red(activityLabel)
+					: isNearStale
+						? colorize.Yellow(activityLabel)
+						: activityLabel
 
 				responsiveOutput(
-					`[${checked}/${allFollowingUsers.length}]\t${user.name}\t${
-						lastActiveAt
-							? timestampToTimeAgo(lastActiveAt)
-							: 'no activity found'
-					}`
+					`${`[${checked}/${allFollowingUsers.length}]`.padEnd(
+						maxIndexLength
+					)}\t${user.name.padEnd(maxNameLength)}\t${coloredActivityLabel}`
 				)
 
-				if (!lastActiveAt || lastActiveAt < cutoff) {
+				if (isStale) {
 					staleUsers.push({ id: user.id, name: user.name })
 				}
 

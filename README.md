@@ -268,4 +268,13 @@ Since you are creating your own API client for login no else else can get your c
 
 Want to contribute to the project? Check out complete guideline [here](CONTRIBUTING.md).
 
+#### Publish
+
+• Bump the version (since you have real changes since 2.0.0-forbidden was published, you can't republish that exact version):
+`npm version prerelease --preid=forbidden --no-git-tag-version`
+This takes 2.0.0-forbidden → 2.0.0-forbidden.0, matching the pattern of past releases (1.1.0-forbidden.0, .7, etc.).
+• Build: `npm run build`
+• Publish under the forbidden tag, not latest:
+`npm publish --tag forbidden`
+
 #### _Thanks for visiting 💙_
