@@ -8,28 +8,28 @@ import { getCurrentPackageVersion } from './helpers/workers.js'
 const cli = new Command()
 
 /**
- * Dispatch to one of two handlers based on a mutually-exclusive pair of boolean
- * flags (eg: --anime/--manga, --follow/--unfollow), optionally requiring login.
+ * Dispatch to exactly one handler out of a set of mutually-exclusive options
+ * (eg: --anime/--manga, --follow/--unfollow/--inactive), optionally requiring login.
  */
-async function dispatchBinaryOption(
-	flagA: boolean,
-	flagB: boolean,
-	optionNames: [string, string],
-	handlerA: () => Promise<unknown>,
-	handlerB: () => Promise<unknown>,
+async function dispatchOneOf(
+	options: { flag: boolean; name: string; handler: () => Promise<unknown> }[],
 	{ requireLogin = false }: { requireLogin?: boolean } = {}
 ) {
-	if ((!flagA && !flagB) || (flagA && flagB)) {
-		console.error(
-			`\nMust select an option, either --${optionNames[0]} or --${optionNames[1]}`
-		)
+	const selected = options.filter(({ flag }) => flag)
+	if (selected.length !== 1) {
+		const names = options.map(({ name }) => `--${name}`)
+		const optionList =
+			names.length <= 2
+				? names.join(' or ')
+				: `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
+		console.error(`\nMust select an option, either ${optionList}`)
 		return
 	}
 	if (requireLogin && !(await Auth.isLoggedIn())) {
 		console.error(`\nPlease login to use this feature.`)
 		return
 	}
-	await (flagA ? handlerA() : handlerB())
+	await selected[0].handler()
 }
 
 cli
@@ -91,13 +91,10 @@ cli
 	.option('-a, --anime', 'For anime list of authenticated user', false)
 	.option('-m, --manga', 'For manga list of authenticated user', false)
 	.action(async ({ anime, manga }) =>
-		dispatchBinaryOption(
-			anime,
-			manga,
-			['anime', 'manga'],
-			AniList.MyAnime,
-			AniList.MyManga
-		)
+		dispatchOneOf([
+			{ flag: anime, name: 'anime', handler: AniList.MyAnime },
+			{ flag: manga, name: 'manga', handler: AniList.MyManga },
+		])
 	)
 cli
 	.command('delete')
@@ -164,13 +161,18 @@ cli
 	.option('-m, --manga', 'To get the manga search results.', false)
 	.option('-c, --count <number>', 'Number of search results to show.', '10')
 	.action(async (query, { anime, manga, count }) =>
-		dispatchBinaryOption(
-			anime,
-			manga,
-			['anime', 'manga'],
-			() => AniList.searchAnime(query, Number(count)),
-			() => AniList.searchManga(query, Number(count))
-		)
+		dispatchOneOf([
+			{
+				flag: anime,
+				name: 'anime',
+				handler: () => AniList.searchAnime(query, Number(count)),
+			},
+			{
+				flag: manga,
+				name: 'manga',
+				handler: () => AniList.searchManga(query, Number(count)),
+			},
+		])
 	)
 cli
 	.command('status <status>')
@@ -187,13 +189,10 @@ cli
 	.option('-a, --anime', 'To get the anime search results.', false)
 	.option('-m, --manga', 'To get the manga search results.', false)
 	.action(async ({ anime, manga }) =>
-		dispatchBinaryOption(
-			anime,
-			manga,
-			['anime', 'manga'],
-			AniList.exportAnime,
-			AniList.exportManga
-		)
+		dispatchOneOf([
+			{ flag: anime, name: 'anime', handler: AniList.exportAnime },
+			{ flag: manga, name: 'manga', handler: AniList.exportManga },
+		])
 	)
 cli
 	.command('import')
@@ -202,12 +201,11 @@ cli
 	.option('-a, --anime', 'To get the anime search results.', false)
 	.option('-m, --manga', 'To get the manga search results.', false)
 	.action(async ({ anime, manga }) =>
-		dispatchBinaryOption(
-			anime,
-			manga,
-			['anime', 'manga'],
-			Auth.callAnimeImporter,
-			Auth.callMangaImporter,
+		dispatchOneOf(
+			[
+				{ flag: anime, name: 'anime', handler: Auth.callAnimeImporter },
+				{ flag: manga, name: 'manga', handler: Auth.callMangaImporter },
+			],
 			{ requireLogin: true }
 		)
 	)
@@ -224,13 +222,21 @@ cli
 	.description('Automate your process')
 	.option('-f, --follow', 'Follow the user whos following you.', false)
 	.option('-u, --unfollow', 'Unfollow the user whos not following you.', false)
-	.action(async ({ follow, unfollow }) =>
-		dispatchBinaryOption(
-			follow,
-			unfollow,
-			['follow', 'unfollow'],
-			Social.follow,
-			Social.unfollow,
+	.option(
+		'-i, --inactive <months>',
+		'Unfollow users you follow with no activity in this many months'
+	)
+	.action(async ({ follow, unfollow, inactive }) =>
+		dispatchOneOf(
+			[
+				{ flag: follow, name: 'follow', handler: Social.follow },
+				{ flag: unfollow, name: 'unfollow', handler: Social.unfollow },
+				{
+					flag: inactive !== undefined,
+					name: 'inactive <months>',
+					handler: () => Social.unfollowInactive(Number(inactive)),
+				},
+			],
 			{ requireLogin: true }
 		)
 	)

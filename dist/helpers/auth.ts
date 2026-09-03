@@ -1120,6 +1120,75 @@ class Social {
 			console.error(`\nautomate_unfollow: ${(error as Error).message}`)
 		}
 	}
+	/**
+	 * Unfollow the users you follow who haven't posted any activity in the
+	 * given number of months, to help clear out stale/inactive accounts.
+	 */
+	static async unfollowInactive(months: number) {
+		try {
+			if (!Number.isFinite(months) || months <= 0) {
+				console.error(`\nMust provide a positive number of months.`)
+				return
+			}
+
+			spinner.start('Fetching all following users...')
+			const allFollowingUsers = await Social.fetchAllUsers(
+				userFollowingQuery,
+				(response: UserFollowing) => ({
+					list: response?.data?.Page?.following || [],
+					hasNextPage: response?.data?.Page?.pageInfo?.hasNextPage ?? false,
+					lastPage: response?.data?.Page?.pageInfo?.lastPage,
+				})
+			)
+			spinner.stop(
+				`Fetched ${allFollowingUsers.length} following user(s). Checking their last activity...`
+			)
+
+			const cutoff = Math.floor(Date.now() / 1000) - months * 30 * 24 * 60 * 60
+			const staleUsers: { id: number; name: string }[] = []
+
+			let checked = 0
+			for (const user of allFollowingUsers) {
+				checked++
+				const activityResponse: SpecificUserActivitiesResponse = await fetcher(
+					specificUserActivitiesQuery,
+					{ userId: user.id, page: 1, perPage: 1 }
+				)
+				const lastActiveAt =
+					activityResponse?.data?.Page?.activities?.[0]?.createdAt
+
+				responsiveOutput(
+					`[${checked}/${allFollowingUsers.length}]\t${user.name}\t${
+						lastActiveAt
+							? timestampToTimeAgo(lastActiveAt)
+							: 'no activity found'
+					}`
+				)
+
+				if (!lastActiveAt || lastActiveAt < cutoff) {
+					staleUsers.push({ id: user.id, name: user.name })
+				}
+
+				// avoiding rate-limit
+				await sleep(1100)
+			}
+
+			console.log(
+				`\nFound ${staleUsers.length} user(s) inactive for ${months}+ month(s).`
+			)
+			if (staleUsers.length <= 0) {
+				console.log(`No stale accounts to unfollow.`)
+				return
+			}
+
+			const unfollowedUsers = await Social.toggleFollowBatch(staleUsers)
+			console.log(
+				`\n${colorize.Green('✔')} Unfollowed ${unfollowedUsers} of ${staleUsers.length} inactive user(s).`
+			)
+		} catch (error) {
+			console.error(`\nautomate_unfollow_inactive: ${(error as Error).message}`)
+		}
+	}
 }
 
 export { Auth, Social }
