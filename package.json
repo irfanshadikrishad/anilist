@@ -62,7 +62,7 @@
     "inquirer": "^13.4.3",
     "jsonrepair": "^3.15.0",
     "open": "^11.0.0",
-    "papaparse": "^5.5.4",
+    "papaparse": "^5.7.0",
     "tiny-spinner": "^2.0.5"
   },
   "devDependencies": {
