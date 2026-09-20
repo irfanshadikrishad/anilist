@@ -1,3 +1,2 @@
-npm run format
+npm exec lint-staged
 npm test
-git add .
