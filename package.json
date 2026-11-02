@@ -63,7 +63,7 @@
   },
   "prettier": "@irfanshadikrishad/prettier",
   "dependencies": {
-    "@irfanshadikrishad/cipher": "^1.7.1",
+    "@irfanshadikrishad/cipher": "^1.7.2",
     "chalk": "^6.0.1",
     "cli-truncate": "^6.1.1",
     "commander": "^14.0.3",
