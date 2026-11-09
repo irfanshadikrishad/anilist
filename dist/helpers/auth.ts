@@ -1,4 +1,5 @@
 import { Cipher } from '@irfanshadikrishad/cipher'
+import { Logger } from '@irfanshadikrishad/logger'
 import fs from 'fs'
 import inquirer from 'inquirer'
 import open from 'open'
@@ -50,6 +51,7 @@ import {
   timestampToTimeAgo,
 } from './workers.js'
 
+const log = Logger.child('auth')
 const home_dir = os.homedir()
 const save_path = path.join(home_dir, '.anilist_tok3n')
 const spinner = new Spinner()
@@ -69,12 +71,12 @@ class Auth {
         },
       ])
       if (!token) {
-        console.warn('\nNo token entered. Please try again.')
+        log.WARN('\nNo token entered. Please try again.')
         return null
       }
       return token
     } catch (error) {
-      console.error(
+      log.ERROR(
         `\nAn error occurred while getting the access token: ${(error as Error).message}`
       )
       return null
@@ -550,13 +552,13 @@ Statistics (Manga):
             }
           }
         } else {
-          console.error('\nNo entries found.')
+          log.ERROR('\nNo entries found.')
         }
       } else {
-        console.error(`\nNo manga(s) found in any list.`)
+        log.ERROR(`\nNo manga(s) found in any list.`)
       }
     } catch (error) {
-      console.error(`\nError deleting manga. ${(error as Error).message}`)
+      log.ERROR(`\nError deleting manga. ${(error as Error).message}`)
     }
   }
   static async DeleteMangaById(id: number, title?: MediaTitle) {
@@ -572,10 +574,10 @@ Statistics (Manga):
         const deleted: boolean = response?.data?.DeleteMediaListEntry?.deleted
         console.log(`del ${statusMessage} ${deleted ? '✔' : '✘'}`)
       } else {
-        console.error(`Error deleting manga. ${response?.errors?.[0]?.message}`)
+        log.ERROR(`Error deleting manga. ${response?.errors?.[0]?.message}`)
       }
     } catch (error) {
-      console.error(
+      log.ERROR(
         `Error deleting manga. ${id} ${
           error instanceof Error ? error.message : error
         }`
@@ -597,7 +599,7 @@ Statistics (Manga):
       )
 
       if (!response?.data) {
-        console.error(`\nSomething went wrong.`)
+        log.ERROR(`\nSomething went wrong.`)
         return
       }
 
@@ -607,7 +609,7 @@ Statistics (Manga):
         )
       }
     } catch (error) {
-      console.error(`\n${(error as Error).message}`)
+      log.ERROR(`\n${(error as Error).message}`)
     }
   }
   static async callAnimeImporter() {
@@ -640,7 +642,7 @@ Statistics (Manga):
           break
       }
     } catch (error) {
-      console.error(`\n${(error as Error).message}`)
+      log.ERROR(`\n${(error as Error).message}`)
     }
   }
   static async callMangaImporter() {
@@ -669,7 +671,7 @@ Statistics (Manga):
           break
       }
     } catch (error) {
-      console.error(`\n${(error as Error).message}`)
+      log.ERROR(`\n${(error as Error).message}`)
     }
   }
 }
@@ -736,7 +738,7 @@ class Social {
             followedBack++
           }
         } catch (error) {
-          console.log(
+          log.ERROR(
             `automate_follow_toggle_follow: ${(error as Error).message}`
           )
         }
@@ -745,7 +747,7 @@ class Social {
         `\n${colorize.Green('✔')} Followed back ${followedBack} users.`
       )
     } catch (error) {
-      console.log(`\nautomate_follow ${(error as Error).message}`)
+      log.ERROR(`\nautomate_follow ${(error as Error).message}`)
     }
   }
   /**
@@ -808,14 +810,14 @@ class Social {
             unfollowedUsers++
           }
         } catch (error) {
-          console.log(`unfollow_toggle_follow. ${(error as Error).message}`)
+          log.ERROR(`unfollow_toggle_follow. ${(error as Error).message}`)
         }
       }
       console.log(
         `\nTotal Unfollowed: ${unfollowedUsers} of ${nfmCount} users.`
       )
     } catch (error) {
-      console.error(`\nautomate_unfollow: ${(error as Error).message}`)
+      log.ERROR(`\nautomate_unfollow: ${(error as Error).message}`)
     }
   }
 }
