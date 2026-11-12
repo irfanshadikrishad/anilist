@@ -1,14 +1,12 @@
 version: 2
 updates:
-  - package-ecosystem: 'npm'
-    directory: '/'
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: 'daily'
+      interval: daily
     commit-message:
-      prefix: 'chore(deps)'
-    labels:
-      - 'dependencies'
-      - 'javascript'
+      prefix: chore(deps)
+    labels: [dependencies, javascript]
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
