@@ -71,13 +71,13 @@ class Auth {
         },
       ])
       if (!token) {
-        log.WARN('\nNo token entered. Please try again.')
+        log.WARN('No token entered. Please try again.')
         return null
       }
       return token
     } catch (error) {
       log.ERROR(
-        `\nAn error occurred while getting the access token: ${(error as Error).message}`
+        `An error occurred while getting the access token: ${(error as Error).message}`
       )
       return null
     }
@@ -85,12 +85,12 @@ class Auth {
   static async StoreAccessToken(token: string): Promise<void> {
     try {
       if (!token) {
-        console.warn('\nNo token provided. Nothing to store.')
+        log.WARN('No token provided. Nothing to store.')
         return
       }
       fs.writeFileSync(save_path, vigenere.encrypt(token), { encoding: 'utf8' })
     } catch (error) {
-      console.error(`\nError storing access token: ${(error as Error).message}`)
+      log.ERROR(`Error storing access token: ${(error as Error).message}`)
     }
   }
   static async RetrieveAccessToken(): Promise<string | null> {
@@ -103,9 +103,7 @@ class Auth {
         return null
       }
     } catch (error) {
-      console.error(
-        `\nError retrieving access token. ${(error as Error).message}`
-      )
+      log.ERROR(`Error retrieving access token. ${(error as Error).message}`)
       return null
     }
   }
@@ -235,17 +233,17 @@ Statistics (Manga):
 
           return user
         } else {
-          console.error(
-            `\nSomething went wrong. Please log in again. ${errors?.[0]?.message}`
+          log.ERROR(
+            `Something went wrong. Please log in again. ${errors?.[0]?.message}`
           )
           return null
         }
       } else {
-        console.error(`\nPlease login first to use this feature.`)
+        log.ERROR(`Please login first to use this feature.`)
         return null
       }
     } catch (error) {
-      console.error(`\nError from Myself. ${(error as Error).message}`)
+      log.ERROR(`Error from Myself. ${(error as Error).message}`)
     }
   }
   static async isLoggedIn(): Promise<boolean> {
@@ -253,7 +251,7 @@ Statistics (Manga):
       const token = await Auth.RetrieveAccessToken()
       return token !== null
     } catch (error) {
-      console.error(`Error checking login status: ${(error as Error).message}`)
+      log.ERROR(`Error checking login status: ${(error as Error).message}`)
       return false
     }
   }
