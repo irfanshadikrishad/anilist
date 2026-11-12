@@ -19,7 +19,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global user.name "Irfan Shadik Rishad"
-          git config --global user.email "irfanshadikrishad@gmail.com"
+          git config --global user.email "77362427+irfanshadikrishad@users.noreply.github.com
       - name: Bump Version
         run: |
           npm version patch --no-git-tag-version
