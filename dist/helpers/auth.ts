@@ -9,6 +9,12 @@ import { exit } from 'process'
 import Spinner from 'tiny-spinner'
 import { fetcher } from './fetcher.js'
 import { colorize } from './lib/colorize.js'
+import {
+  rate_limit_time_ms,
+  symbol_done,
+  symbol_fail,
+  symbol_neutral,
+} from './lib/constants.js'
 import { AniDB, AniList, MyAnimeList } from './lists.js'
 import {
   deleteActivityMutation,
@@ -377,12 +383,12 @@ Statistics (Manga):
 
                 console.log(
                   `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
-                    isDeleted ? colorize.Green('✔') : colorize.Red('✘')
+                    isDeleted ? symbol_done : symbol_fail
                   }`
                 )
 
                 // Avoiding rate-limit
-                await sleep(1100)
+                await sleep(rate_limit_time_ms)
               }
             }
           }
@@ -407,7 +413,7 @@ Statistics (Manga):
       if (response?.data) {
         const deleted = response?.data?.DeleteMediaListEntry?.deleted
         console.log(
-          `del ${title ? getTitle(title) : ''} ${deleted ? colorize.Green('✔') : colorize.Red('✘')}`
+          `del ${title ? getTitle(title) : ''} ${deleted ? symbol_done : symbol_fail}`
         )
       } else {
         console.error(
@@ -472,7 +478,7 @@ Statistics (Manga):
       for (const [, entry] of selectedEntries.entries.entries()) {
         if (entry?.id) {
           await deleteByIdFn(entry?.id, entry?.media?.title)
-          await sleep(1100)
+          await sleep(rate_limit_time_ms)
         } else {
           console.log(`No id in entry.`)
           console.log(entry)
@@ -643,15 +649,15 @@ Statistics (Manga):
             }
             if (result === 'liked' || result === 'failed') {
               responsiveOutput(
-                `${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+                `${result === 'liked' ? symbol_done : symbol_fail} ${activityBy(activ, likedCount)}`
               )
             } else if (result === 'skipped') {
               responsiveOutput(
-                `${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
+                `${symbol_neutral} ${activityBy(activ, likedCount)}`
               )
             }
             // avoiding rate-limit
-            await sleep(2000)
+            await sleep(rate_limit_time_ms)
           }
 
           page++
@@ -662,7 +668,7 @@ Statistics (Manga):
             spinner.update(
               `Empty activities returned. Retrying... (${retryCount}/${maxRetries})`
             )
-            await sleep(2000)
+            await sleep(rate_limit_time_ms)
           } else {
             spinner.error(
               `Probably the end of activities after ${maxRetries} retries.`
@@ -705,15 +711,15 @@ Statistics (Manga):
             if (result === 'liked' || result === 'failed') {
               likedCount++
               responsiveOutput(
-                `${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+                `${result === 'liked' ? symbol_done : symbol_fail} ${activityBy(activ, likedCount)}`
               )
             } else if (result === 'skipped') {
               responsiveOutput(
-                `${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
+                `${symbol_neutral} ${activityBy(activ, likedCount)}`
               )
             }
             // avoiding rate-limit
-            await sleep(1500)
+            await sleep(rate_limit_time_ms)
           }
 
           page++
@@ -784,7 +790,7 @@ Statistics (Manga):
             if (result === 'liked' || result === 'failed') {
               likedCount++
               responsiveOutput(
-                `${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, likedCount)}`
+                `${result === 'liked' ? symbol_done : symbol_fail} ${activityBy(activ, likedCount)}`
               )
 
               if (likedCount >= toLikeAmount) {
@@ -795,7 +801,7 @@ Statistics (Manga):
               }
             } else if (result === 'skipped') {
               responsiveOutput(
-                `${colorize.Yellow('⚉')} ${activityBy(activ, likedCount)}`
+                `${symbol_neutral} ${activityBy(activ, likedCount)}`
               )
             }
           }
@@ -912,23 +918,21 @@ Statistics (Manga):
           const result = await Auth.attemptLikeActivity(activ)
           if (result === 'liked' || result === 'failed') {
             responsiveOutput(
-              `${result === 'liked' ? colorize.Green('✔') : colorize.Red('✘')} ${activityBy(activ, i + 1)}`
+              `${result === 'liked' ? symbol_done : symbol_fail} ${activityBy(activ, i + 1)}`
             )
             if (result === 'liked') {
               liked++
             }
           } else if (result === 'skipped') {
-            responsiveOutput(
-              `${colorize.Yellow('⚉')} ${activityBy(activ, i + 1)}`
-            )
+            responsiveOutput(`${symbol_neutral} ${activityBy(activ, i + 1)}`)
           }
 
           // Avoid rate-limiting
-          await sleep(1200)
+          await sleep(rate_limit_time_ms)
         }
       }
       console.log(
-        `\n${colorize.Green('✔')} All ${liked} activities liked successfully.`
+        `\n${symbol_done} All ${liked} activities liked successfully.`
       )
     } catch (error) {
       console.error(
@@ -1037,7 +1041,7 @@ class Social {
             `[${response?.data?.ToggleFollow?.name}]`
           ).padEnd(
             maxNameLength
-          )}\t${response?.data?.ToggleFollow?.id ? colorize.Green('✔') : colorize.Red('✘')}`
+          )}\t${response?.data?.ToggleFollow?.id ? symbol_done : symbol_fail}`
         )
         if (response?.data?.ToggleFollow?.id) {
           toggled++
@@ -1076,9 +1080,7 @@ class Social {
         return
       }
       const followedBack = await Social.toggleFollowBatch(notFollowing)
-      console.log(
-        `\n${colorize.Green('✔')} Followed back ${followedBack} users.`
-      )
+      console.log(`\n${symbol_done} Followed back ${followedBack} users.`)
     } catch (error) {
       console.log(`\nautomate_follow ${(error as Error).message}`)
     }
@@ -1112,9 +1114,9 @@ class Social {
         `Unfollow process activated with ${notFollowingMe.length} users.`
       )
       console.log(`\n`)
-      const unfollowedUsers = await Social.toggleFollowBatch(notFollowingMe)
+      const unfollowed_users = await Social.toggleFollowBatch(notFollowingMe)
       console.log(
-        `\n${colorize.Green('✔')} Total Unfollowed: ${unfollowedUsers} of ${notFollowingMe.length} users.`
+        `\n${symbol_done} Total Unfollowed: ${unfollowed_users} of ${notFollowingMe.length} users.`
       )
     } catch (error) {
       console.error(`\nautomate_unfollow: ${(error as Error).message}`)
@@ -1189,7 +1191,7 @@ class Social {
         }
 
         // avoiding rate-limit
-        await sleep(1100)
+        await sleep(rate_limit_time_ms)
       }
 
       console.log(
@@ -1200,9 +1202,9 @@ class Social {
         return
       }
 
-      const unfollowedUsers = await Social.toggleFollowBatch(staleUsers)
+      const unfollowed_users = await Social.toggleFollowBatch(staleUsers)
       console.log(
-        `\n${colorize.Green('✔')} Unfollowed ${unfollowedUsers} of ${staleUsers.length} inactive user(s).`
+        `\n${symbol_done} Unfollowed ${unfollowed_users} of ${staleUsers.length} inactive user(s).`
       )
     } catch (error) {
       console.error(`\nautomate_unfollow_inactive: ${(error as Error).message}`)
