@@ -6,6 +6,9 @@ permissions:
   actions: write
   contents: write
   pull-requests: write
+concurrency:
+  group: linter-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   eslint:
     runs-on: ubuntu-latest
