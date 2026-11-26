@@ -25,6 +25,10 @@ npm install -g @irfanshadikrishad/anilist
 
 This will install the package globally. And you have to use commands like
 
+> [!IMPORTANT]
+> Recommended to use the `forbidden` version for additional options and latest updates:
+> `npm i -g @irfanshadikrishad/anilist@forbidden`
+
 ```bash
 anilist tr -c 15
 ```
