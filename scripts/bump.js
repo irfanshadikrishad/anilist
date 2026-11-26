@@ -32,25 +32,15 @@ let newVersion
 
 switch (type) {
   case 'major':
-    major += 1
-    minor = 0
-    patch = 0
-    newVersion = `${major}.${minor}.${patch}-${preid}.0`
+    newVersion = `${major + 1}.0.0-${preid}.0`
     break
 
   case 'minor':
-    minor += 1
-    patch = 0
-    newVersion = `${major}.${minor}.${patch}-${preid}.0`
+    newVersion = `${major}.${minor + 1}.0-${preid}.0`
     break
 
   case 'patch':
-    if (preTag) {
-      newVersion = `${major}.${minor}.${patch}-${preTag}.${Number(preNum) + 1}`
-    } else {
-      patch += 1
-      newVersion = `${major}.${minor}.${patch}-${preid}.0`
-    }
+    newVersion = `${major}.${minor}.${patch + 1}-${preid}.0`
     break
 
   case 'prerelease':
