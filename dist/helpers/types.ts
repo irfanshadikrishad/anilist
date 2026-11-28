@@ -407,6 +407,11 @@ type MangaDetails = {
   errors?: Error
 }
 
+export type DeleteActivityResponse = {
+  data?: { DeleteActivity: { deleted: boolean } }
+  errors?: { message: string }[]
+}
+
 export {
   Activity,
   AniListMediaStatus,

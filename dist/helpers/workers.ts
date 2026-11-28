@@ -10,10 +10,18 @@ import process from 'process'
 import Spinner from 'tiny-spinner'
 import { Auth } from './auth.js'
 import { fetcher } from './fetcher.js'
+import {
+  rate_limit_time_ms,
+  symbol_done,
+  symbol_fail,
+} from './lib/constants.js'
+import { deleteActivityMutation } from './mutations.js'
 import { animeSearchQuery } from './queries.js'
 import {
+  Activity,
   AnimeSearchResponse,
   DateMonthYear,
+  DeleteActivityResponse,
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
@@ -514,6 +522,74 @@ function logUserDetails(
     'Chapters Read': user.statistics?.manga?.chaptersRead || 0,
     'Volumes Read': user.statistics?.manga?.volumesRead || 0,
   })
+}
+
+/**
+ * Dispatch to exactly one handler out of a set of mutually-exclusive options
+ * (eg: --anime/--manga, --follow/--unfollow/--inactive), optionally requiring login.
+ */
+export async function dispatchOneOf(
+  options: { flag: boolean; name: string; handler: () => Promise<unknown> }[],
+  { requireLogin = false }: { requireLogin?: boolean } = {}
+) {
+  const selected = options.filter(({ flag }) => flag)
+  if (selected.length !== 1) {
+    const names = options.map(({ name }) => `--${name}`)
+    const optionList =
+      names.length <= 2
+        ? names.join(' or ')
+        : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
+    console.error(`\nMust select an option, either ${optionList}`)
+    return
+  }
+  if (requireLogin && !(await Auth.isLoggedIn())) {
+    console.error(`\nPlease login to use this feature.`)
+    return
+  }
+  await selected[0].handler()
+}
+
+/**
+ * Deletes a single activity and returns whether the API reported it as deleted.
+ */
+export async function deleteActivity(id: number): Promise<boolean> {
+  const deleteResponse: DeleteActivityResponse = await fetcher(
+    deleteActivityMutation,
+    { id }
+  )
+
+  return Boolean(deleteResponse?.data?.DeleteActivity?.deleted)
+}
+
+/**
+ * Deletes every activity in the page (skipping entries without an id),
+ * logging progress and respecting the rate limit.
+ * Returns the updated running total.
+ */
+export async function deleteActivities(
+  activities: Activity[],
+  totalCount: number
+): Promise<number> {
+  let count = 0
+
+  for (const act of activities) {
+    if (!act?.id) continue
+
+    const isDeleted = await deleteActivity(act.id)
+    count++
+    totalCount++
+
+    console.log(
+      `[${count}/${activities.length}/${totalCount}]\t${act.id} ${
+        isDeleted ? symbol_done : symbol_fail
+      }`
+    )
+
+    // Avoiding rate-limit
+    await sleep(rate_limit_time_ms)
+  }
+
+  return totalCount
 }
 
 export {

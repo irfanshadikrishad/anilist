@@ -3,34 +3,9 @@ import { Command } from 'commander'
 import process from 'process'
 import { Auth, Social } from './helpers/auth.js'
 import { AniList } from './helpers/lists.js'
-import { getCurrentPackageVersion } from './helpers/workers.js'
+import { dispatchOneOf, getCurrentPackageVersion } from './helpers/workers.js'
 
 const cli = new Command()
-
-/**
- * Dispatch to exactly one handler out of a set of mutually-exclusive options
- * (eg: --anime/--manga, --follow/--unfollow/--inactive), optionally requiring login.
- */
-async function dispatchOneOf(
-  options: { flag: boolean; name: string; handler: () => Promise<unknown> }[],
-  { requireLogin = false }: { requireLogin?: boolean } = {}
-) {
-  const selected = options.filter(({ flag }) => flag)
-  if (selected.length !== 1) {
-    const names = options.map(({ name }) => `--${name}`)
-    const optionList =
-      names.length <= 2
-        ? names.join(' or ')
-        : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
-    console.error(`\nMust select an option, either ${optionList}`)
-    return
-  }
-  if (requireLogin && !(await Auth.isLoggedIn())) {
-    console.error(`\nPlease login to use this feature.`)
-    return
-  }
-  await selected[0].handler()
-}
 
 cli
   .name('anilist')
