@@ -50,12 +50,12 @@ import {
 } from './types.js'
 import { Validate } from './validation.js'
 import {
-  anidbToanilistMapper,
   formatDateObject,
   getDownloadFolderPath,
   getNextSeasonAndYear,
   getTitle,
   logUserDetails,
+  processAnimeList,
   removeHtmlAndMarkdown,
   saveJSONasCSV,
   saveJSONasJSON,
@@ -883,96 +883,20 @@ class AniDB {
         return
       }
 
-      if (js0n_repaired) {
-        const obj3ct = await JSON.parse(js0n_repaired)
-        const animeList = obj3ct?.anime
-
-        if (animeList?.length > 0) {
-          let count = 0
-          let iteration = 0
-          let missed: {
-            anidbId: number
-            englishTitle?: string
-            romajiTitle?: string
-          }[] = []
-          for (const anime of animeList) {
-            iteration++
-            const anidbId: number = anime.id
-            const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
-            const status: string = anime.status
-            // const type = anime.type
-            const totalEpisodes = anime.totalEpisodes
-            const ownEpisodes = anime.ownEpisodes
-            const romanjiName = anime.romanjiName
-            const englishName = anime.englishName
-
-            function getStatus(anidbStatus: string, episodesSeen: string) {
-              if (anidbStatus === 'complete') {
-                return AniListMediaStatus.COMPLETED
-              } else if (
-                anidbStatus === 'incomplete' &&
-                Number(episodesSeen) > 0
-              ) {
-                return AniListMediaStatus.CURRENT
-              } else {
-                return AniListMediaStatus.PLANNING
-              }
-            }
-
-            let anilistId = await anidbToanilistMapper(
-              romanjiName,
-              Number(released.split('.')[2]),
-              englishName
-            )
-
-            if (anilistId) {
-              try {
-                const saveResponse: {
-                  data?: { SaveMediaListEntry: { id: number; status: string } }
-                  errors?: { message: string }[]
-                } = await fetcher(saveAnimeWithProgressMutation, {
-                  mediaId: anilistId,
-                  progress: ownEpisodes - 2,
-                  status: getStatus(status, ownEpisodes),
-                  hiddenFromStatusLists: false,
-                  private: false,
-                })
-
-                const entryId = saveResponse?.data?.SaveMediaListEntry?.id
-                if (entryId) {
-                  count++
-                  responsiveOutput(
-                    `[${count}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
-                  )
-                }
-              } catch (error) {
-                console.error(
-                  `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`
-                )
-              }
-            } else {
-              missed.push({
-                anidbId: anidbId,
-                englishTitle: englishName,
-                romajiTitle: romanjiName,
-              })
-            }
-          }
-          responsiveOutput(
-            `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
-          )
-          if (missed.length > 0) {
-            responsiveOutput(
-              `Exporting missed entries to JSON file, Please add them manually.`
-            )
-            await saveJSONasJSON(missed, 'anidb-missed')
-          }
-        } else {
-          console.log(`\nNo anime list found in the file.`)
-        }
-      } else {
+      if (!js0n_repaired) {
         console.log(`\nNo content found in the file or unable to read.`)
+        return
       }
+
+      const obj3ct = await JSON.parse(js0n_repaired)
+      const animeList = obj3ct?.anime
+
+      if (!(animeList?.length > 0)) {
+        console.log(`\nNo anime list found in the file.`)
+        return
+      }
+
+      await processAnimeList(animeList)
     } catch (error) {
       console.error(
         `\nError in AniDB import process: ${(error as Error).message}`

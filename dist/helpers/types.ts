@@ -412,6 +412,24 @@ export type DeleteActivityResponse = {
   errors?: { message: string }[]
 }
 
+export type MissedEntry = {
+  anidbId: number
+  englishTitle?: string
+  romajiTitle?: string
+}
+
+export type EntryResult = 'saved' | 'skipped' | 'missed'
+
+export type AniDBAnimeEntry = {
+  id: number
+  broadcastDate: string // "DD.MM.YYYY" (eg: "23.07.2016")
+  status: string
+  totalEpisodes: number | string
+  ownEpisodes: number | string
+  romanjiName: string
+  englishName?: string
+}
+
 export {
   Activity,
   AniListMediaStatus,

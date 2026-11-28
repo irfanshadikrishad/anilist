@@ -15,16 +15,25 @@ import {
   symbol_done,
   symbol_fail,
 } from './lib/constants.js'
-import { deleteActivityMutation } from './mutations.js'
+import {
+  deleteActivityMutation,
+  saveAnimeWithProgressMutation,
+} from './mutations.js'
 import { animeSearchQuery } from './queries.js'
+import { responsiveOutput } from './truncate.js'
 import {
   Activity,
+  AniDBAnimeEntry,
+  AniListMediaStatus,
   AnimeSearchResponse,
   DateMonthYear,
   DeleteActivityResponse,
+  EntryResult,
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
+  MissedEntry,
+  SaveMediaListEntryResponse,
   TheActivity,
   User,
 } from './types.js'
@@ -590,6 +599,106 @@ export async function deleteActivities(
   }
 
   return totalCount
+}
+
+export function getStatus(anidbStatus: string, episodesSeen: string) {
+  if (anidbStatus === 'complete') {
+    return AniListMediaStatus.COMPLETED
+  } else if (anidbStatus === 'incomplete' && Number(episodesSeen) > 0) {
+    return AniListMediaStatus.CURRENT
+  } else {
+    return AniListMediaStatus.PLANNING
+  }
+}
+
+/**
+ * Maps a single AniDB entry to AniList and saves it.
+ * `nextCount` is the running success counter value to display if the save succeeds.
+ * Pushes unmapped entries into `missed`.
+ */
+async function processAnimeEntry(
+  anime: AniDBAnimeEntry,
+  nextCount: number,
+  missed: MissedEntry[]
+): Promise<EntryResult> {
+  const anidbId: number = anime.id
+  const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
+  const status: string = anime.status
+  // const type = anime.type
+  const totalEpisodes = anime.totalEpisodes
+  const ownEpisodes = anime.ownEpisodes
+  const romanjiName = anime.romanjiName
+  const englishName = anime.englishName
+
+  const anilistId = await anidbToanilistMapper(
+    romanjiName,
+    Number(released.split('.')[2]),
+    englishName
+  )
+
+  if (!anilistId) {
+    missed.push({
+      anidbId: anidbId,
+      englishTitle: englishName,
+      romajiTitle: romanjiName,
+    })
+    return 'missed'
+  }
+
+  try {
+    const saveResponse: SaveMediaListEntryResponse = await fetcher(
+      saveAnimeWithProgressMutation,
+      {
+        mediaId: anilistId,
+        progress: ownEpisodes - 2,
+        status: getStatus(status, ownEpisodes),
+        hiddenFromStatusLists: false,
+        private: false,
+      }
+    )
+
+    const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+    if (!entryId) return 'skipped'
+
+    responsiveOutput(
+      `[${nextCount}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
+    )
+    return 'saved'
+  } catch (error) {
+    console.error(
+      `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`
+    )
+    return 'skipped'
+  }
+}
+
+/**
+ * Processes the whole anime list, prints the summary,
+ * and exports unmapped entries to JSON.
+ */
+export async function processAnimeList(
+  animeList: AniDBAnimeEntry[]
+): Promise<void> {
+  let count = 0
+  let iteration = 0
+  const missed: MissedEntry[] = []
+
+  for (const anime of animeList) {
+    iteration++
+    const result = await processAnimeEntry(anime, count + 1, missed)
+    if (result === 'saved') count++
+  }
+
+  responsiveOutput(
+    `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
+  )
+
+  if (missed.length > 0) {
+    responsiveOutput(
+      `Exporting missed entries to JSON file, Please add them manually.`
+    )
+    await saveJSONasJSON(missed, 'anidb-missed')
+  }
 }
 
 export {
