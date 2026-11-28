@@ -20,7 +20,7 @@ If you see the version then its installed. Otherwise install nodejs and npm shou
 Then install the package by running
 
 ```bash
-npm install -g @irfanshadikrishad/anilist
+npm install -g @irfanshadikrishad/anilist@forbidden
 ```
 
 This will install the package globally. And you have to use commands like

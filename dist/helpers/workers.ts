@@ -10,13 +10,30 @@ import process from 'process'
 import Spinner from 'tiny-spinner'
 import { Auth } from './auth.js'
 import { fetcher } from './fetcher.js'
-import { animeSearchQuery } from './queries.js'
 import {
+  rate_limit_time_ms,
+  symbol_done,
+  symbol_fail,
+} from './lib/constants.js'
+import {
+  deleteActivityMutation,
+  saveAnimeWithProgressMutation,
+} from './mutations.js'
+import { animeSearchQuery } from './queries.js'
+import { responsiveOutput } from './truncate.js'
+import {
+  Activity,
+  AniDBAnimeEntry,
+  AniListMediaStatus,
   AnimeSearchResponse,
   DateMonthYear,
+  DeleteActivityResponse,
+  EntryResult,
   MALAnimeStatus,
   MALMangaStatus,
   MediaWithProgress,
+  MissedEntry,
+  SaveMediaListEntryResponse,
   TheActivity,
   User,
 } from './types.js'
@@ -514,6 +531,174 @@ function logUserDetails(
     'Chapters Read': user.statistics?.manga?.chaptersRead || 0,
     'Volumes Read': user.statistics?.manga?.volumesRead || 0,
   })
+}
+
+/**
+ * Dispatch to exactly one handler out of a set of mutually-exclusive options
+ * (eg: --anime/--manga, --follow/--unfollow/--inactive), optionally requiring login.
+ */
+export async function dispatchOneOf(
+  options: { flag: boolean; name: string; handler: () => Promise<unknown> }[],
+  { requireLogin = false }: { requireLogin?: boolean } = {}
+) {
+  const selected = options.filter(({ flag }) => flag)
+  if (selected.length !== 1) {
+    const names = options.map(({ name }) => `--${name}`)
+    const optionList =
+      names.length <= 2
+        ? names.join(' or ')
+        : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`
+    console.error(`\nMust select an option, either ${optionList}`)
+    return
+  }
+  if (requireLogin && !(await Auth.isLoggedIn())) {
+    console.error(`\nPlease login to use this feature.`)
+    return
+  }
+  await selected[0].handler()
+}
+
+/**
+ * Deletes a single activity and returns whether the API reported it as deleted.
+ */
+export async function deleteActivity(id: number): Promise<boolean> {
+  const deleteResponse: DeleteActivityResponse = await fetcher(
+    deleteActivityMutation,
+    { id }
+  )
+
+  return Boolean(deleteResponse?.data?.DeleteActivity?.deleted)
+}
+
+/**
+ * Deletes every activity in the page (skipping entries without an id),
+ * logging progress and respecting the rate limit.
+ * Returns the updated running total.
+ */
+export async function deleteActivities(
+  activities: Activity[],
+  totalCount: number
+): Promise<number> {
+  let count = 0
+
+  for (const act of activities) {
+    if (!act?.id) continue
+
+    const isDeleted = await deleteActivity(act.id)
+    count++
+    totalCount++
+
+    console.log(
+      `[${count}/${activities.length}/${totalCount}]\t${act.id} ${
+        isDeleted ? symbol_done : symbol_fail
+      }`
+    )
+
+    // Avoiding rate-limit
+    await sleep(rate_limit_time_ms)
+  }
+
+  return totalCount
+}
+
+function getStatus(anidbStatus: string, episodesSeen: string | number) {
+  if (anidbStatus === 'complete') {
+    return AniListMediaStatus.COMPLETED
+  } else if (anidbStatus === 'incomplete' && Number(episodesSeen) > 0) {
+    return AniListMediaStatus.CURRENT
+  } else {
+    return AniListMediaStatus.PLANNING
+  }
+}
+
+/**
+ * Maps a single AniDB entry to AniList and saves it.
+ * `nextCount` is the running success counter value to display if the save succeeds.
+ * Pushes unmapped entries into `missed`.
+ */
+async function processAnimeEntry(
+  anime: AniDBAnimeEntry,
+  nextCount: number,
+  missed: MissedEntry[]
+): Promise<EntryResult> {
+  const anidbId: number = anime.id
+  const released: string = anime.broadcastDate // DD-MM-YYYY (eg: "23.07.2016")
+  const status: string = anime.status
+  // const type = anime.type
+  const totalEpisodes = anime.totalEpisodes
+  const ownEpisodes = anime.ownEpisodes
+  const romanjiName = anime.romanjiName
+  const englishName = anime.englishName
+
+  const anilistId = await anidbToanilistMapper(
+    romanjiName,
+    Number(released.split('.')[2]),
+    englishName
+  )
+
+  if (!anilistId) {
+    missed.push({
+      anidbId: anidbId,
+      englishTitle: englishName,
+      romajiTitle: romanjiName,
+    })
+    return 'missed'
+  }
+
+  try {
+    const saveResponse: SaveMediaListEntryResponse = await fetcher(
+      saveAnimeWithProgressMutation,
+      {
+        mediaId: anilistId,
+        progress: Number(ownEpisodes) - 2,
+        status: getStatus(status, ownEpisodes),
+        hiddenFromStatusLists: false,
+        private: false,
+      }
+    )
+
+    const entryId = saveResponse?.data?.SaveMediaListEntry?.id
+    if (!entryId) return 'skipped'
+
+    responsiveOutput(
+      `[${nextCount}]\t${entryId} ✅\t${anidbId}\t${anilistId}\t(${ownEpisodes}/${totalEpisodes})\t${status}–>${getStatus(status, ownEpisodes)}`
+    )
+    return 'saved'
+  } catch (error) {
+    console.error(
+      `Error processing AniDB ID ${anidbId}: ${(error as Error).message}`
+    )
+    return 'skipped'
+  }
+}
+
+/**
+ * Processes the whole anime list, prints the summary,
+ * and exports unmapped entries to JSON.
+ */
+export async function processAnimeList(
+  animeList: AniDBAnimeEntry[]
+): Promise<void> {
+  let count = 0
+  let iteration = 0
+  const missed: MissedEntry[] = []
+
+  for (const anime of animeList) {
+    iteration++
+    const result = await processAnimeEntry(anime, count + 1, missed)
+    if (result === 'saved') count++
+  }
+
+  responsiveOutput(
+    `\nAccuracy: ${(((animeList.length - missed.length) / animeList.length) * 100).toFixed(2)}%\tTotal Processed: ${iteration}\tMissed: ${missed.length}`
+  )
+
+  if (missed.length > 0) {
+    responsiveOutput(
+      `Exporting missed entries to JSON file, Please add them manually.`
+    )
+    await saveJSONasJSON(missed, 'anidb-missed')
+  }
 }
 
 export {

@@ -15,9 +15,9 @@ import {
   symbol_fail,
   symbol_neutral,
 } from './lib/constants.js'
+import { renderUserProfile } from './lib/render.js'
 import { AniDB, AniList, MyAnimeList } from './lists.js'
 import {
-  deleteActivityMutation,
   deleteMangaEntryMutation,
   deleteMediaEntryMutation,
   likeActivityMutation,
@@ -62,6 +62,7 @@ import {
 import {
   activityBy,
   aniListEndpoint,
+  deleteActivities,
   getTitle,
   redirectUri,
   sleep,
@@ -111,13 +112,10 @@ class Auth {
   }
   static async RetriveAccessToken(): Promise<string | null> {
     try {
-      if (fs.existsSync(save_path)) {
-        return vigenere.decrypt(
-          fs.readFileSync(save_path, { encoding: 'utf8' })
-        )
-      } else {
+      if (!fs.existsSync(save_path)) {
         return null
       }
+      return vigenere.decrypt(fs.readFileSync(save_path, { encoding: 'utf8' }))
     } catch (error) {
       console.error(
         `\nError retriving acess-token. ${(error as Error).message}`
@@ -153,117 +151,88 @@ class Auth {
 
       const token_Data: { access_token?: string } = await tokenResponse.json()
 
-      if (token_Data?.access_token) {
-        await Auth.StoreAccessToken(token_Data?.access_token)
-        const name = await Auth.MyUserName()
-        if (name) {
-          console.log(`\nWelcome Back, ${name}!`)
-        } else {
-          console.log(`\nLogged in successfull!`)
-        }
-      } else {
+      if (!token_Data?.access_token) {
         console.error('\nFailed to get access token:', token_Data)
+        return
       }
+      await Auth.StoreAccessToken(token_Data.access_token)
+      const name = await Auth.MyUserName()
+      console.log(
+        name ? `\nWelcome Back, ${name}!` : '\nLogged in successfully!'
+      )
     } catch (error) {
       console.error(`\nFailed logging in. ${(error as Error).message}`)
     }
   }
   static async Myself() {
     try {
-      if (await Auth.isLoggedIn()) {
-        const headers = {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await Auth.RetriveAccessToken()}`,
-        }
-        const request = await fetch(aniListEndpoint, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ query: currentUserQuery }),
-        })
-        const { data, errors }: Myself = await request.json()
-
-        if (request.status === 200) {
-          const user = data?.Viewer
-          const activiResponse: UserActivitiesResponse = await fetcher(
-            userActivityQuery,
-            {
-              id: user?.id,
-              page: 1,
-              perPage: 10,
-            }
-          )
-          const activities = activiResponse?.data?.Page?.activities
-          // Get follower/following information
-          const req_followers: UserFollower = await fetcher(
-            userFollowersQuery,
-            {
-              userId: user?.id,
-            }
-          )
-          const req_following: UserFollowing = await fetcher(
-            userFollowingQuery,
-            {
-              userId: user?.id,
-            }
-          )
-          const followersCount = req_followers?.data?.Page?.pageInfo?.total || 0
-          const followingCount = req_following?.data?.Page?.pageInfo?.total || 0
-
-          console.log(`
-ID:                     ${user?.id}
-Name:                   ${user?.name}
-siteUrl:                ${user?.siteUrl}
-profileColor:           ${user?.options?.profileColor}
-timeZone:               ${user?.options?.timezone}
-activityMergeTime:      ${user?.options?.activityMergeTime}
-donatorTier:            ${user?.donatorTier}
-donatorBadge:           ${user?.donatorBadge}
-unreadNotificationCount:${user?.unreadNotificationCount}
-Account Created:        ${new Date(user?.createdAt * 1000).toUTCString()}
-Account Updated:        ${new Date(user?.updatedAt * 1000).toUTCString()}
-
-Followers:              ${followersCount}
-Following:              ${followingCount}
-      
-Statistics (Anime):
-  Count:                ${user?.statistics?.anime?.count}
-  Mean Score:           ${user?.statistics?.anime?.meanScore}
-  Minutes Watched:      ${user?.statistics?.anime?.minutesWatched}
-  Episodes Watched:     ${user?.statistics?.anime?.episodesWatched}
-      
-Statistics (Manga):
-  Count:                ${user?.statistics?.manga?.count}
-  Mean Score:           ${user?.statistics?.manga?.meanScore}
-  Chapters Read:        ${user?.statistics?.manga?.chaptersRead}
-  Volumes Read:         ${user?.statistics?.manga?.volumesRead}
-`)
-
-          console.log(`\nRecent Activities:`)
-          if (activities.length > 0) {
-            activities.map(({ status, progress, media, createdAt }) => {
-              responsiveOutput(
-                `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ''}${getTitle(
-                  media?.title
-                )}`
-              )
-            })
-          }
-
-          return user
-        } else {
-          console.error(
-            `\nSomething went wrong. Please log in again. ${errors[0].message}`
-          )
-          return null
-        }
-      } else {
-        console.error(`\nPlease login first to use this feature.`)
+      if (!(await Auth.isLoggedIn())) {
+        console.error('\nPlease login first to use this feature.')
         return null
       }
+
+      const accessToken = await Auth.RetriveAccessToken()
+
+      const request = await fetch(aniListEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ query: currentUserQuery }),
+      })
+
+      const { data, errors }: Myself = await request.json()
+
+      if (!request.ok) {
+        console.error(
+          `\nSomething went wrong. Please log in again. ${errors?.[0]?.message ?? 'Unknown error'}`
+        )
+        return null
+      }
+
+      const user = data?.Viewer
+
+      if (!user) {
+        console.error('\nUnable to retrieve user information.')
+        return null
+      }
+
+      const [activityResponse, followersResponse, followingResponse] =
+        await Promise.all([
+          fetcher<UserActivitiesResponse>(userActivityQuery, {
+            id: user.id,
+            page: 1,
+            perPage: 10,
+          }),
+          fetcher<UserFollower>(userFollowersQuery, {
+            userId: user.id,
+          }),
+          fetcher<UserFollowing>(userFollowingQuery, {
+            userId: user.id,
+          }),
+        ])
+
+      const activities = activityResponse?.data?.Page?.activities ?? []
+      const followersCount = followersResponse?.data?.Page?.pageInfo?.total ?? 0
+      const followingCount = followingResponse?.data?.Page?.pageInfo?.total ?? 0
+
+      renderUserProfile(user, followersCount, followingCount)
+
+      console.log('\nRecent Activities:')
+
+      activities.forEach(({ status, progress, media, createdAt }) => {
+        responsiveOutput(
+          `${timestampToTimeAgo(createdAt)}\t${status} ${progress ? `${progress} of ` : ''}${getTitle(media?.title)}`
+        )
+      })
+
+      return user
     } catch (error) {
       console.error(`\nError from Myself. ${(error as Error).message}`)
     }
   }
+
   static async isLoggedIn(): Promise<boolean> {
     try {
       const token = await Auth.RetriveAccessToken()
@@ -360,42 +329,17 @@ Statistics (Manga):
           userId: await Auth.MyUserId(),
         })
 
-        if (response?.data?.Page?.activities) {
-          let count = 0
+        const activities = response?.data?.Page?.activities
 
-          const activities = response?.data?.Page?.activities
-
-          if (!activities || activities.length === 0) {
-            console.log(`\nNo more activities available.`)
-            hasMoreActivities = false
-          } else {
-            for (const act of activities) {
-              if (act?.id) {
-                const deleteResponse: {
-                  data?: { DeleteActivity: { deleted: boolean } }
-                  errors?: { message: string }[]
-                } = await fetcher(deleteActivityMutation, {
-                  id: act?.id,
-                })
-                const isDeleted = deleteResponse?.data?.DeleteActivity?.deleted
-                count++
-                totalCount++
-
-                console.log(
-                  `[${count}/${activities.length}/${totalCount}]\t${act?.id} ${
-                    isDeleted ? symbol_done : symbol_fail
-                  }`
-                )
-
-                // Avoiding rate-limit
-                await sleep(rate_limit_time_ms)
-              }
-            }
-          }
-        } else {
+        if (!activities) {
           // In case of an unexpected null response, exit the loop
           console.log(`\nProbably deleted all the activities of this type.`)
           hasMoreActivities = false
+        } else if (activities.length === 0) {
+          console.log(`\nNo more activities available.`)
+          hasMoreActivities = false
+        } else {
+          totalCount = await deleteActivities(activities, totalCount)
         }
       }
     } catch (error) {

@@ -5,18 +5,14 @@ import { aniListEndpoint, handleRateLimitRetry } from './workers.js'
 /**
  * Sends a GraphQL request to the AniList API.
  *
- * This function constructs a request with the provided query and variables,
- * handles authorization, and processes the API response. If a rate-limit error (429) is returned,
- * it waits for 1 minute and retries the request.
- *
- * @param {string} query - The AniList GraphQL query to be executed.
- * @param {object} variables - An object containing the variables for the query.
- * @returns {Promise<object|null>} The response from the API as a JSON object if successful; otherwise, null.
+ * @param query - The GraphQL query to execute.
+ * @param variables - Variables for the GraphQL query.
+ * @returns The API response if successful; otherwise, null.
  */
-async function fetcher(
+async function fetcher<T = Record<string, unknown>>(
   query: string,
   variables: object
-): Promise<object | null> {
+): Promise<T | null> {
   try {
     const headers: Record<string, string> = {
       'content-type': 'application/json',
@@ -25,29 +21,37 @@ async function fetcher(
     const token = (await Auth.isLoggedIn())
       ? await Auth.RetriveAccessToken()
       : null
+
     if (token) headers['Authorization'] = `Bearer ${token}`
 
     const request = await fetch(aniListEndpoint, {
       method: 'POST',
-      headers: headers,
+      headers,
       body: JSON.stringify({ query, variables }),
     })
 
-    const response: { errors?: { message: string }[] } = await request.json()
+    const response = (await request.json()) as T & {
+      errors?: { message: string }[]
+    }
 
     if (request.status === 200) {
       return response
-    } else if (request.status === 429) {
-      await handleRateLimitRetry(60)
-      return await fetcher(query, variables)
-    } else {
-      console.error(
-        `\n${request.status} ${response?.errors?.[0]?.message || 'Unknown error'}.`
-      )
-      return null
     }
+
+    if (request.status === 429) {
+      await handleRateLimitRetry(60)
+      return fetcher<T>(query, variables)
+    }
+
+    console.error(
+      `\n${request.status} ${response?.errors?.[0]?.message || 'Unknown error'}.`
+    )
+
+    return null
   } catch (error) {
-    console.error(`\nSomething went wrong. ${error.message}.`)
+    console.error(
+      `\nSomething went wrong. ${error instanceof Error ? error.message : String(error)}.`
+    )
     return null
   }
 }
