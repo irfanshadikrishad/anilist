@@ -601,7 +601,7 @@ export async function deleteActivities(
   return totalCount
 }
 
-export function getStatus(anidbStatus: string, episodesSeen: string) {
+function getStatus(anidbStatus: string, episodesSeen: string | number) {
   if (anidbStatus === 'complete') {
     return AniListMediaStatus.COMPLETED
   } else if (anidbStatus === 'incomplete' && Number(episodesSeen) > 0) {
@@ -650,7 +650,7 @@ async function processAnimeEntry(
       saveAnimeWithProgressMutation,
       {
         mediaId: anilistId,
-        progress: ownEpisodes - 2,
+        progress: Number(ownEpisodes) - 2,
         status: getStatus(status, ownEpisodes),
         hiddenFromStatusLists: false,
         private: false,
